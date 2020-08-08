@@ -26,7 +26,6 @@ class TaskPath:
 
         self.task_configs = kwargs["tasks"]
         self.default_values = kwargs["defaults"]
-        self.use_bias_reset = kwargs["use_bias_reset"]
 
         self.idx: int = 0
         self.logdir: pathlib.Path = logdir
@@ -78,8 +77,6 @@ class TaskPath:
                     else:
                         raise NotImplementedError(f"The following model_to_train config parameter is unknown: "
                                                   f"{task.config['model_to_train']}")
-                    if self.use_bias_reset is not None:
-                        model.apply(reset_bias)
 
                     if model is None:
                         ValueError(f"The model could not get properly assigned for {model_to_pick}")
