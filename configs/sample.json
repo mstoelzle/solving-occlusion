@@ -1,0 +1,53 @@
+{
+    "name": "vwhl_test",
+    "cuda": false,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "loss_function": {
+                        "domain_distance_metric": "fid",
+                        "regularization_weights": [0.01, 0.00]
+                    },
+                    "loss_aggregator": {"name": "mean"},
+                    "report_frequency": 100
+                },
+                "domain_defaults": {
+                    "batch_size": 32,
+                    "dataset": "Office31",
+                    "shuffle": true,
+                    "num_workers": 4
+                },
+                "model": {
+                    "name": "resnet"
+                },
+                "optimizer": {
+                    "name": "SGD",
+                    "lr": 0.001,
+                    "weight_decay": 0.001,
+                    "momentum": 0.9
+                },
+                "controller": {
+                    "max_num_epochs": 1,
+                    "max_num_better_results": 20
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "semi-supervised-learning",
+                    "model_to_infer": "untrained",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {}
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                }
+            ]
+        }
+    },
+    "logging": {
+        "upload": false
+    },
+    "remote": false,
+    "seeds": [101]
+}
