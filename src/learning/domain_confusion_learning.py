@@ -21,7 +21,7 @@ class DomainConfusionLearning(BaseLearning):
         self.activations = []
 
     def train(self, task: Task):
-        self.task = task
+        self.set_task(task)
         self.task.loss = DomainConfusionLoss(self.task.logdir, **self.task.config["loss"])
 
         self.set_model(task.model_to_train)

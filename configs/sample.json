@@ -1,5 +1,5 @@
 {
-    "name": "vwhl_test",
+    "name": "sample",
     "cuda": false,
     "experiment": {
         "task_path": {
@@ -14,12 +14,13 @@
                 },
                 "domain_defaults": {
                     "batch_size": 32,
-                    "dataset": "Office31",
+                    "dataset": "CIFAR10",
                     "shuffle": true,
                     "num_workers": 4
                 },
                 "model": {
-                    "name": "resnet"
+                    "name": "resnet",
+                    "num_outputs": 10
                 },
                 "optimizer": {
                     "name": "SGD",
@@ -34,8 +35,7 @@
             },
             "tasks": [
                 {
-                    "task_type": "semi-supervised-learning",
-                    "model_to_infer": "untrained",
+                    "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {
                         "target": {}

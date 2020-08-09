@@ -13,7 +13,7 @@ class SupervisedLearning(BaseLearning):
         super().__init__(**kwargs)
 
     def train(self, task: Task):
-        self.task = task
+        self.set_task(task)
         self.task.loss = SupervisedLearningLoss(self.task.logdir, **self.task.config["loss"])
 
         self.set_model(task.model_to_train)

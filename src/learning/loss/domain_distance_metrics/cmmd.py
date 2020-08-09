@@ -1,7 +1,7 @@
 import torch
 
 from .mmd import gaussian_kernel_2
-from path_learning.utils import get_logger
+from src.utils import get_logger
 
 logger = get_logger("cmmd")
 

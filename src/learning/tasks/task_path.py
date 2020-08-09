@@ -5,10 +5,8 @@ from typing import Dict, List, Optional
 import torch
 
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
-from src.dataloaders.semi_supervised_dataloader import SemiSupervisedDataloader
 from src.learning.models.models import reset_bias
 from .task import Task
-from ..tests import test_init_kwargs
 from src.utils.log import get_logger
 
 logger = get_logger("task_path")
@@ -19,9 +17,7 @@ class TaskPath:
     Task paths are iterables that return a task and increasing uid at each iteration. The TaskPath also measures
     the runtime of each of its path by logging the time between calls itself (the task iterator).
     """
-
-    @test_init_kwargs
-    def __init__(self, logdir: pathlib.Path, **kwargs):
+    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, **kwargs):
         self.config = kwargs
 
         self.task_configs = kwargs["tasks"]
@@ -29,6 +25,7 @@ class TaskPath:
 
         self.idx: int = 0
         self.logdir: pathlib.Path = logdir
+        self.datadir: pathlib.Path = datadir
 
         self.tasks: List[Task] = []
 
@@ -70,8 +67,6 @@ class TaskPath:
                         model = deepcopy(self.get_prior_model())
                     elif task.config[model_to_pick] == 'prior_supervised_learning':
                         model = deepcopy(self.get_prior_model("supervised-learning"))
-                    elif task.config[model_to_pick] == 'prior_semi_supervised_learning':
-                        model = deepcopy(self.get_prior_model("semi-supervised-learning"))
                     elif task.config[model_to_pick] == 'prior_domain_confusion':
                         model = deepcopy(self.get_prior_model("domain-confusion"))
                     else:
@@ -83,10 +78,8 @@ class TaskPath:
                     setattr(task, model_to_pick, model)
 
         for dataloader_type, dataloader_spec in task.config['dataloaders'].items():
-            if dataloader_spec == "prior_semi_supervised_dataloader":
-                dataloader = self.get_prior_semi_supervised_dataloader()
-            else:
-                dataloader = SupervisedDataloader(dataloader_spec, task.logdir,
+            dataloader = SupervisedDataloader(dataloader_spec,
+                                                  self.datadir, task.logdir,
                                                   **task.config["domains"][dataloader_spec])
 
             if dataloader is None:
@@ -102,13 +95,6 @@ class TaskPath:
             else:
                 if task.type == task_type:
                     return task.output_model
-
-        return None
-
-    def get_prior_semi_supervised_dataloader(self) -> Optional[SemiSupervisedDataloader]:
-        for task in reversed(self.tasks):
-            if task.type == "semi-supervised-learning":
-                return task.semi_supervised_dataloader
 
         return None
 

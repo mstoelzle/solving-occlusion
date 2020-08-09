@@ -15,12 +15,19 @@ from .experiment import Experiment
 
 class ExperimentSet:
     def __init__(self, **kwargs):
-        self.name = kwargs["name"]
-        self.experiment_config = kwargs["experiment"]
-        self.seeds: List[int] = kwargs["seeds"]
-        self.max_n_processes_per_gpu = kwargs["max_n_processes_per_gpu"] if "max_n_processes_per_gpu" in kwargs else 1
+        self.config = kwargs
+
+        self.name = self.config["name"]
+        self.experiment_config = self.config["experiment"]
+        self.seeds: List[int] = self.config["seeds"]
+
         self.logdir = self.create_set_logdir()
+        self.datadir = pathlib.Path("data")
+        self.datadir.mkdir(parents=True, exist_ok=True)
+
         self.logger = create_base_logger(self.logdir)
+
+        self.device = torch.device("cuda" if self.config.get("cuda", True) else "cpu")
 
     def run(self):
         with measure_runtime(self.logdir):
@@ -29,7 +36,8 @@ class ExperimentSet:
                 self.logger.info(f"Seed {seed} used to run experiment")
                 self.set_random_seeds(seed)
                 exp_logdir: pathlib.Path = self.create_experiment_logdir(seed)
-                experiment: Experiment = Experiment(exp_logdir, self.name, **self.experiment_config)
+                experiment: Experiment = Experiment(exp_logdir, self.datadir, self.name, self.device,
+                                                    **self.experiment_config)
                 experiment.run()
 
     @staticmethod
@@ -71,7 +79,7 @@ class ExperimentSet:
         creates a logdir for an ExperimentSet instance. It contains all other logdirs for all Experiments.
         :return: an existing logdir path.
         """
-        logdir = LOGDIR / f"{get_timestring()}_{self.name}_{getpass.getuser()}"
+        logdir = pathlib.Path("logs") / f"{get_timestring()}_{self.name}_{getpass.getuser()}"
         logdir.mkdir(parents=True, exist_ok=False)
 
         with open(logdir / "set.json", "w")as fp:
@@ -79,7 +87,6 @@ class ExperimentSet:
                        "user": getpass.getuser(),
                        "experiment_config": self.experiment_config,
                        "seeds": self.seeds,
-                       "max_n_processes_per_gpu": self.max_n_processes_per_gpu,
                        "start_time": time.time()
                        }, fp)
 

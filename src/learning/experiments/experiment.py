@@ -2,34 +2,34 @@ import pathlib
 import json
 import traceback
 
+import torch
 
 from src.learning.domain_confusion_learning import DomainConfusionLearning
-from src.learning.semi_supervised_learning import SemiSupervisedLearning
 from src.learning.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
-from ..tests import test_init_kwargs
 from src.utils import hash_dict, measure_runtime
 from src.utils.log import get_logger
 from src.utils.sheet_uploader import SheetUploader
 
 
 class Experiment:
-
-    @test_init_kwargs
-    def __init__(self, logdir: pathlib.Path, set_name: str, **kwargs):
+    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, set_name: str, device: torch.device, **kwargs):
         self.config = kwargs
 
         self.logdir: pathlib.Path = logdir
+        self.datadir: pathlib.Path = datadir
+
         self.logger = get_logger("experiment")
         self.set_name = set_name
         self.hash = hash_dict(kwargs)
         self.save_hash()
 
-        self.task_path: TaskPath = TaskPath(self.logdir, **kwargs["task_path"])
+        self.device = device
 
-        self.domain_confusion_learning = DomainConfusionLearning(logdir=self.logdir)
-        self.supervised_learning = SupervisedLearning(logdir=self.logdir)
-        self.semi_supervised_learning = SemiSupervisedLearning(logdir=self.logdir)
+        self.task_path: TaskPath = TaskPath(self.logdir, self.datadir, **kwargs["task_path"])
+
+        self.domain_confusion_learning = DomainConfusionLearning(logdir=self.logdir, device=self.device)
+        self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device)
 
     def run(self):
         with measure_runtime(self.logdir):

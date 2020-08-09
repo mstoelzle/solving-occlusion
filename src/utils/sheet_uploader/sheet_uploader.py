@@ -11,13 +11,14 @@ from .gather_results import gather_results_df, COLUMNS
 
 SCOPE = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 CREDENTIALS_FILEPATH = pathlib.Path('/home/idscadmin/secondorderlearning-f737ea086b4b.json')
-CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILEPATH, SCOPE)
+CREDENTIALS = None
 SPREADSHEET = "SecondOrderLearning"
 
 
 class SheetUploader:
 
     def __init__(self, experiment_name):
+        CREDENTIALS = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILEPATH, SCOPE)
 
         self.experiment_name = experiment_name
         self.logger = get_logger(f"sheets_uploader")

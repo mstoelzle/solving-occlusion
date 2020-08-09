@@ -4,8 +4,8 @@ from typing import Dict, Tuple
 import torch
 import torch.nn.functional as F
 
-from path_learning.loss.base_loss import BaseLoss, calc_domain_distance
-from path_learning.utils.log import get_logger
+from .base_loss import BaseLoss, calc_domain_distance
+from src.utils.log import get_logger
 
 logger = get_logger("domain_confusion_loss")
 

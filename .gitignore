@@ -1,6 +1,8 @@
 /venv/*
-/logs/*
 /cache/*
 /.idea/*
 /sandbox.py
 *__pycache__*
+
+/data/*
+/logs/*

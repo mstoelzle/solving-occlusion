@@ -1,7 +1,7 @@
 import torch
 
-from path_learning.utils import get_logger
-from path_learning.utils.torch_utils import torch_cov
+from src.utils import get_logger
+from src.utils.torch_utils import torch_cov
 
 logger = get_logger("coral")
 

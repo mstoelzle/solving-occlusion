@@ -4,7 +4,7 @@ from typing import Dict
 import torch
 import torch.nn.functional as F
 
-from src.learning.loss.base_loss import BaseLoss
+from .base_loss import BaseLoss
 from src.utils.log import get_logger
 
 logger = get_logger("supervised_learning_loss")

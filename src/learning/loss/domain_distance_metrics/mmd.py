@@ -1,6 +1,6 @@
 import torch
 
-from path_learning.utils import get_logger
+from src.utils import get_logger
 
 logger = get_logger("mmd")
 

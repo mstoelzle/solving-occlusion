@@ -12,7 +12,7 @@ from .domain_distance_metrics.coral import coral
 from .domain_distance_metrics.fid import frechet_inception_distance
 from .domain_distance_metrics.lmmd import local_maximum_mean_discrepancy
 from .domain_distance_metrics.mmd import maximum_mean_discrepancy
-from path_learning.utils.log import get_logger
+from src.utils.log import get_logger
 
 logger = get_logger("base_loss")
 

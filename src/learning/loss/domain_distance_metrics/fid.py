@@ -1,8 +1,8 @@
 import torch
 
 
-from path_learning.utils import get_logger
-from path_learning.utils.torch_utils import torch_cov, torch_symsqrt
+from src.utils import get_logger
+from src.utils.torch_utils import torch_cov, torch_symsqrt
 
 
 logger = get_logger("frechet_inception_distance")

@@ -4,18 +4,14 @@ from typing import Optional, Type
 
 import torch
 
-from src.dataloaders.semi_supervised_dataloader import SemiSupervisedDataloader
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
-from src.learning.loss import BaseLoss
-from ..tests import test_init_kwargs
+from src.learning.loss.base_loss import BaseLoss
 from src.utils.log import get_logger
 
 logger = get_logger("task")
 
 
 class Task:
-
-    @test_init_kwargs
     def __init__(self, uid: int, logdir: pathlib.Path, **kwargs):
         self.uid: int = uid
         self.type = kwargs["task_type"]
@@ -31,7 +27,6 @@ class Task:
         self.labeled_dataloader: Optional[SupervisedDataloader] = None
         self.unlabeled_dataloader: Optional[SupervisedDataloader] = None
         self.inference_dataloader: Optional[SupervisedDataloader] = None
-        self.semi_supervised_dataloader: Optional[SemiSupervisedDataloader] = None
 
         self.model_to_train = None
         self.model_to_infer = None

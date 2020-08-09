@@ -17,7 +17,7 @@ logger = get_logger("base_learning")
 
 
 class BaseLearning(ABC):
-    def __init__(self, device: torch.device, logdir: pathlib.Path, **kwargs):
+    def __init__(self, logdir: pathlib.Path, device: torch.device, **kwargs):
         self.task: Optional[Task] = None
 
         # Is overwritten in set_model_to_device()
@@ -64,11 +64,11 @@ class BaseLearning(ABC):
         optimizer_config = self.task.config["optimizer"]
         if optimizer_config["name"] == "Adam":
             self.optimizer = optim.Adam(self.model.parameters(),
-                                        lr=optimizer_config["learning_rate"],
+                                        lr=optimizer_config["lr"],
                                         weight_decay=optimizer_config.get("weight_decay", 0))
         if optimizer_config["name"] == "SGD":
             self.optimizer = optim.SGD(params=self.model.parameters(),
-                                       lr=optimizer_config["learning_rate"],
+                                       lr=optimizer_config["lr"],
                                        momentum=optimizer_config["momentum"],
                                        weight_decay=optimizer_config.get("weight_decay", 0))
         else:
