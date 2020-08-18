@@ -5,7 +5,6 @@ from typing import Dict, List, Optional
 import torch
 
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
-from src.learning.models.models import reset_bias
 from .task import Task
 from src.utils.log import get_logger
 

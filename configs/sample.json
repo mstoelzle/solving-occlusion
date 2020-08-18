@@ -19,8 +19,9 @@
                     "num_workers": 4
                 },
                 "model": {
-                    "name": "resnet",
-                    "num_outputs": 10
+                    "name": "VanillaVAE",
+                    "in_channels": 3,
+                    "latent_dim": 128
                 },
                 "optimizer": {
                     "name": "SGD",

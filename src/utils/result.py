@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 
 from .log import get_logger
-from src.learning.models.models import pick_model
+from src.learning.models import pick_model
 from src.learning.loss.supervised_learning_loss import SupervisedLearningLoss
 from src.learning.tasks import Task
 

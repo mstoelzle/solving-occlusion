@@ -24,17 +24,21 @@ class SupervisedLearning(BaseLearning):
         with self.task.loss.new_epoch(epoch, "train"):
             dataloader = self.task.labeled_dataloader.dataloaders['train']
 
-            for batch_idx, (data, target) in enumerate(dataloader):
+            for batch_idx, (input, target) in enumerate(dataloader):
                 self.optimizer.zero_grad()
 
-                data, target = data.to(self.device), target.to(self.device)
+                input, target = input.to(self.device), target.to(self.device)
 
-                pred_target = self.model(data)
-                loss = self.task.loss({"labeled_data_targets": target,
-                                       "labeled_data_pred_targets": pred_target})
+                output = self.model(input)
+
+                loss_dict = self.model.loss_function(config=self.task.config["loss"],
+                                                     output=output,
+                                                     target=target,
+                                                     kld_weight=input.size(0) / len(dataloader.dataset))
+                loss = loss_dict["loss"]
 
                 if self.digest is not None:
-                    self.digest.cache_data(batch_idx, data)
+                    self.digest.cache_data(batch_idx, input)
 
                 loss.backward()
                 self.optimizer.step()
@@ -46,11 +50,15 @@ class SupervisedLearning(BaseLearning):
         self.model.eval()
         with self.task.loss.new_epoch(epoch, "val"), torch.no_grad():
             dataloader = self.task.labeled_dataloader.dataloaders['val']
-            for batch_idx, (data, target) in enumerate(dataloader):
-                data, target = data.to(self.device), target.to(self.device)
+            for batch_idx, (input, target) in enumerate(dataloader):
+                input, target = input.to(self.device), target.to(self.device)
 
-                pred_target = self.model(data)
-                self.task.loss({"labeled_data_targets": target,
-                                "labeled_data_pred_targets": pred_target})
+                output = self.model(input)
+
+                loss_dict = self.model.loss_function(config=self.task.config["loss"],
+                                                     output=output,
+                                                     target=target,
+                                                     kld_weight=input.size(0) / len(dataloader.dataset))
+                loss = loss_dict["loss"]
 
         self.controller.add_state(epoch, self.task.loss.get_epoch_loss(), self.model.state_dict())
