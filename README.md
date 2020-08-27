@@ -3,6 +3,11 @@
 ## Instructions for running
 
 ### 1. Installation:
+All git submodules need to be initialized and updated:
+```
+git submodule update --init
+```
+
 This framework requires **Python 3.7.7**
 
 **Note:** Cuda 10.2 needs to be installed and available.

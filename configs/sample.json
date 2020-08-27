@@ -1,6 +1,21 @@
 {
     "name": "sample",
     "cuda": false,
+    "dataset_generation": {
+        "type": "synthetic",
+        "terrain_types": ["RANDOM_BOXES"],
+        "elevation_map": {
+            "resolution": 0.04,
+            "size": 64,
+            "height_viewpoint": {"min":  0.3, "max":  0.8}
+        },
+        "num_train_samples": 100,
+        "num_val_samples": 100,
+        "num_test_samples": 100,
+        "visualization": {
+            "frequency": 100
+        }
+    },
     "experiment": {
         "task_path": {
             "defaults": {
