@@ -5,7 +5,7 @@ import datetime
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
-from ..log import ROOT_DIR, get_logger
+from ..log import get_logger
 from .requests import create_requests
 from .gather_results import gather_results_df, COLUMNS
 

@@ -5,10 +5,9 @@ import subprocess
 import time
 from typing import Dict
 
-from .log import ROOT_DIR, get_logger
+from .log import get_logger
 
 LIB_DIR = pathlib.Path(__file__).parent.parent.parent.resolve()
-CACHE_DIR = ROOT_DIR / "cache"
 
 logger = get_logger("utils")
 

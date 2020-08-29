@@ -6,7 +6,7 @@ from typing import List, Tuple, Dict
 
 import pandas as pd
 
-from ..log import LOGDIR, get_logger
+from ..log import get_logger
 from ..result import ExperimentSetResult
 
 COLUMNS: List[str] = ["Experiment Date", "Experiment Time", "Task Date", " Task Time", "Experiment", "Seed", "Hash",
@@ -31,7 +31,7 @@ def gather_results_df(exp_set_names: List[str]) -> pd.DataFrame:
 
     for exp_set_name in exp_set_names:
         count = 0
-        for exp_set_dir in [child for child in LOGDIR.iterdir() if child.is_dir() and exp_set_name in child.stem]:
+        for exp_set_dir in [child for child in logdir.iterdir() if child.is_dir() and exp_set_name in child.stem]:
             experiment_set = ExperimentSetResult(exp_set_dir)
 
             if exp_set_name == experiment_set.name:

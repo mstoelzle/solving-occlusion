@@ -1,10 +1,8 @@
+import getpass
 import logging
 import datetime
+import json
 import pathlib
-
-
-ROOT_DIR = pathlib.Path("/media/sdb/path_learning")
-LOGDIR = ROOT_DIR / "logs"
 
 LOGGER_ROOT = "path_learning.experiment"
 
@@ -34,5 +32,16 @@ def get_timestring():
 
 def init_logging(level=logging.INFO):
     logging.basicConfig(level=level)
+
+
+def create_logdir(name: str):
+    """
+    creates a logdir for an ExperimentSet instance. It contains all other logdirs for all Experiments.
+    :return: an existing logdir path.
+    """
+    logdir = pathlib.Path("logs") / f"{get_timestring()}_{name}_{getpass.getuser()}"
+    logdir.mkdir(parents=True, exist_ok=False)
+
+    return logdir
 
 

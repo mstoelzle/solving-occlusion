@@ -17,8 +17,8 @@ def command_line():
 
 def main(config_path: Text):
     init_logging()
-    experiment_filepath = project_path(config_path)
-    with open(experiment_filepath, "r") as exp_fp:
+    config_filepath = project_path(config_path)
+    with open(config_filepath, "r") as exp_fp:
         config = json.load(exp_fp)
 
     ex = ExperimentSet(**config)

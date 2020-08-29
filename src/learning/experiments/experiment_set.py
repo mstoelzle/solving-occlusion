@@ -8,7 +8,7 @@ from typing import List
 import torch
 import numpy as np
 
-from src.utils.log import create_base_logger, LOGDIR, get_timestring
+from src.utils.log import create_base_logger, create_logdir
 from src.utils import measure_runtime, get_git_version
 from .experiment import Experiment
 
@@ -21,7 +21,9 @@ class ExperimentSet:
         self.experiment_config = self.config["experiment"]
         self.seeds: List[int] = self.config["seeds"]
 
-        self.logdir = self.create_set_logdir()
+        self.logdir = create_logdir(self.name)
+        self.create_set_info()
+
         self.datadir = pathlib.Path("data")
         self.datadir.mkdir(parents=True, exist_ok=True)
 
@@ -74,21 +76,11 @@ class ExperimentSet:
 
         return exp_logdir
 
-    def create_set_logdir(self) -> pathlib.Path:
-        """
-        creates a logdir for an ExperimentSet instance. It contains all other logdirs for all Experiments.
-        :return: an existing logdir path.
-        """
-        logdir = pathlib.Path("logs") / f"{get_timestring()}_{self.name}_{getpass.getuser()}"
-        logdir.mkdir(parents=True, exist_ok=False)
-
-        with open(logdir / "set.json", "w")as fp:
+    def create_set_info(self):
+        with open(self.logdir / "set.json", "w")as fp:
             json.dump({"name": self.name,
                        "user": getpass.getuser(),
                        "experiment_config": self.experiment_config,
                        "seeds": self.seeds,
                        "start_time": time.time()
                        }, fp)
-
-        return logdir
-

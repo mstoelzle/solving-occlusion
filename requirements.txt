@@ -1,6 +1,7 @@
 # requires Python 3.7.6
 coloredlogs==14.0
 gspread>=3.6, <4.0
+h5py>=2.10.0, <3.0
 jsonschema>=3.2, <4.0
 matplotlib>=3.3.1, <4.0
 numpy>=1.19.1, <2.0
