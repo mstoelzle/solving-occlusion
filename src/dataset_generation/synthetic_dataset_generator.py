@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
+from progress.bar import Bar
 
 from .base_dataset_generator import BaseDatasetGenerator
 from src.enums.terrain_type_enum import TerrainTypeEnum
@@ -43,6 +44,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
     def run(self):
         for purpose in ["train", "val", "test"]:
             num_samples = self.config[f"num_{purpose}_samples"]
+            progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
             for sample_idx in range(num_samples):
                 terrain_idx = np.random.randint(low=0, high=len(self.terrain_types))
                 terrain_type = self.terrain_types[terrain_idx]
@@ -90,6 +92,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         mat = ax.matshow(occluded_elevation_map)
                         fig.colorbar(mat)
                         plt.show()
+
+                progress_bar.next()
+            progress_bar.finish()
 
     def trace_occlusion(self, robot: Robot) -> np.array:
         """
