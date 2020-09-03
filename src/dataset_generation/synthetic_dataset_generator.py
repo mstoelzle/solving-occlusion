@@ -142,16 +142,16 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.elevation_map_generator.get_height_scan(ray_trace_world, scan)
                 ray_trace_world_scan[:, 2] = scan
 
-                # fig = plt.figure()
-                # ax = fig.add_subplot(111, projection='3d')
-                # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray_trace_world_scan[:, 2])
-                # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
-                # plt.show()
-
                 occlusion_condition = ray_trace_world_scan[:, 2] <= ray[:, 1]
 
                 if np.sum(occlusion_condition) < ray_trace_world_scan.shape[0]:
                     occluded_height_map[i][j] = np.NaN
+
+                    # fig = plt.figure()
+                    # ax = fig.add_subplot(111, projection='3d')
+                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray_trace_world_scan[:, 2])
+                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
+                    # plt.show()
 
         return occluded_height_map
 
