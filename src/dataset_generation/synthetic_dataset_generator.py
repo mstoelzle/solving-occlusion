@@ -53,8 +53,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
             hdf5_group = self.hdf5_file.create_group(purpose)
 
-            dataset_shape = (0, self.terrain_width, self.terrain_height)
-            dataset_maxshape = (num_samples, self.terrain_width, self.terrain_height)
+            dataset_shape = (0, self.terrain_height, self.terrain_width)
+            dataset_maxshape = (num_samples, self.terrain_height, self.terrain_width)
             elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
             occluded_elevation_map_dataset = hdf5_group.create_dataset(name="occluded_elevation_map",
@@ -74,7 +74,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.elevation_map_generator.generate_new_terrain(terrain_id, terrain_param)
 
                 # allocate the memory for the elevation map
-                elevation_map = np.zeros((self.terrain_width, self.terrain_height))
+                elevation_map = np.zeros((self.terrain_height, self.terrain_width))
 
                 # you can select the center position and yaw angle of the height map
                 yaw_angle = np.random.uniform(0, 2 * np.pi)
@@ -118,9 +118,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
                         fig, axes = plt.subplots(nrows=1, ncols=2)
                         mat = axes[0].matshow(elevation_map)
-                        axes[0].plot([self.terrain_width / 2], [self.terrain_height / 2], marker="*", color="red")
+                        axes[0].plot([self.terrain_height / 2], [self.terrain_width / 2], marker="*", color="red")
                         mat = axes[1].matshow(occluded_elevation_map)
-                        axes[1].plot([self.terrain_width / 2], [self.terrain_height / 2], marker="*", color="red")
+                        axes[1].plot([self.terrain_height / 2], [self.terrain_width / 2], marker="*", color="red")
 
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()
