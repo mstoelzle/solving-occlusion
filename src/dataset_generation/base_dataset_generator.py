@@ -4,6 +4,7 @@ import numpy as np
 import random
 import pathlib
 import torch
+from typing import *
 
 from src.utils.log import create_base_logger, create_logdir
 
@@ -25,6 +26,15 @@ class BaseDatasetGenerator(ABC):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
 
+        self.hdf5_path = pathlib.Path(self.logdir / "DATASET_OCCLUSION.hdf5")
+        self.hdf5_file: Optional[h5py.File] = None
+
+    def __enter__(self):
+        self.hdf5_file = h5py.File(str(self.hdf5_path), 'w')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.hdf5_file.__exit__()
+
     @abstractmethod
     def run(self):
         pass
@@ -32,5 +42,10 @@ class BaseDatasetGenerator(ABC):
     def save_to_dataset(self):
         pass
 
-    def extend_dataset(dataset: h5py.Dataset, data: np.array):
+    @staticmethod
+    def extend_dataset(dataset: h5py.Dataset, data: Union[np.array, List]):
+        if type(data) is list:
+            data = np.array(data)
+
         dataset.resize((dataset.shape[0] + data.shape[0]), axis=0)
+        dataset[-data.shape[0]:] = data

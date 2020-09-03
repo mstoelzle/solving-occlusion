@@ -3,7 +3,7 @@
     "cuda": false,
     "dataset_generation": {
         "type": "synthetic",
-        "terrain_types": ["RANDOM_BOXES"],
+        "terrain_types": ["HEIGHT_MAP"],
         "elevation_map": {
             "resolution": 0.04,
             "size": 64,
@@ -12,8 +12,9 @@
         "num_train_samples": 100,
         "num_val_samples": 100,
         "num_test_samples": 100,
+        "save_frequency": 10,
         "visualization": {
-            "frequency": 100
+            "frequency": 50
         }
     },
     "experiment": {

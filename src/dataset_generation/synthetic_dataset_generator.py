@@ -41,9 +41,25 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         self.terrain_height = self.config["elevation_map"]["size"]
         self.terrain_resolution = self.config["elevation_map"]["resolution"]
 
+        self.reset()
+
+    def reset(self):
+        self.elevation_maps = []
+        self.occluded_elevation_maps = []
+
     def run(self):
         for purpose in ["train", "val", "test"]:
             num_samples = self.config[f"num_{purpose}_samples"]
+
+            hdf5_group = self.hdf5_file.create_group(purpose)
+
+            dataset_shape = (0, self.terrain_width, self.terrain_height)
+            dataset_maxshape = (num_samples, self.terrain_width, self.terrain_height)
+            elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
+                                                              shape=dataset_shape, maxshape=dataset_maxshape)
+            occluded_elevation_map_dataset = hdf5_group.create_dataset(name="occluded_elevation_map",
+                                                                       shape=dataset_shape, maxshape=dataset_maxshape)
+
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
             num_accepted_samples = 0
             while num_accepted_samples < num_samples:
@@ -87,6 +103,16 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     # we skip the elevation map if we do not find any occlusion
                     continue
 
+                num_accepted_samples += 1
+                self.elevation_maps.append(elevation_map)
+                self.occluded_elevation_maps.append(occluded_elevation_map)
+
+                if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
+                        num_accepted_samples >= num_samples:
+                    self.extend_dataset(elevation_map_dataset, self.elevation_maps)
+                    self.extend_dataset(occluded_elevation_map_dataset, self.occluded_elevation_maps)
+                    self.reset()
+
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
@@ -99,7 +125,6 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()
 
-                num_accepted_samples += 1
                 progress_bar.next()
             progress_bar.finish()
 

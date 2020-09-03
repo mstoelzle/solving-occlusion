@@ -23,7 +23,8 @@ def main(config_path: Text):
         config = json.load(exp_fp)
 
     dataset_generator = pick_dataset_generator(**config["dataset_generation"])
-    dataset_generator.run()
+    with dataset_generator:
+        dataset_generator.run()
 
 
 if __name__ == '__main__':
