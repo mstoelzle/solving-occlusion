@@ -45,7 +45,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         for purpose in ["train", "val", "test"]:
             num_samples = self.config[f"num_{purpose}_samples"]
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
-            for sample_idx in range(num_samples):
+            num_accepted_samples = 0
+            while num_accepted_samples < num_samples:
                 terrain_idx = np.random.randint(low=0, high=len(self.terrain_types))
                 terrain_type = self.terrain_types[terrain_idx]
                 terrain_id = terrain_type.value
@@ -82,9 +83,13 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 occluded_elevation_map = self.trace_occlusion(robot)
 
+                if not np.isnan(np.sum(occluded_elevation_map)):
+                    # we skip the elevation map if we do not find any occlusion
+                    continue
+
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
-                            or sample_idx % self.config["visualization"].get("frequency", 100) == 0:
+                            or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
                         fig, axes = plt.subplots(nrows=1, ncols=2)
                         mat = axes[0].matshow(elevation_map)
                         axes[0].plot([self.terrain_width / 2], [self.terrain_height / 2], marker="*", color="red")
@@ -94,6 +99,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()
 
+                num_accepted_samples += 1
                 progress_bar.next()
             progress_bar.finish()
 
