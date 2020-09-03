@@ -125,7 +125,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 # print("psi", psi / np.pi * 180)
 
-                ray_x = np.arange(start=0, stop=np.sqrt(relative_x ** 2 + relative_y ** 2),
+                ray_x = np.arange(start=0, stop=0.99*np.sqrt(relative_x ** 2 + relative_y ** 2),
                                   step=self.terrain_resolution)
 
                 ray_z = robot.height_viewpoint + elevation_map[robot_i][robot_j] + np.tan(theta) * ray_x
