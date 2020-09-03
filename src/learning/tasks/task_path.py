@@ -38,7 +38,7 @@ class TaskPath:
         for domain, domain_config in task_config['domains'].items():
             recursive_default_setting(task_config["domain_defaults"], domain_config)
 
-        logger.info(f"Loaded defaults for task {task_config}")
+        logger.info(f"Loaded defaults for task {self.idx}")
         return task_config
 
     def get_next_logdir(self) -> pathlib.Path:
@@ -77,9 +77,7 @@ class TaskPath:
                     setattr(task, model_to_pick, model)
 
         for dataloader_type, dataloader_spec in task.config['dataloaders'].items():
-            dataloader = SupervisedDataloader(dataloader_spec,
-                                                  self.datadir, task.logdir,
-                                                  **task.config["domains"][dataloader_spec])
+            dataloader = SupervisedDataloader(**task.config["domains"][dataloader_spec])
 
             if dataloader is None:
                 ValueError(f"The {dataloader_type} could not get properly assigned")
