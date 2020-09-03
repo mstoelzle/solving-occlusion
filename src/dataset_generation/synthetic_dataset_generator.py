@@ -85,12 +85,13 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
                             or sample_idx % self.config["visualization"].get("frequency", 100) == 0:
-                        fig = plt.figure()
-                        ax = fig.add_subplot(121)
-                        mat = ax.matshow(elevation_map)
-                        ax = fig.add_subplot(122)
-                        mat = ax.matshow(occluded_elevation_map)
-                        fig.colorbar(mat)
+                        fig, axes = plt.subplots(nrows=1, ncols=2)
+                        mat = axes[0].matshow(elevation_map)
+                        axes[0].plot([self.terrain_width / 2], [self.terrain_height / 2], marker="*", color="red")
+                        mat = axes[1].matshow(occluded_elevation_map)
+                        axes[1].plot([self.terrain_width / 2], [self.terrain_height / 2], marker="*", color="red")
+
+                        fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()
 
                 progress_bar.next()
