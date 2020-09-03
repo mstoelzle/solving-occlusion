@@ -37,7 +37,7 @@
                 },
                 "model": {
                     "name": "VanillaVAE",
-                    "in_channels": 3,
+                    "in_channels": 1,
                     "latent_dim": 128
                 },
                 "optimizer": {

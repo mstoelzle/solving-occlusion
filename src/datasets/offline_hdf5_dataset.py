@@ -17,8 +17,8 @@ class OfflineHdf5Dataset(BaseDataset):
     def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         self.set_hdf5_dataset()
 
-        elevation_map = torch.tensor(self.elevation_map_dataset[idx, :])
-        occluded_elevation_map = torch.tensor(self.occluded_elevation_map_dataset[idx, :])
+        elevation_map = torch.tensor(self.elevation_map_dataset[idx, :]).unsqueeze(dim=0)
+        occluded_elevation_map = torch.tensor(self.occluded_elevation_map_dataset[idx, :]).unsqueeze(dim=0)
 
         return elevation_map, occluded_elevation_map
 
