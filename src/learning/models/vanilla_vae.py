@@ -5,6 +5,7 @@ from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from . import BaseVAE
 from src.enums.channels_enum import ChannelEnum
+from src.learning.loss.loss import kld_loss_fct
 
 
 class VanillaVAE(BaseVAE):
@@ -134,8 +135,6 @@ class VanillaVAE(BaseVAE):
         Computes the VAE loss function.
         KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
         """
-        mu = output["mu"]
-        log_var = output["log_var"]
 
         kld_weight = self.config.get("kld_weight", None)
         if kld_weight is None:
@@ -143,10 +142,14 @@ class VanillaVAE(BaseVAE):
 
         recons_loss = F.mse_loss(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP], data[ChannelEnum.ELEVATION_MAP])
 
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
+        kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
-        # kld_weight: Account for the minibatch samples from the dataset
-        loss = recons_loss + kld_weight * kld_loss
+        if self.training:
+            # kld_weight: Account for the minibatch samples from the dataset
+            loss = recons_loss + kld_weight * kld_loss
+        else:
+            loss = recons_loss
+
         return {'loss': loss, 'Reconstruction_Loss': recons_loss, 'KLD': -kld_loss}
 
     def sample(self,

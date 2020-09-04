@@ -109,6 +109,15 @@ class Loss(ABC):
 
         return epoch_loss_dict
 
+def reconstruction_occluded_area_loss_fct():
+    # TODO: implement
+    pass
+
+def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
+    kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
+
+    return kld_loss
+
 
 def calc_domain_distance(data_domain_1: torch.Tensor, data_domain_2: torch.Tensor,
                          domain_distance_metric: str = "fid", normalize_activations=True, num_classes=None,
