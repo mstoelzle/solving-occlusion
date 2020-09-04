@@ -1,4 +1,4 @@
-# Path learning
+# Solving Occlusion
 
 ## Instructions for running
 
