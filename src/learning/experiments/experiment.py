@@ -4,7 +4,6 @@ import traceback
 
 import torch
 
-from src.learning.domain_confusion_learning import DomainConfusionLearning
 from src.learning.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
 from src.utils import hash_dict, measure_runtime
@@ -28,7 +27,6 @@ class Experiment:
 
         self.task_path: TaskPath = TaskPath(self.logdir, self.datadir, **kwargs["task_path"])
 
-        self.domain_confusion_learning = DomainConfusionLearning(logdir=self.logdir, device=self.device)
         self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device)
 
     def run(self):
@@ -41,12 +39,6 @@ class Experiment:
                     if task.type == 'supervised-learning':
                         task.output_model = self.supervised_learning.train(task)
                         self.supervised_learning.reset()
-                    elif task.type == 'semi-supervised-learning':
-                        task.output_model = self.semi_supervised_learning.train(task)
-                        self.semi_supervised_learning.reset()
-                    elif task.type == 'domain-confusion':
-                        task.output_model = self.domain_confusion_learning.train(task)
-                        self.domain_confusion_learning.reset()
                     else:
                         raise NotImplementedError(f"The following task type is not implemented: {task.type}")
 
