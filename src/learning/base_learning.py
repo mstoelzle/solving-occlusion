@@ -7,6 +7,7 @@ import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
 
+from src.enums.task_type_enum import TaskTypeEnum
 from src.learning.models import pick_model
 from src.learning.tasks import Task
 from src.learning.controller import Controller
@@ -81,9 +82,6 @@ class BaseLearning(ABC):
     def train_epoches(self):
         self.controller.reset()
 
-        if self.digest is not None:
-            self.digest.__enter__()
-
         logger.info(f"Running {self.task.type} task {self.task.name}")
 
         self.validate_epoch(-1)  # validate the model once before any training occurs.
@@ -96,9 +94,6 @@ class BaseLearning(ABC):
         self.task.save_model(self.model)
 
         self.test()
-
-        if self.digest is not None:
-            self.digest.__exit__()
 
         return self.model
 
@@ -113,12 +108,8 @@ class BaseLearning(ABC):
     def test(self):
         self.model.eval()
         with self.task.loss.new_epoch(0, "test"), torch.no_grad():
-            if self.task.type == "supervised-learning":
+            if self.task.type == TaskTypeEnum.SUPERVISED_LEARNING:
                 dataloader = self.task.labeled_dataloader.dataloaders['test']
-            elif self.task.type == "semi-supervised-learning":
-                dataloader = self.task.semi_supervised_dataloader.dataloaders['test']
-            elif self.task.type == "domain-confusion":
-                dataloader = self.task.unlabeled_dataloader.dataloaders['test']
             else:
                 raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 

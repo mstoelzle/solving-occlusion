@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 import torch
 
+from src.enums.task_type_enum import TaskTypeEnum
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
 from .task import Task
 from src.utils.log import get_logger
@@ -65,9 +66,7 @@ class TaskPath:
                     elif task.config[model_to_pick] == 'prior_task':
                         model = deepcopy(self.get_prior_model())
                     elif task.config[model_to_pick] == 'prior_supervised_learning':
-                        model = deepcopy(self.get_prior_model("supervised-learning"))
-                    elif task.config[model_to_pick] == 'prior_domain_confusion':
-                        model = deepcopy(self.get_prior_model("domain-confusion"))
+                        model = deepcopy(self.get_prior_model(TaskTypeEnum.SUPERVISED_LEARNING))
                     else:
                         raise NotImplementedError(f"The following model_to_train config parameter is unknown: "
                                                   f"{task.config['model_to_train']}")
@@ -85,7 +84,7 @@ class TaskPath:
 
         self.tasks.append(task)
 
-    def get_prior_model(self, task_type: Optional[str] = None) -> Optional[torch.nn.Module]:
+    def get_prior_model(self, task_type: TaskTypeEnum = None) -> Optional[torch.nn.Module]:
         for task in reversed(self.tasks):
             if task_type is None:
                 return task.output_model

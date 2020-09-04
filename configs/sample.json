@@ -25,7 +25,7 @@
                 },
                 "domain_defaults": {
                     "batch_size": 32,
-                    "dataset": "CIFAR10",
+                    "dataset": "hdf5",
                     "dataset_path": "logs/2020-09-03-19-00-58_dataset_generation_synthetic_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                     "shuffle": true,
                     "num_workers": 4

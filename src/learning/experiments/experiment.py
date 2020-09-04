@@ -4,6 +4,7 @@ import traceback
 
 import torch
 
+from src.enums.task_type_enum import TaskTypeEnum
 from src.learning.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
 from src.utils import hash_dict, measure_runtime
@@ -36,7 +37,7 @@ class Experiment:
                     self.upload_task()
 
                 with measure_runtime(task.logdir):
-                    if task.type == 'supervised-learning':
+                    if task.type == TaskTypeEnum.SUPERVISED_LEARNING:
                         task.output_model = self.supervised_learning.train(task)
                         self.supervised_learning.reset()
                     else:

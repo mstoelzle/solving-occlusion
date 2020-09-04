@@ -4,6 +4,7 @@ from typing import Optional, Type
 
 import torch
 
+from src.enums.task_type_enum import TaskTypeEnum
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
 from src.learning.loss.loss import Loss
 from src.utils.log import get_logger
@@ -14,7 +15,7 @@ logger = get_logger("task")
 class Task:
     def __init__(self, uid: int, logdir: pathlib.Path, **kwargs):
         self.uid: int = uid
-        self.type = kwargs["task_type"]
+        self.type = TaskTypeEnum(kwargs["task_type"])
         self.config = kwargs
 
         self.logdir: pathlib.Path = logdir
