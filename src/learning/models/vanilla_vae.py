@@ -9,19 +9,16 @@ from . import BaseVAE
 class VanillaVAE(BaseVAE):
 
     def __init__(self,
-                 in_channels: int,
-                 latent_dim: int,
                  hidden_dims: List = None,
                  **kwargs) -> None:
         super(VanillaVAE, self).__init__(**kwargs)
-
-        self.latent_dim = latent_dim
 
         modules = []
         if hidden_dims is None:
             hidden_dims = [32, 64, 128, 256, 512]
 
         # Build Encoder
+        in_channels = self.in_channels
         for h_dim in hidden_dims:
             modules.append(
                 nn.Sequential(
@@ -33,13 +30,13 @@ class VanillaVAE(BaseVAE):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1] * 4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * 4, latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * 4, self.latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * 4, self.latent_dim)
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(self.latent_dim, hidden_dims[-1] * 4)
 
         hidden_dims.reverse()
 
@@ -67,7 +64,7 @@ class VanillaVAE(BaseVAE):
                                output_padding=1),
             nn.BatchNorm2d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_dims[-1], out_channels=3,
+            nn.Conv2d(hidden_dims[-1], out_channels=self.out_channels,
                       kernel_size=3, padding=1),
             nn.Tanh())
 
