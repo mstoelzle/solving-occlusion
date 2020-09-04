@@ -5,7 +5,7 @@ from typing import Optional, Type
 import torch
 
 from src.dataloaders.supervised_dataloader import SupervisedDataloader
-from src.learning.loss.base_loss import BaseLoss
+from src.learning.loss.loss import Loss
 from src.utils.log import get_logger
 
 logger = get_logger("task")
@@ -19,7 +19,7 @@ class Task:
 
         self.logdir: pathlib.Path = logdir
 
-        self.loss: Optional[Type[BaseLoss]] = None
+        self.loss: Optional[Loss] = None
 
         self.config = kwargs
         self.name = json.dumps(self.config)

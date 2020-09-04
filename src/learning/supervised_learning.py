@@ -1,7 +1,7 @@
 import torch
 
 from .base_learning import BaseLearning
-from src.learning.loss.supervised_learning_loss import SupervisedLearningLoss
+from src.learning.loss.loss import Loss
 from src.learning.tasks import Task
 from ..utils.log import get_logger
 
@@ -14,7 +14,7 @@ class SupervisedLearning(BaseLearning):
 
     def train(self, task: Task):
         self.set_task(task)
-        self.task.loss = SupervisedLearningLoss(self.task.logdir, **self.task.config["loss"])
+        self.task.loss = Loss(self.task.logdir, **self.task.config["loss"])
 
         self.set_model(task.model_to_train)
         return self.train_epoches()
@@ -29,16 +29,17 @@ class SupervisedLearning(BaseLearning):
 
                 for key, value in data.items():
                     data[key] = value.to(self.device)
+                batch_size = data["occluded_elevation_map"].size(0)
 
                 output = self.model(data["occluded_elevation_map"])
 
-                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
+                kld_weight = batch_size / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
                                                      target=data["elevation_map"],
                                                      kld_weight=kld_weight)
                 loss = loss_dict["loss"]
-
+                self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 
                 loss.backward()
                 self.optimizer.step()
@@ -50,14 +51,16 @@ class SupervisedLearning(BaseLearning):
             for batch_idx, data in enumerate(dataloader):
                 for key, value in data.items():
                     data[key] = value.to(self.device)
+                batch_size = data["occluded_elevation_map"].size(0)
 
                 output = self.model(data["occluded_elevation_map"])
 
-                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
+                kld_weight = batch_size / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
                                                      target=data["elevation_map"],
                                                      kld_weight=kld_weight)
                 loss = loss_dict["loss"]
+                self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 
         self.controller.add_state(epoch, self.task.loss.get_epoch_loss(), self.model.state_dict())

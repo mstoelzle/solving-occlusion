@@ -21,11 +21,6 @@
         "task_path": {
             "defaults": {
                 "loss": {
-                    "loss_function": {
-                        "domain_distance_metric": "fid",
-                        "regularization_weights": [0.01, 0.00]
-                    },
-                    "loss_aggregator": {"name": "mean"},
                     "report_frequency": 100
                 },
                 "domain_defaults": {

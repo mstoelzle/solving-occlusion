@@ -125,13 +125,14 @@ class BaseLearning(ABC):
             for batch_idx, data in enumerate(dataloader):
                 for key, value in data.items():
                     data[key] = value.to(self.device)
+                batch_size = data["occluded_elevation_map"].size(0)
 
                 output = self.model(data["occluded_elevation_map"])
 
-                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
+                kld_weight = batch_size / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
                                                      target=data["elevation_map"],
                                                      kld_weight=kld_weight)
                 loss = loss_dict["loss"]
-
+                self.task.loss(batch_size=batch_size, loss_dict=loss_dict)

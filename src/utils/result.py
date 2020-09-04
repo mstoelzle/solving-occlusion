@@ -10,7 +10,7 @@ import torch
 
 from .log import get_logger
 from src.learning.models import pick_model
-from src.learning.loss.supervised_learning_loss import SupervisedLearningLoss
+from src.learning.loss.loss import Loss
 from src.learning.tasks import Task
 
 
@@ -197,7 +197,7 @@ class TaskResult(_Result):
     def generate_loss(self, logdir):
         logdir = logdir / "tmp_loss"
         logdir.mkdir(exist_ok=True, parents=False)
-        return SupervisedLearningLoss(logdir, **self.config["loss"])
+        return Loss(logdir, **self.config["loss"])
 
 
 class ExperimentResult(_Result):
