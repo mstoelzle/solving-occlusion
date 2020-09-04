@@ -24,41 +24,40 @@ class SupervisedLearning(BaseLearning):
         with self.task.loss.new_epoch(epoch, "train"):
             dataloader = self.task.labeled_dataloader.dataloaders['train']
 
-            for batch_idx, (input, target) in enumerate(dataloader):
+            for batch_idx, data in enumerate(dataloader):
                 self.optimizer.zero_grad()
 
-                input, target = input.to(self.device), target.to(self.device)
+                for key, value in data.items():
+                    data[key] = value.to(self.device)
 
-                output = self.model(input)
+                output = self.model(data["occluded_elevation_map"])
 
+                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
-                                                     target=target,
-                                                     kld_weight=input.size(0) / len(dataloader.dataset))
+                                                     target=data["elevation_map"],
+                                                     kld_weight=kld_weight)
                 loss = loss_dict["loss"]
 
-                if self.digest is not None:
-                    self.digest.cache_data(batch_idx, input)
 
                 loss.backward()
                 self.optimizer.step()
-
-            if self.digest is not None:
-                self.digest.digest(self.model)
 
     def validate_epoch(self, epoch: int):
         self.model.eval()
         with self.task.loss.new_epoch(epoch, "val"), torch.no_grad():
             dataloader = self.task.labeled_dataloader.dataloaders['val']
-            for batch_idx, (input, target) in enumerate(dataloader):
-                input, target = input.to(self.device), target.to(self.device)
+            for batch_idx, data in enumerate(dataloader):
+                for key, value in data.items():
+                    data[key] = value.to(self.device)
 
-                output = self.model(input)
+                output = self.model(data["occluded_elevation_map"])
 
+                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
-                                                     target=target,
-                                                     kld_weight=input.size(0) / len(dataloader.dataset))
+                                                     target=data["elevation_map"],
+                                                     kld_weight=kld_weight)
                 loss = loss_dict["loss"]
 
         self.controller.add_state(epoch, self.task.loss.get_epoch_loss(), self.model.state_dict())

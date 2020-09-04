@@ -122,10 +122,16 @@ class BaseLearning(ABC):
             else:
                 raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
-            for batch_idx, (data, target) in enumerate(dataloader):
-                data, target = data.to(self.device), target.to(self.device)
+            for batch_idx, data in enumerate(dataloader):
+                for key, value in data.items():
+                    data[key] = value.to(self.device)
 
-                pred_target = self.model(data)
-                self.task.loss({"labeled_data_targets": target,
-                                "labeled_data_pred_targets": pred_target})
+                output = self.model(data["occluded_elevation_map"])
+
+                kld_weight = data["occluded_elevation_map"].size(0) / len(dataloader.dataset)
+                loss_dict = self.model.loss_function(config=self.task.config["loss"],
+                                                     output=output,
+                                                     target=data["elevation_map"],
+                                                     kld_weight=kld_weight)
+                loss = loss_dict["loss"]
 

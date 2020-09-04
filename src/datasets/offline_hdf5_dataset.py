@@ -17,13 +17,10 @@ class OfflineHdf5Dataset(BaseDataset):
         with h5py.File(self.hdf5_dataset_path, 'r') as hdf5_file:
             self.dataset_length = len(hdf5_file[f"/{self.purpose}/elevation_map"])
 
-    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
         self.set_hdf5_dataset()
 
-        elevation_map = torch.tensor(self.elevation_map_dataset[idx, :]).unsqueeze(dim=0)
-        occluded_elevation_map = torch.tensor(self.occluded_elevation_map_dataset[idx, :]).unsqueeze(dim=0)
-
-        return elevation_map, occluded_elevation_map
+        return self.preprocess_item(self.elevation_map_dataset[idx, :], self.occluded_elevation_map_dataset[idx, :])
 
     def __len__(self):
         return self.dataset_length
