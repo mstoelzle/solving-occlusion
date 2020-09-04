@@ -4,6 +4,7 @@ from torch.nn import functional as F
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from . import BaseVAE
+from src.enums.channels_enum import ChannelEnum
 
 
 class VanillaVAE(BaseVAE):
@@ -18,7 +19,7 @@ class VanillaVAE(BaseVAE):
             hidden_dims = [32, 64, 128, 256, 512]
 
         # Build Encoder
-        in_channels = self.in_channels
+        in_channels = len(self.in_channels)
         for h_dim in hidden_dims:
             modules.append(
                 nn.Sequential(
@@ -64,7 +65,7 @@ class VanillaVAE(BaseVAE):
                                output_padding=1),
             nn.BatchNorm2d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_dims[-1], out_channels=self.out_channels,
+            nn.Conv2d(hidden_dims[-1], out_channels=len(self.out_channels),
                       kernel_size=3, padding=1),
             nn.Tanh())
 
@@ -110,12 +111,14 @@ class VanillaVAE(BaseVAE):
         eps = torch.randn_like(std)
         return eps * std + mu
 
-    def forward(self, input: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
+                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        input = self.assemble_input(data)
+
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
 
-        output = {"reconstruction": self.decode(z),
-                  "input": input,
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: self.decode(z).squeeze(),
                   "mu": mu,
                   "log_var": log_var}
 
@@ -123,9 +126,10 @@ class VanillaVAE(BaseVAE):
 
     def loss_function(self,
                       config: dict,
-                      output: Dict[str, torch.Tensor],
-                      target: torch.Tensor,
-                      kld_weight: float) -> dict:
+                      output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                      data: Dict[ChannelEnum, torch.Tensor],
+                      dataset_length: int,
+                      **kwargs) -> dict:
         """
         Computes the VAE loss function.
         KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
@@ -133,7 +137,11 @@ class VanillaVAE(BaseVAE):
         mu = output["mu"]
         log_var = output["log_var"]
 
-        recons_loss = F.mse_loss(output["reconstruction"], target)
+        kld_weight = self.config.get("kld_weight", None)
+        if kld_weight is None:
+            kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
+
+        recons_loss = F.mse_loss(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP], data[ChannelEnum.ELEVATION_MAP])
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
 

@@ -7,6 +7,7 @@ import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
 
+from src.enums.channels_enum import ChannelEnum
 from src.enums.task_type_enum import TaskTypeEnum
 from src.learning.models import pick_model
 from src.learning.tasks import Task
@@ -116,14 +117,13 @@ class BaseLearning(ABC):
             for batch_idx, data in enumerate(dataloader):
                 for key, value in data.items():
                     data[key] = value.to(self.device)
-                batch_size = data["occluded_elevation_map"].size(0)
+                batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
-                output = self.model(data["occluded_elevation_map"])
+                output = self.model(data)
 
-                kld_weight = batch_size / len(dataloader.dataset)
                 loss_dict = self.model.loss_function(config=self.task.config["loss"],
                                                      output=output,
-                                                     target=data["elevation_map"],
-                                                     kld_weight=kld_weight)
+                                                     data=data,
+                                                     dataset_length=len(dataloader.dataset))
                 loss = loss_dict["loss"]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)

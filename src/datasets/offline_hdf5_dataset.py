@@ -20,7 +20,7 @@ class OfflineHdf5Dataset(BaseDataset):
     def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
         self.set_hdf5_dataset()
 
-        return self.preprocess_item(self.elevation_map_dataset[idx, :], self.occluded_elevation_map_dataset[idx, :])
+        return self.prepare_item(self.elevation_map_dataset[idx, :], self.occluded_elevation_map_dataset[idx, :])
 
     def __len__(self):
         return self.dataset_length
