@@ -1,37 +1,50 @@
 # Solving Occlusion
 
-## Instructions for running
+## Instructions
 
-### 1. Installation:
+### 1. Prerequisites
+This framework requires **Python 3.7.7**. The generation of synthetic datasets requires an Ubuntu environment. 
+
+**Note:** To use efficient neural network training, Cuda 10.2 needs to be installed and available.
+
+It is recommended to use a package manager like Conda (https://docs.conda.io/en/latest/) to manage the Python version 
+and all required Python packages.
+
+### 2. Initialisation of git submodules
 All git submodules need to be initialized and updated:
 ```
 git submodule update --init
 ```
 
+### 3. Installation:
 As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins (which only run on Ubuntu),
 the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
 https://bitbucket.org/tamiki/terrain_data_generator
-
-This framework requires **Python 3.7.7**
-
-**Note:** Cuda 10.2 needs to be installed and available.
-
-It is recommended to use a package manager like Conda (https://docs.conda.io/en/latest/) to manage the Python version 
-and all required Python packages.
 
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
 ```
 pip install -r requirements.txt --user
 ```
 
-### 2. Running an experiment
+### 4. Generating a dataset
 
 We use JSON config files to specify all settings and parameters of our experiments. 
 All config files need to be placed in a subdirectory of `{DIR_TO_REPO}/configs`.
-Subsequently, an experiment can be started by stating the path relative to the `{DIR_TO_REPO}/configs` directory:
+Subsequently, a dataset generation can be started by stating the path relative to the `{DIR_TO_REPO}` directory:
 
 ```
-python main.py {CONFIG_NAME}.json
+python dataset_generation.py configs/{CONFIG_NAME}.json
+```
+
+### 5. Learning
+
+We use JSON config files to specify all settings and parameters of our experiments. 
+All config files need to be placed in a subdirectory of `{DIR_TO_REPO}/configs`. 
+The absolute or relative path to the dataset needs to be specified in the JSON config.
+Subsequently, a learning experiment can be started by stating the path relative to the `{DIR_TO_REPO}` directory:
+
+```
+python learning.py configs/{CONFIG_NAME}.json
 ```
 
 ## Important components
