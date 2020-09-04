@@ -8,6 +8,10 @@ All git submodules need to be initialized and updated:
 git submodule update --init
 ```
 
+As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins (which only run on Ubuntu),
+the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
+https://bitbucket.org/tamiki/terrain_data_generator
+
 This framework requires **Python 3.7.7**
 
 **Note:** Cuda 10.2 needs to be installed and available.
