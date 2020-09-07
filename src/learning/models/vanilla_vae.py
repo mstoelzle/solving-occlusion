@@ -189,7 +189,8 @@ class VanillaVAE(BaseVAE):
 
         z = z.to(device)
 
-        samples = self.decode(z)
+        samples = self.decode(z).squeeze()
+
         return samples
 
     def generate(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
