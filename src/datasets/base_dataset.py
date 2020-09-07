@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from typing import Dict, List, Tuple
 
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 from src.utils.log import get_logger
 
 logger = get_logger("base_dataset")

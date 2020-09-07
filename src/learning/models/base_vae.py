@@ -4,7 +4,7 @@ from torch import nn
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from .base_model import BaseModel
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 
 
 class BaseVAE(BaseModel, ABC):

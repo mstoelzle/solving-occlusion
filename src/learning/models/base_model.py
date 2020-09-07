@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from typing import *
 
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 
 
 class BaseModel(ABC, nn.Module):

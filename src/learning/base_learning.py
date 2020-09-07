@@ -7,7 +7,7 @@ import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
 
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 from src.enums.task_type_enum import TaskTypeEnum
 from src.learning.models import pick_model
 from src.learning.tasks import Task

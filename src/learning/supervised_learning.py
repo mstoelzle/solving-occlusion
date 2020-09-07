@@ -1,7 +1,7 @@
 import torch
 
 from .base_learning import BaseLearning
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 from src.learning.loss.loss import Loss
 from src.learning.tasks import Task
 from ..utils.log import get_logger

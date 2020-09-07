@@ -4,7 +4,7 @@ from torch.nn import functional as F
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from . import BaseVAE
-from src.enums.channels_enum import ChannelEnum
+from src.enums.channel_enum import ChannelEnum
 from src.learning.loss.loss import kld_loss_fct
 
 
