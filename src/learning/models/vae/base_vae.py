@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
-from .base_model import BaseModel
+from src.learning.models.base_model import BaseModel
 from src.enums.channel_enum import ChannelEnum
 
 

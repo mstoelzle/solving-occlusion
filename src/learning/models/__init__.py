@@ -1,8 +1,6 @@
-import torch
-
 from .base_model import *
-from .base_vae import *
-from .vanilla_vae import *
+from .vae.base_vae import *
+from .vae.vanilla_vae import *
 
 models = {"VanillaVAE": VanillaVAE}
 
