@@ -4,7 +4,7 @@ from torch.nn import functional as F
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from . import BaseVAE
-from src.enums.channel_enum import ChannelEnum
+from src.enums import *
 from src.learning.loss.loss import kld_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
@@ -153,7 +153,7 @@ class VanillaVAE(BaseVAE):
         elevation_map = data[ChannelEnum.ELEVATION_MAP]
         reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
 
-        if "reconstruction_loss" in config.get("normalization", {}):
+        if LossEnum.RECONSTRUCTION.value in config.get("normalization", []):
             elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
                                                                                    input=elevation_map,
                                                                                    batch=True)
@@ -172,7 +172,7 @@ class VanillaVAE(BaseVAE):
         else:
             loss = recons_loss
 
-        return {'loss': loss, 'reconstruction_loss': recons_loss, 'KLD': -kld_loss}
+        return {LossEnum.LOSS: loss, LossEnum.RECONSTRUCTION: recons_loss, LossEnum.KLD: -kld_loss}
 
     def sample(self,
                num_samples: int,

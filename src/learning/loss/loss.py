@@ -12,6 +12,7 @@ from .domain_distance_metrics.coral import coral
 from .domain_distance_metrics.fid import frechet_inception_distance
 from .domain_distance_metrics.lmmd import local_maximum_mean_discrepancy
 from .domain_distance_metrics.mmd import maximum_mean_discrepancy
+from src.enums import *
 from src.utils.log import get_logger
 
 logger = get_logger("loss")
@@ -42,7 +43,7 @@ class Loss(ABC):
 
     def __call__(self, batch_size: int, loss_dict: dict):
         # assert that a loss (total loss) key is available
-        assert "loss" in loss_dict
+        assert LossEnum.LOSS in loss_dict
 
         # aggregate results
         self.batch_results.append(loss_dict)
@@ -54,12 +55,12 @@ class Loss(ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         epoch_result = self.compute_epoch_result()
-        self.epoch_losses[self.purpose].update({str(self.epoch): epoch_result["loss"]})
+        self.epoch_losses[self.purpose].update({str(self.epoch): epoch_result[LossEnum.LOSS]})
 
         if self.purpose != "test":
-            logger.info(f"Epoch {self.epoch} - {self.purpose} average loss - {epoch_result['loss']:.4f}")
+            logger.info(f"Epoch {self.epoch} - {self.purpose} average loss - {epoch_result[LossEnum.LOSS]:.4f}")
         else:
-            logger.info(f"Testing Loss: {epoch_result['loss']:.4f}")
+            logger.info(f"Testing Loss: {epoch_result[LossEnum.LOSS]:.4f}")
 
         self.write_logfile(self.epoch, epoch_result)
 
@@ -71,7 +72,11 @@ class Loss(ABC):
             write_mode = "w"
 
         write_dict = {"epoch": epoch}
-        write_dict.update(epoch_result)
+        for key, value in epoch_result.items():
+            if type(key) == LossEnum:
+                write_dict[key.value] = value
+            else:
+                write_dict[key] = value
 
         with open(str(logfile_path), write_mode, newline='') as fp:
             fieldnames = list(write_dict.keys())
@@ -109,9 +114,11 @@ class Loss(ABC):
 
         return epoch_loss_dict
 
-def reconstruction_occluded_area_loss_fct():
+
+def reconstruction_occlusion_loss_fct():
     # TODO: implement
     pass
+
 
 def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
     kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)

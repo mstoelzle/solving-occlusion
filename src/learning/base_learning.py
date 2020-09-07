@@ -7,8 +7,7 @@ import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
 
-from src.enums.channel_enum import ChannelEnum
-from src.enums.task_type_enum import TaskTypeEnum
+from src.enums import *
 from src.learning.models import pick_model
 from src.learning.tasks import Task
 from src.learning.controller import Controller
@@ -125,5 +124,5 @@ class BaseLearning(ABC):
                                                      output=output,
                                                      data=data,
                                                      dataset_length=len(dataloader.dataset))
-                loss = loss_dict["loss"]
+                loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)

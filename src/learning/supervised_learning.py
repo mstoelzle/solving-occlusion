@@ -1,7 +1,7 @@
 import torch
 
 from .base_learning import BaseLearning
-from src.enums.channel_enum import ChannelEnum
+from src.enums import *
 from src.learning.loss.loss import Loss
 from src.learning.tasks import Task
 from ..utils.log import get_logger
@@ -38,7 +38,7 @@ class SupervisedLearning(BaseLearning):
                                                      output=output,
                                                      data=data,
                                                      dataset_length=len(dataloader.dataset))
-                loss = loss_dict["loss"]
+                loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 
                 loss.backward()
@@ -59,7 +59,7 @@ class SupervisedLearning(BaseLearning):
                                                      output=output,
                                                      data=data,
                                                      dataset_length=len(dataloader.dataset))
-                loss = loss_dict["loss"]
+                loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 
         self.controller.add_state(epoch, self.task.loss.get_epoch_loss(), self.model.state_dict())

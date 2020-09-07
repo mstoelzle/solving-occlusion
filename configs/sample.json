@@ -22,7 +22,7 @@
             "defaults": {
                 "loss": {
                     "report_frequency": 100,
-                    "normalization": ["reconstruction_loss"]
+                    "normalization": ["reconstruction"]
                 },
                 "domain_defaults": {
                     "batch_size": 32,
