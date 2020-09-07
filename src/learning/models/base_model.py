@@ -4,6 +4,7 @@ from torch import nn
 from typing import *
 
 from src.enums.channel_enum import ChannelEnum
+from src.learning.normalization.input_normalization import InputNormalization
 
 
 class BaseModel(ABC, nn.Module):
@@ -22,12 +23,18 @@ class BaseModel(ABC, nn.Module):
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> torch.Tensor:
         input = None
         for channel_idx, in_channel in enumerate(self.in_channels):
-            if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
-                channel_data = self.preprocess_occluded_elevation_map(data[in_channel])
+            if in_channel in data:
+                channel_data = data[in_channel]
             elif in_channel == ChannelEnum.BINARY_OCCLUSION_MAP:
                 channel_data = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
             else:
-                channel_data = data[in_channel]
+                raise NotImplementedError
+
+            if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or in_channel == ChannelEnum.ELEVATION_MAP:
+                channel_data, norm_consts = InputNormalization.normalize(in_channel, channel_data, batch=True)
+
+            if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
+                channel_data = self.preprocess_occluded_elevation_map(channel_data)
 
             if input is None:
                 input = channel_data.new_zeros(size=(channel_data.size(0), len(self.in_channels),
