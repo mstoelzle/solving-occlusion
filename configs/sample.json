@@ -36,7 +36,8 @@
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "latent_dim": 128,
-                    "input_normalization": true
+                    "input_normalization": true,
+                    "inpaint_radius": 3
                 },
                 "optimizer": {
                     "name": "SGD",
