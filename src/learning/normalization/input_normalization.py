@@ -10,7 +10,8 @@ class InputNormalization:
                   norm_consts: dict = None) -> Tuple[torch.Tensor, Dict]:
         generate_norm_consts = norm_consts is None
 
-        if channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or channel == ChannelEnum.ELEVATION_MAP:
+        if channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or channel == ChannelEnum.ELEVATION_MAP \
+                or channel == ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
             if batch:
                 normalized_elevation_map = input.clone()
                 if generate_norm_consts:

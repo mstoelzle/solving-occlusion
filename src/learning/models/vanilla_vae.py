@@ -126,7 +126,8 @@ class VanillaVAE(BaseVAE):
             reconstructed_elevation_map = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
                                                                          input=reconstructed_elevation_map,
                                                                          batch=True,
-                                                                         norm_consts=norm_consts[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+                                                                         norm_consts=norm_consts[
+                                                                             ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   "mu": mu,
@@ -149,7 +150,19 @@ class VanillaVAE(BaseVAE):
         if kld_weight is None:
             kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
 
-        recons_loss = F.mse_loss(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP], data[ChannelEnum.ELEVATION_MAP])
+        elevation_map = data[ChannelEnum.ELEVATION_MAP]
+        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+
+        if "reconstruction_loss" in config.get("normalization", {}):
+            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
+                                                                                   input=elevation_map,
+                                                                                   batch=True)
+            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                                                                          input=reconstructed_elevation_map,
+                                                                          batch=True,
+                                                                          norm_consts=ground_truth_norm_consts)
+
+        recons_loss = F.mse_loss(reconstructed_elevation_map, elevation_map)
 
         kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
@@ -159,7 +172,7 @@ class VanillaVAE(BaseVAE):
         else:
             loss = recons_loss
 
-        return {'loss': loss, 'Reconstruction_Loss': recons_loss, 'KLD': -kld_loss}
+        return {'loss': loss, 'reconstruction_loss': recons_loss, 'KLD': -kld_loss}
 
     def sample(self,
                num_samples: int,
