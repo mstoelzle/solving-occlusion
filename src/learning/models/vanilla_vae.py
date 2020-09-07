@@ -6,6 +6,7 @@ from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 from . import BaseVAE
 from src.enums.channel_enum import ChannelEnum
 from src.learning.loss.loss import kld_loss_fct
+from src.learning.normalization.input_normalization import InputNormalization
 
 
 class VanillaVAE(BaseVAE):
@@ -114,12 +115,20 @@ class VanillaVAE(BaseVAE):
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
-        input = self.assemble_input(data)
+        input, norm_consts = self.assemble_input(data)
 
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: self.decode(z).squeeze(),
+        reconstructed_elevation_map = self.decode(z).squeeze()
+
+        if self.input_normalization:
+            reconstructed_elevation_map = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                                                                         input=reconstructed_elevation_map,
+                                                                         batch=True,
+                                                                         norm_consts=norm_consts[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   "mu": mu,
                   "log_var": log_var}
 

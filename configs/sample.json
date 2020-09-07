@@ -34,7 +34,8 @@
                     "name": "VanillaVAE",
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
-                    "latent_dim": 128
+                    "latent_dim": 128,
+                    "input_normalization": true
                 },
                 "optimizer": {
                     "name": "SGD",

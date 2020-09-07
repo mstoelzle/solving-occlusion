@@ -12,6 +12,8 @@ class BaseModel(ABC, nn.Module):
         super().__init__()
         self.config = kwargs
 
+        self.input_normalization: bool = self.config.get("input_normalization", True)
+
     @abstractmethod
     def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
         pass
@@ -20,8 +22,9 @@ class BaseModel(ABC, nn.Module):
     def loss_function(self, *inputs: Any, **kwargs) -> torch.Tensor:
         pass
 
-    def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> torch.Tensor:
+    def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
         input = None
+        norm_consts = {}
         for channel_idx, in_channel in enumerate(self.in_channels):
             if in_channel in data:
                 channel_data = data[in_channel]
@@ -30,8 +33,10 @@ class BaseModel(ABC, nn.Module):
             else:
                 raise NotImplementedError
 
-            if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or in_channel == ChannelEnum.ELEVATION_MAP:
-                channel_data, norm_consts = InputNormalization.normalize(in_channel, channel_data, batch=True)
+            if self.input_normalization:
+                if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or in_channel == ChannelEnum.ELEVATION_MAP:
+                    channel_data, norm_consts[in_channel] = InputNormalization.normalize(in_channel, channel_data,
+                                                                                         batch=True)
 
             if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
                 channel_data = self.preprocess_occluded_elevation_map(channel_data)
@@ -42,7 +47,7 @@ class BaseModel(ABC, nn.Module):
 
             input[:, channel_idx, ...] = channel_data.unsqueeze(dim=1)[:, 0, :, :]
 
-        return input
+        return input, norm_consts
 
     def preprocess_occluded_elevation_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
         poem = occluded_elevation_map.clone()
