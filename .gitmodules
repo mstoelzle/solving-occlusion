@@ -1,3 +1,6 @@
 [submodule "src/dataset_generation/synthetic_terrain_data_generator"]
 	path = src/dataset_generation/synthetic_terrain_data_generator
 	url = https://x-token-auth@bitbucket.org/tamiki/terrain_data_generator.git
+[submodule "src/learning/models/baseline/py_patch_match"]
+	path = src/learning/models/baseline/py_patch_match
+	url = https://github.com/vacancy/PyPatchMatch
