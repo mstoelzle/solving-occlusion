@@ -5,7 +5,8 @@ from .vae.vanilla_vae import *
 
 models = {"VanillaVAE": VanillaVAE,
           "NavierStokes": OpenCVBaseline,
-          "Telea": OpenCVBaseline}
+          "Telea": OpenCVBaseline,
+          "PatchMatch": OpenCVBaseline}
 
 
 def pick_model(**kwargs) -> torch.nn:

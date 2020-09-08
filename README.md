@@ -26,6 +26,14 @@ The required Python packages can be installed as follows (within the Conda envir
 pip install -r requirements.txt --user
 ```
 
+We use the PatchMatch [[1]](#1) algorithm as a (traditional) baseline for in-painting of the occluded elevation maps.
+If this baseline is specified for use in the config, the following installation steps to use the dependency [PyPatchMatch](https://github.com/vacancy/PyPatchMatch) need to be taken:
+1. Install the pkg-config package - for macOS: `brew install pkg-config`.
+2. Manual build of OpenCV - for macOS: https://docs.opencv.org/master/d0/db2/tutorial_macos_install.html. 
+Set the CMake boolean variable `OPENCV_GENERATE_PKGCONFIG=ON`. Install OpenCV from the build directory: `sudo make install`
+3. Set the environmental variable `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig`
+4. Install the PyPatchMatch package: `cd src/learning/models/baseline/py_patch_match & make`
+
 ### 4. Generating a dataset
 
 We use JSON config files to specify all settings and parameters of our experiments. 
@@ -64,5 +72,10 @@ or a maximum number of epochs is reached.
 
 ### Experiment
 The experiment contains all other objects introduced above. It manages device placement and logdir creation.
+
+## Citations
+<a id="1">[1]</a> Barnes, Connelly, et al. 
+"PatchMatch: A randomized correspondence algorithm for structural image editing." 
+ACM Trans. Graph. 28.3 (2009): 24.
 
 

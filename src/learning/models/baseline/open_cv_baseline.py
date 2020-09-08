@@ -18,6 +18,8 @@ class OpenCVBaseline(BaseBaselineModel):
             self.inpainting_method = cv.INPAINT_NS
         elif name == "Telea":
             self.inpainting_method = cv.INPAINT_TELEA
+        elif name == "PatchMatch":
+            self.inpainting_method = name
         else:
             raise ValueError
 
@@ -40,7 +42,11 @@ class OpenCVBaseline(BaseBaselineModel):
             np_map = map.detach().cpu().numpy()
             np_mask = binary_occlusion_map.detach().cpu().numpy().astype('uint8')
 
-            np_reconstructed_map = cv.inpaint(np_map, np_mask, self.inpaint_radius, self.inpainting_method)
+            if self.inpainting_method == "PatchMatch":
+                from .py_patch_match import patch_match
+                np_reconstructed_map = patch_match.inpaint(np_map, np_mask, patch_size=self.inpaint_radius)
+            else:
+                np_reconstructed_map = cv.inpaint(np_map, np_mask, self.inpaint_radius, self.inpainting_method)
 
             reconstructed_map = map.new_tensor(data=np_reconstructed_map)
 
