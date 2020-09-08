@@ -43,8 +43,16 @@ class OpenCVBaseline(BaseBaselineModel):
             np_mask = binary_occlusion_map.detach().cpu().numpy().astype('uint8')
 
             if self.inpainting_method == "PatchMatch":
+                # we are forced to use 3 channels for the PyPatchMatch package
+                np_three_channel_map = np.zeros(shape=(np_mask.shape[0], np_mask.shape[1], 3), dtype="uint8")
+                for channel_idx in range(3):
+                    np_three_channel_map[:, :, channel_idx] = np_map
+
                 from .py_patch_match import patch_match
-                np_reconstructed_map = patch_match.inpaint(np_map, np_mask, patch_size=self.inpaint_radius)
+                np_three_channel_reconstructed_map = patch_match.inpaint(np_three_channel_map, np_mask,
+                                                                         patch_size=self.inpaint_radius)
+
+                np_reconstructed_map = np_three_channel_reconstructed_map[:, :, 0]
             else:
                 np_reconstructed_map = cv.inpaint(np_map, np_mask, self.inpaint_radius, self.inpainting_method)
 
