@@ -3,4 +3,4 @@
 	url = https://x-token-auth@bitbucket.org/tamiki/terrain_data_generator.git
 [submodule "src/learning/models/baseline/py_patch_match"]
 	path = src/learning/models/baseline/py_patch_match
-	url = https://github.com/vacancy/PyPatchMatch
+	url = https://github.com/mstoelzle/PyPatchMatch
