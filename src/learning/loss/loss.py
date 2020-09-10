@@ -73,6 +73,9 @@ class Loss(ABC):
 
         write_dict = {"epoch": epoch}
         for key, value in epoch_result.items():
+            if type(value) == torch.Tensor:
+                value = value.item()
+
             if type(key) == LossEnum:
                 write_dict[key.value] = value
             else:
