@@ -29,7 +29,9 @@ class ExperimentSet:
 
         self.logger = create_base_logger(self.logdir)
 
-        self.device = torch.device("cuda" if self.config.get("cuda", True) else "cpu")
+        self.device = torch.device("cuda" if (self.config.get("cuda", True) and torch.cuda.is_available()) else "cpu")
+
+        self.logger.info(f"Using device {self.device}")
 
     def run(self):
         with measure_runtime(self.logdir):
