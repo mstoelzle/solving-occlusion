@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 import torch
 from torch import nn
+from torch.nn import functional as F
 from typing import *
 
-from src.enums.channel_enum import ChannelEnum
+from src.enums import *
+from src.learning.loss.loss import reconstruction_occlusion_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -61,3 +63,28 @@ class BaseModel(ABC, nn.Module):
         binary_occlusion_map = (occluded_elevation_map != occluded_elevation_map)
 
         return binary_occlusion_map
+
+    def eval_loss_function(self,
+                           loss_config: dict,
+                           output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                           data: Dict[ChannelEnum, torch.Tensor],
+                           **kwargs) -> dict:
+        elevation_map = data[ChannelEnum.ELEVATION_MAP]
+        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+
+        if LossEnum.RECONSTRUCTION_OCCLUSION.value in loss_config.get("normalization", []):
+            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
+                                                                                   input=elevation_map,
+                                                                                   batch=True)
+            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                                                                          input=reconstructed_elevation_map,
+                                                                          batch=True,
+                                                                          norm_consts=ground_truth_norm_consts)
+
+        binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+
+        recons_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
+                                                                  elevation_map,
+                                                                  binary_occlusion_map)
+
+        return {LossEnum.LOSS: recons_occlusion_loss, LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss}

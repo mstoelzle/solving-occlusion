@@ -120,7 +120,7 @@ class BaseLearning(ABC):
 
                 output = self.model(data)
 
-                loss_dict = self.model.loss_function(config=self.task.config["loss"],
+                loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
                                                      dataset_length=len(dataloader.dataset))

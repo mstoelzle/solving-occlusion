@@ -5,7 +5,7 @@ from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from src.learning.models import BaseVAE
 from src.enums import *
-from src.learning.loss.loss import kld_loss_fct
+from src.learning.loss.loss import kld_loss_fct, reconstruction_occlusion_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -136,7 +136,7 @@ class VanillaVAE(BaseVAE):
         return output
 
     def loss_function(self,
-                      config: dict,
+                      loss_config: dict,
                       output: Dict[Union[ChannelEnum, str], torch.Tensor],
                       data: Dict[ChannelEnum, torch.Tensor],
                       dataset_length: int,
@@ -152,8 +152,9 @@ class VanillaVAE(BaseVAE):
 
         elevation_map = data[ChannelEnum.ELEVATION_MAP]
         reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+        binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
-        if LossEnum.RECONSTRUCTION.value in config.get("normalization", []):
+        if LossEnum.RECONSTRUCTION.value in loss_config.get("normalization", []):
             elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
                                                                                    input=elevation_map,
                                                                                    batch=True)
@@ -162,17 +163,23 @@ class VanillaVAE(BaseVAE):
                                                                           batch=True,
                                                                           norm_consts=ground_truth_norm_consts)
 
-        recons_loss = F.mse_loss(reconstructed_elevation_map, elevation_map)
+        reconstruction_loss = F.mse_loss(reconstructed_elevation_map, elevation_map)
+        reconstruction_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
+                                                                          elevation_map,
+                                                                          binary_occlusion_map)
 
         kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
         if self.training:
             # kld_weight: Account for the minibatch samples from the dataset
-            loss = recons_loss + kld_weight * kld_loss
-        else:
-            loss = recons_loss
+            loss = reconstruction_loss + reconstruction_occlusion_loss + kld_weight * kld_loss
 
-        return {LossEnum.LOSS: loss, LossEnum.RECONSTRUCTION: recons_loss, LossEnum.KLD: -kld_loss}
+            return {LossEnum.LOSS: loss,
+                    LossEnum.RECONSTRUCTION: reconstruction_loss,
+                    LossEnum.RECONSTRUCTION_OCCLUSION: reconstruction_occlusion_loss,
+                    LossEnum.KLD: -kld_loss}
+        else:
+            return self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
 
     def sample(self,
                num_samples: int,

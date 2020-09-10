@@ -73,24 +73,5 @@ class OpenCVBaseline(BaseBaselineModel):
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map}
         return output
 
-    def loss_function(self,
-                      config: dict,
-                      output: Dict[Union[ChannelEnum, str], torch.Tensor],
-                      data: Dict[ChannelEnum, torch.Tensor],
-                      **kwargs) -> dict:
-
-        elevation_map = data[ChannelEnum.ELEVATION_MAP]
-        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-
-        if LossEnum.RECONSTRUCTION.value in config.get("normalization", []):
-            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
-                                                                                   input=elevation_map,
-                                                                                   batch=True)
-            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                          input=reconstructed_elevation_map,
-                                                                          batch=True,
-                                                                          norm_consts=ground_truth_norm_consts)
-
-        recons_loss = F.mse_loss(reconstructed_elevation_map, elevation_map)
-
-        return {LossEnum.LOSS: recons_loss, LossEnum.RECONSTRUCTION: recons_loss}
+    def loss_function(self, **kwargs) -> dict:
+        return self.eval_loss_function(**kwargs)

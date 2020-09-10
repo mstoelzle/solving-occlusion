@@ -115,9 +115,13 @@ class Loss(ABC):
         return epoch_loss_dict
 
 
-def reconstruction_occlusion_loss_fct():
-    # TODO: implement
-    pass
+def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
+                                      elevation_map: torch.Tensor,
+                                      binary_occlusion_map: torch.Tensor):
+
+    recons_loss = F.mse_loss(reconstructed_elevation_map[binary_occlusion_map == 1],
+                             elevation_map[binary_occlusion_map == 1])
+    return recons_loss
 
 
 def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
