@@ -67,7 +67,7 @@ class BaseLearning(ABC):
             self.optimizer = optim.Adam(self.model.parameters(),
                                         lr=optimizer_config["lr"],
                                         weight_decay=optimizer_config.get("weight_decay", 0))
-        if optimizer_config["name"] == "SGD":
+        elif optimizer_config["name"] == "SGD":
             self.optimizer = optim.SGD(params=self.model.parameters(),
                                        lr=optimizer_config["lr"],
                                        momentum=optimizer_config["momentum"],
