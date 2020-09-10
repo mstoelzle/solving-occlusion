@@ -1,0 +1,22 @@
+{
+    "name": "synthetic_height_map_dataset_generation",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "synthetic",
+        "terrain_types": ["HEIGHT_MAP"],
+        "elevation_map": {
+            "resolution": 0.04,
+            "size": 64,
+            "height_viewpoint": {"min":  0.2, "max":  0.5}
+        },
+        "num_train_samples": 5000,
+        "num_val_samples": 1000,
+        "num_test_samples": 1000,
+        "save_frequency": 10,
+        "visualization": {
+            "frequency": 1000
+        }
+    },
+    "remote": false,
+    "seeds": [101]
+}
