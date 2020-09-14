@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
-from src.learning.models import BaseVAE
+from .base_vae import BaseVAE
 from src.enums import *
 from src.learning.loss.loss import kld_loss_fct, reconstruction_occlusion_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
