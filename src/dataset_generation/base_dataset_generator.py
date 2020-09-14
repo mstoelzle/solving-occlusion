@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import h5py
+import json
 import numpy as np
 import random
 import pathlib
@@ -17,6 +18,9 @@ class BaseDatasetGenerator(ABC):
 
         self.logdir = create_logdir(f"dataset_generation_{self.type}")
         self.logger = create_base_logger(self.logdir)
+
+        with open(str(self.logdir / "config.json"), "w") as fp:
+            json.dump(self.config, fp, indent=4)
 
         # set seed
         seeds = self.config.get("seeds", [101])

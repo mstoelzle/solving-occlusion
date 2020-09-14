@@ -79,6 +79,9 @@ class ExperimentSet:
         return exp_logdir
 
     def create_set_info(self):
+        with open(str(self.logdir / "config.json"), "w") as fp:
+            json.dump(self.config, fp, indent=4)
+
         with open(self.logdir / "set.json", "w")as fp:
             json.dump({"name": self.name,
                        "user": getpass.getuser(),
