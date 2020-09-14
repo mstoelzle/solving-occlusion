@@ -45,6 +45,12 @@ class Loss(ABC):
         # assert that a loss (total loss) key is available
         assert LossEnum.LOSS in loss_dict
 
+        loss_dict_cuda = loss_dict
+        loss_dict = {}
+        for key, value in loss_dict_cuda.items():
+            if type(value) == torch.Tensor:
+                loss_dict[key] = value.detach().cpu()
+
         # aggregate results
         self.batch_results.append(loss_dict)
         self.batch_sizes.append(batch_size)
