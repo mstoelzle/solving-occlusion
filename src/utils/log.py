@@ -49,7 +49,7 @@ def create_logdir(name: str):
 
 def log_memory_usage(name: str, logger: logging.Logger = None):
     process = psutil.Process(os.getpid())
-    msg = f"Used memory in {name}: {(process.memory_info().rss / 1000000):.1f} MBytes"
+    msg = f"Used memory {name}: {(process.memory_info().rss / 1000000):.1f} MBytes"
 
     if logger is None:
         print(msg)
