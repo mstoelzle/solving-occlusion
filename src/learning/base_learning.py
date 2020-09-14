@@ -11,7 +11,7 @@ from src.enums import *
 from src.learning.models import pick_model
 from src.learning.tasks import Task
 from src.learning.controller import Controller
-from src.utils.log import get_logger
+from src.utils.log import get_logger, log_memory_usage
 from src.utils.digest import TensorboardDigest
 
 logger = get_logger("base_learning")
@@ -86,6 +86,7 @@ class BaseLearning(ABC):
 
         self.validate_epoch(-1)  # validate the model once before any training occurs.
         for epoch in self.controller:
+            log_memory_usage(f"before epoch {epoch}", logger)
             self.train_epoch(epoch)
             self.validate_epoch(epoch)
 
