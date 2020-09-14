@@ -179,12 +179,17 @@ class VQVAE(BaseVAE):
                                                                           binary_occlusion_map)
 
         if self.training:
-            loss = reconstruction_loss + reconstruction_occlusion_loss + output[LossEnum.VQ]
+            vq_loss = output[LossEnum.VQ]
+
+            weights = loss_config.get("train_weights", {})
+            loss = weights.get("reconstruction", 1) * reconstruction_loss + \
+                   weights.get("reconstruction_occlusion", 1) * reconstruction_occlusion_loss + \
+                   weights.get("vq", 1) * vq_loss
 
             return {LossEnum.LOSS: loss,
                     LossEnum.RECONSTRUCTION: reconstruction_loss,
                     LossEnum.RECONSTRUCTION_OCCLUSION: reconstruction_occlusion_loss,
-                    LossEnum.VQ: output[LossEnum.VQ]}
+                    LossEnum.VQ: vq_loss}
         else:
             return self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
 

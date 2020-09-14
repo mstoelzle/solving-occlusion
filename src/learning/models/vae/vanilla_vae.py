@@ -171,8 +171,11 @@ class VanillaVAE(BaseVAE):
         kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
         if self.training:
+            weights = loss_config.get("train_weights", {})
             # kld_weight: Account for the minibatch samples from the dataset
-            loss = reconstruction_loss + reconstruction_occlusion_loss + kld_weight * kld_loss
+            loss = weights.get("reconstruction", 1) * reconstruction_loss + \
+                   weights.get("reconstruction_occlusion", 1) * reconstruction_occlusion_loss + \
+                   weights.get("kld", 1) * kld_weight * kld_loss
 
             return {LossEnum.LOSS: loss,
                     LossEnum.RECONSTRUCTION: reconstruction_loss,

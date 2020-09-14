@@ -22,7 +22,11 @@
             "defaults": {
                 "loss": {
                     "report_frequency": 100,
-                    "normalization": ["reconstruction", "reconstruction_occlusion"]
+                    "normalization": ["reconstruction", "reconstruction_occlusion"],
+                    "train_weights": {
+                        "reconstruction": 1,
+                        "reconstruction_occlusion": 2
+                    }
                 },
                 "domain_defaults": {
                     "batch_size": 32,
