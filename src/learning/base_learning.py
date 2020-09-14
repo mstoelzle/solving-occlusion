@@ -88,7 +88,9 @@ class BaseLearning(ABC):
         for epoch in self.controller:
             log_memory_usage(f"before epoch {epoch}", logger)
             self.train_epoch(epoch)
+            log_memory_usage(f"after train epoch {epoch}", logger)
             self.validate_epoch(epoch)
+            log_memory_usage(f"after epoch {epoch}", logger)
 
         best_dict = self.controller.get_best_state()["model_dict"]
         self.model.load_state_dict(best_dict)
