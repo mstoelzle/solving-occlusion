@@ -2,7 +2,9 @@ import getpass
 import logging
 import datetime
 import json
+import os
 import pathlib
+import psutil
 
 LOGGER_ROOT = "path_learning.experiment"
 
@@ -45,3 +47,11 @@ def create_logdir(name: str):
     return logdir
 
 
+def log_memory_usage(name: str, logger: logging.Logger = None):
+    process = psutil.Process(os.getpid())
+    msg = f"Used memory in {name}: {process.memory_info().rss / 1000000} MBytes"
+
+    if logger is None:
+        print(msg)
+    else:
+        logger.debug(msg)
