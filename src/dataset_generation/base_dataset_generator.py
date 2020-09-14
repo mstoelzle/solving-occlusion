@@ -16,7 +16,7 @@ class BaseDatasetGenerator(ABC):
 
         self.type = self.config["type"]
 
-        self.logdir = create_logdir(f"dataset_generation_{self.type}")
+        self.logdir = create_logdir(f"dataset_generation_{self.config['name']}")
         self.logger = create_base_logger(self.logdir)
 
         with open(str(self.logdir / "config.json"), "w") as fp:

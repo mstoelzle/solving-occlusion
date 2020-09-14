@@ -21,7 +21,7 @@ class ExperimentSet:
         self.experiment_config = self.config["experiment"]
         self.seeds: List[int] = self.config["seeds"]
 
-        self.logdir = create_logdir(self.name)
+        self.logdir = create_logdir(f"learning_{self.name}")
         self.create_set_info()
 
         self.datadir = pathlib.Path("data")
