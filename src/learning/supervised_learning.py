@@ -28,8 +28,7 @@ class SupervisedLearning(BaseLearning):
             for batch_idx, data in enumerate(dataloader):
                 self.optimizer.zero_grad()
 
-                for key, value in data.items():
-                    data[key] = value.to(self.device)
+                data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)
@@ -49,8 +48,7 @@ class SupervisedLearning(BaseLearning):
         with self.task.loss.new_epoch(epoch, "val"), torch.no_grad():
             dataloader = self.task.labeled_dataloader.dataloaders['val']
             for batch_idx, data in enumerate(dataloader):
-                for key, value in data.items():
-                    data[key] = value.to(self.device)
+                data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)

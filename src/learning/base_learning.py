@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 import pathlib
-from typing import Dict, Optional
+from typing import *
 
 import torch
 from torch import optim, nn
@@ -115,8 +115,7 @@ class BaseLearning(ABC):
                 raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
             for batch_idx, data in enumerate(dataloader):
-                for key, value in data.items():
-                    data[key] = value.to(self.device)
+                data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)
@@ -127,3 +126,9 @@ class BaseLearning(ABC):
                                                      dataset_length=len(dataloader.dataset))
                 loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
+
+    def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
+            -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        for key, value in data.items():
+            data[key] = value.to(self.device)
+        return data
