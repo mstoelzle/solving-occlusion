@@ -8,17 +8,25 @@ from src.enums.terrain_type_enum import TerrainTypeEnum
 
 
 @dataclass
-class RobotPosition:
+class Position:
     x: float = 0.
     y: float = 0.
     yaw: float = 0.
 
 
 @dataclass
+class ElevationMap:
+    terrain_origin_offset: Position  # offset of center of elevation map grid from terrain origin
+    ground_truth_elevation_map: np.array
+    occluded_elevation_map: np.array
+
+
+@dataclass
 class Robot:
+    robot_position: Position  # elevation map relative position of robot
     height_viewpoint: float
-    robot_position: RobotPosition
-    elevation_map: np.array
+
+    elevation_map: ElevationMap
 
 
 class SyntheticDatasetGenerator(BaseDatasetGenerator):
@@ -40,6 +48,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         self.terrain_width = self.config["elevation_map"]["size"]
         self.terrain_height = self.config["elevation_map"]["size"]
         self.terrain_resolution = self.config["elevation_map"]["resolution"]
+
+        self.robot_position_config = self.config.get("robot_position", {})
 
         self.reset()
 
@@ -76,13 +86,14 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 # allocate the memory for the elevation map
                 elevation_map = np.zeros((self.terrain_height, self.terrain_width))
 
-                # you can select the center position and yaw angle of the height map
-                yaw_angle = np.random.uniform(0, 2 * np.pi)
                 # TODO: maybe we need to sample the center x and center y positions
-                robot_position = RobotPosition(0., 0., yaw_angle)
+                # TODO: activate rotation of terrain origin again
+                # yaw = np.random.uniform(0, 2 * np.pi)
+                terrain_origin_offset = Position(0., 0., yaw=0)
 
                 # sample the height map from the generated terrains
-                self.elevation_map_generator.get_height_map(robot_position.x, robot_position.y, robot_position.yaw,
+                self.elevation_map_generator.get_height_map(terrain_origin_offset.x, terrain_origin_offset.y,
+                                                            terrain_origin_offset.yaw,
                                                             self.terrain_height, self.terrain_width,
                                                             self.terrain_resolution,
                                                             elevation_map)
@@ -95,9 +106,45 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 else:
                     raise ValueError
 
-                robot = Robot(height_viewpoint, robot_position, elevation_map)
+                # TODO: implement yaw view angle later
+                robot_yaw = 0
 
-                occluded_elevation_map = self.trace_occlusion(robot)
+                if self.robot_position_config == "center":
+                    robot_x = 0
+                    robot_y = 0
+                else:
+                    robot_x_config = self.robot_position_config.get("x", 0)
+                    if type(robot_x_config) == float or type(robot_x_config) == int:
+                        robot_x = robot_x_config
+                    elif type(robot_x_config) == dict:
+                        delta_x = robot_x_config["max"] - robot_x_config["min"]
+                        assert delta_x >= 0
+                        sign_x = np.random.choice([-1, 1])
+                        robot_x = sign_x * (robot_x_config["min"] + np.random.uniform(0, delta_x))
+                    else:
+                        raise NotImplementedError
+
+                    robot_y_config = self.robot_position_config.get("y", 0)
+                    if type(robot_y_config) == float or type(robot_y_config) == int:
+                        robot_y = robot_y_config
+                    elif type(robot_y_config) == dict:
+                        delta_y = robot_y_config["max"] - robot_y_config["min"]
+                        assert delta_y >= 0
+                        sign_y = np.random.choice([-1, 1])
+                        robot_y = sign_y * (robot_y_config["min"] + np.random.uniform(0, delta_y))
+                    else:
+                        raise NotImplementedError
+
+                # print("robot position rel", robot_x, robot_y)
+
+                robot_position = Position(x=robot_x, y=robot_y, yaw=robot_yaw)
+                elevation_map_object = ElevationMap(terrain_origin_offset=terrain_origin_offset,
+                                                    ground_truth_elevation_map=elevation_map,
+                                                    occluded_elevation_map=None)
+                robot = Robot(robot_position=robot_position, height_viewpoint=height_viewpoint,
+                              elevation_map=elevation_map_object)
+
+                occluded_elevation_map = self.raycast_occlusion(robot)
 
                 if not np.isnan(np.sum(occluded_elevation_map)):
                     # we skip the elevation map if we do not find any occlusion
@@ -117,10 +164,14 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     if self.config["visualization"] is True \
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
                         fig, axes = plt.subplots(nrows=1, ncols=2)
-                        mat = axes[0].matshow(elevation_map)
-                        axes[0].plot([self.terrain_height / 2], [self.terrain_width / 2], marker="*", color="red")
-                        mat = axes[1].matshow(occluded_elevation_map)
-                        axes[1].plot([self.terrain_height / 2], [self.terrain_width / 2], marker="*", color="red")
+                        robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
+                        robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
+                        # matshow plots x and y swapped
+                        mat = axes[0].matshow(np.swapaxes(occluded_elevation_map, 0, 1))
+                        axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+                        # matshow plots x and y swapped
+                        mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1))
+                        axes[1].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
 
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()
@@ -128,26 +179,35 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 progress_bar.next()
             progress_bar.finish()
 
-    def trace_occlusion(self, robot: Robot) -> np.array:
+    def raycast_occlusion(self, robot: Robot) -> np.array:
         """
         Trace occlusion starting from (0,0) to each cell
         If the ray to a cell is occluded, we insert a NaN for that cell
         """
 
-        elevation_map = robot.elevation_map
+        elevation_map = robot.elevation_map.ground_truth_elevation_map
         occluded_height_map = np.copy(elevation_map)
 
-        robot_i = int(elevation_map.shape[0] / 2)
-        robot_j = int(elevation_map.shape[1] / 2)
+        center_i = int(elevation_map.shape[0] / 2)
+        center_j = int(elevation_map.shape[1] / 2)
+
+        robot_relative_position = np.array([[robot.robot_position.x, robot.robot_position.y]])
+        robot_world_position = self.body_to_world_coordinates(robot_relative_position,
+                                                              body_position=robot.elevation_map.terrain_origin_offset)
+        robot_elevation_scan = np.zeros(shape=(1,))
+        self.elevation_map_generator.get_height_scan(robot_world_position, robot_elevation_scan)
+        robot_elevation = robot_elevation_scan.item()
+
+        camera_elevation = robot_elevation + robot.height_viewpoint
 
         for i in range(elevation_map.shape[0]):
             for j in range(elevation_map.shape[1]):
-                # relative coordinates from position of rover
-                relative_x = (i - robot_i) * self.terrain_resolution
-                relative_y = (j - robot_j) * self.terrain_resolution
-                relative_z = elevation_map[i][j] - (robot.height_viewpoint + elevation_map[robot_i][robot_j])
+                # relative vector from ray-casted pixel to robot camera
+                relative_x = (i - center_i) * self.terrain_resolution - robot.robot_position.x
+                relative_y = (j - center_j) * self.terrain_resolution - robot.robot_position.y
+                relative_z = elevation_map[i][j] - camera_elevation
 
-                # print("position", relative_x, relative_y, relative_z)
+                # print("relative position", relative_x, relative_y, relative_z)
 
                 # roll angle to target cell
                 theta = np.arctan2(relative_z, np.sqrt(relative_x ** 2 + relative_y ** 2))
@@ -156,46 +216,50 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 # print("psi", psi / np.pi * 180)
 
-                ray_x = np.arange(start=0, stop=0.99*np.sqrt(relative_x ** 2 + relative_y ** 2),
+                ray_x = np.arange(start=0, stop=0.99 * np.sqrt(relative_x ** 2 + relative_y ** 2),
                                   step=self.terrain_resolution)
 
-                ray_z = robot.height_viewpoint + elevation_map[robot_i][robot_j] + np.tan(theta) * ray_x
+                ray_z = camera_elevation + np.tan(theta) * ray_x
                 ray = np.stack((ray_x, ray_z), axis=1)
 
-                ray_trace_input_1d = np.zeros([ray_x.shape[0], 2])
-                ray_trace_input_1d[:, 0] = ray_x
-                ray_trace_world = self.robot_to_world_coordinates(ray_trace_input_1d, robot.robot_position,
-                                                                  additional_yaw=-psi)
+                ray_cast_input_1d = np.zeros([ray_x.shape[0], 2])
+                ray_cast_input_1d[:, 0] = ray_x
 
-                ray_trace_world_scan = np.zeros([ray_x.shape[0], 3])
-                ray_trace_world_scan[:, 0:2] = ray_trace_world
+                ray_trace_in_elevation_map = self.body_to_world_coordinates(ray_cast_input_1d, Position(0, 0, -psi))
+                ray_trace_in_elevation_map = ray_trace_in_elevation_map + np.array([[robot.robot_position.x,
+                                                                                     robot.robot_position.y]])
+                ray_trace_world = self.body_to_world_coordinates(ray_trace_in_elevation_map,
+                                                                 robot.elevation_map.terrain_origin_offset)
+
+                ray_cast_world_scan = np.zeros([ray_x.shape[0], 3])
+                ray_cast_world_scan[:, 0:2] = ray_trace_world
                 scan = np.zeros([ray_x.shape[0]])
                 self.elevation_map_generator.get_height_scan(ray_trace_world, scan)
-                ray_trace_world_scan[:, 2] = scan
+                ray_cast_world_scan[:, 2] = scan
 
-                occlusion_condition = ray_trace_world_scan[:, 2] <= ray[:, 1]
+                occlusion_condition = ray_cast_world_scan[:, 2] <= ray[:, 1]
 
-                if np.sum(occlusion_condition) < ray_trace_world_scan.shape[0]:
+                if np.sum(occlusion_condition) < ray_cast_world_scan.shape[0]:
                     occluded_height_map[i][j] = np.NaN
 
                     # fig = plt.figure()
                     # ax = fig.add_subplot(111, projection='3d')
-                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray_trace_world_scan[:, 2])
+                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray_cast_world_scan[:, 2])
                     # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
                     # plt.show()
 
         return occluded_height_map
 
     @staticmethod
-    def robot_to_world_coordinates(body_coordinates: np.array, robot_position: RobotPosition,
-                                   additional_yaw: float) -> np.array:
+    def body_to_world_coordinates(body_coordinates: np.array, body_position: Position,
+                                  additional_yaw: float = 0) -> np.array:
         # robot_coordinates: Nx2 array
         world_coordinates = np.copy(body_coordinates)
 
-        yaw = robot_position.yaw + additional_yaw
-        world_coordinates[:, 0] = (body_coordinates[:, 0] - robot_position.x) * np.cos(yaw) \
-                                  + (body_coordinates[:, 1] - robot_position.y) * np.sin(yaw)
-        world_coordinates[:, 1] = -(body_coordinates[:, 0] - robot_position.x) * np.sin(yaw) \
-                                  + (body_coordinates[:, 1] - robot_position.y) * np.cos(yaw)
+        yaw = body_position.yaw + additional_yaw
+        world_coordinates[:, 0] = (body_coordinates[:, 0] - body_position.x) * np.cos(yaw) \
+                                  + (body_coordinates[:, 1] - body_position.y) * np.sin(yaw)
+        world_coordinates[:, 1] = -(body_coordinates[:, 0] - body_position.x) * np.sin(yaw) \
+                                  + (body_coordinates[:, 1] - body_position.y) * np.cos(yaw)
 
         return world_coordinates
