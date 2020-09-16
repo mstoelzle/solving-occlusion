@@ -11,12 +11,13 @@ from src.utils.log import create_base_logger, create_logdir
 
 
 class BaseDatasetGenerator(ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, name: str, **kwargs):
         self.config = kwargs
 
+        self.name = name
         self.type = self.config["type"]
 
-        self.logdir = create_logdir(f"dataset_generation_{self.config['name']}")
+        self.logdir = create_logdir(f"dataset_generation_{self.name}")
         self.logger = create_base_logger(self.logdir)
 
         with open(str(self.logdir / "config.json"), "w") as fp:
