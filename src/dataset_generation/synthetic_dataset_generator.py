@@ -88,8 +88,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 # TODO: maybe we need to sample the center x and center y positions
                 # TODO: activate rotation of terrain origin again
-                # yaw = np.random.uniform(0, 2 * np.pi)
-                terrain_origin_offset = Position(0., 0., yaw=0)
+                terrain_yaw = np.random.uniform(0, 2 * np.pi)
+                # print("terrain_yaw", terrain_yaw)
+                terrain_origin_offset = Position(0., 0., yaw=terrain_yaw)
 
                 # sample the height map from the generated terrains
                 self.elevation_map_generator.get_height_map(terrain_origin_offset.x, terrain_origin_offset.y,
@@ -167,7 +168,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
                         robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
                         # matshow plots x and y swapped
-                        mat = axes[0].matshow(np.swapaxes(occluded_elevation_map, 0, 1))
+                        mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))
                         axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
                         # matshow plots x and y swapped
                         mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1))
