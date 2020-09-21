@@ -123,13 +123,30 @@ class Loss(ABC):
 
         return epoch_loss_dict
 
+    def aggregate_mean_loss_dict(self, loss_dict: dict) -> dict:
+        aggregated_loss_dict = {}
+        for key, value in loss_dict.items():
+            if type(value) == torch.Tensor:
+                aggregated_loss_dict[key] = value.mean()
+
+        return aggregated_loss_dict
+
 
 def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
                                       elevation_map: torch.Tensor,
-                                      binary_occlusion_map: torch.Tensor):
-
-    recons_loss = F.mse_loss(reconstructed_elevation_map[binary_occlusion_map == 1],
-                             elevation_map[binary_occlusion_map == 1])
+                                      binary_occlusion_map: torch.Tensor,
+                                      **kwargs):
+    if kwargs.get("reduction", 'mean') == 'none':
+        batch_size = elevation_map.size(0)
+        recons_loss = elevation_map.new_zeros(size=(batch_size,))
+        for i in range(batch_size):
+            recons_loss[i] = F.mse_loss(reconstructed_elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
+                                        elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
+                                        reduction="mean")
+    else:
+        recons_loss = F.mse_loss(reconstructed_elevation_map[binary_occlusion_map == 1],
+                                 elevation_map[binary_occlusion_map == 1],
+                                 **kwargs)
     return recons_loss
 
 

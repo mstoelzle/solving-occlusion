@@ -136,7 +136,8 @@ class BaseLearning(ABC):
         pass
 
     def test(self):
-        test_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test")
+        test_data_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test/data")
+        test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test/loss")
 
         self.model.eval()
         with self.task.loss.new_epoch(0, "test"), torch.no_grad():
@@ -145,20 +146,26 @@ class BaseLearning(ABC):
             else:
                 raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
+            start_idx = 0
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
-                self.add_batch_data_to_hdf5_results(test_hdf5_group, data, batch_idx, len(dataloader.dataset))
+                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, batch_idx, len(dataloader.dataset))
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)
-                self.add_batch_data_to_hdf5_results(test_hdf5_group, output, batch_idx, len(dataloader.dataset))
+                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, batch_idx, len(dataloader.dataset))
 
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
-                                                     dataset_length=len(dataloader.dataset))
-                loss = loss_dict[LossEnum.LOSS]
-                self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
+                                                     dataset_length=len(dataloader.dataset),
+                                                     reduction="none")
+                aggregated_loss_dict = self.task.loss.aggregate_mean_loss_dict(loss_dict)
+                loss = aggregated_loss_dict[LossEnum.LOSS]
+                self.task.loss(batch_size=batch_size, loss_dict=aggregated_loss_dict)
+                self.add_batch_data_to_hdf5_results(test_loss_hdf5_group, loss_dict, start_idx, len(dataloader.dataset))
+
+                start_idx += batch_size
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:
@@ -166,8 +173,9 @@ class BaseLearning(ABC):
             data[key] = value.to(self.device)
         return data
 
-    def add_batch_data_to_hdf5_results(self, hdf5_group: h5py.Group, batch_data: dict,
-                                       batch_idx: int, total_length: int):
+    @staticmethod
+    def add_batch_data_to_hdf5_results(hdf5_group: h5py.Group, batch_data: dict,
+                                       start_idx: int, total_length: int):
         for key, value in batch_data.items():
             if issubclass(type(key), Enum):
                 key = key.value
@@ -185,4 +193,4 @@ class BaseLearning(ABC):
             else:
                 hdf5_dataset = hdf5_group[key]
 
-            hdf5_dataset[batch_idx:batch_idx+value_shape[0], ...] = value
+            hdf5_dataset[start_idx:start_idx + value_shape[0], ...] = value

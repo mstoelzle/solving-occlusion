@@ -173,10 +173,11 @@ class VQVAE(BaseVAE):
                                                                           batch=True,
                                                                           norm_consts=ground_truth_norm_consts)
 
-        reconstruction_loss = F.mse_loss(reconstructed_elevation_map, elevation_map)
+        reconstruction_loss = F.mse_loss(reconstructed_elevation_map, elevation_map, **kwargs)
         reconstruction_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
                                                                           elevation_map,
-                                                                          binary_occlusion_map)
+                                                                          binary_occlusion_map,
+                                                                          **kwargs)
 
         if self.training:
             vq_loss = output[LossEnum.VQ]
