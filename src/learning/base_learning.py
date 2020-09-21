@@ -23,7 +23,8 @@ logger = get_logger("base_learning")
 
 
 class BaseLearning(ABC):
-    def __init__(self, logdir: pathlib.Path, device: torch.device, logger: logging.Logger, **kwargs):
+    def __init__(self, logdir: pathlib.Path, device: torch.device, logger: logging.Logger,
+                 results_hdf5_path: pathlib.Path, **kwargs):
         super().__init__()
 
         self.logger = logger
@@ -43,7 +44,8 @@ class BaseLearning(ABC):
         else:
             self.digest = None
 
-        self.results_hdf5_file: Optional[h5py.File] = None
+        self.results_hdf5_path: pathlib.Path = results_hdf5_path
+        self.results_hdf5_file: h5py.File = h5py.File(str(self.results_hdf5_path), 'w')
 
     def reset(self):
         self.task = None
@@ -95,7 +97,6 @@ class BaseLearning(ABC):
             raise NotImplementedError("Pick a valid optimizer")
 
     def __enter__(self):
-        self.results_hdf5_file: h5py.File = h5py.File(str(self.logdir / "learning_results.hdf5"), 'w')
         self.results_hdf5_file.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -136,8 +137,9 @@ class BaseLearning(ABC):
         pass
 
     def test(self):
-        test_data_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test/data")
-        test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test/loss")
+        hdf5_group_prefix = f"/task_{self.task.uid}/test"
+        test_data_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/data")
+        test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/loss")
 
         self.model.eval()
         with self.task.loss.new_epoch(0, "test"), torch.no_grad():

@@ -43,6 +43,7 @@ class ExperimentSet:
                 experiment: Experiment = Experiment(exp_logdir, self.datadir, self.name, self.device,
                                                     **self.experiment_config)
                 experiment.run()
+                experiment.plot()
 
     @staticmethod
     def set_random_seeds(seed: int) -> None:

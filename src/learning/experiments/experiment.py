@@ -7,6 +7,7 @@ import torch
 from src.enums.task_type_enum import TaskTypeEnum
 from src.learning.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
+from src.learning.visualization.results_plotter import ResultsPlotter
 from src.utils import hash_dict, measure_runtime
 from src.utils.log import get_logger
 from src.utils.sheet_uploader import SheetUploader
@@ -18,6 +19,7 @@ class Experiment:
 
         self.logdir: pathlib.Path = logdir
         self.datadir: pathlib.Path = datadir
+        self.results_hdf5_path: pathlib.Path = self.logdir / "learning_results.hdf5"
 
         self.logger = get_logger("experiment")
         self.set_name = set_name
@@ -28,7 +30,10 @@ class Experiment:
 
         self.task_path: TaskPath = TaskPath(self.logdir, self.datadir, **kwargs["task_path"])
 
-        self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device)
+        self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device,
+                                                      results_hdf5_path=self.results_hdf5_path)
+
+        self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path)
 
     def run(self):
         with measure_runtime(self.logdir):
@@ -58,6 +63,9 @@ class Experiment:
             exc = traceback.format_exc()
             self.logger.exception(exc)
             self.logger.critical("Could not upload latest results. Likely connection problem to Google sheets.")
+
+    def plot(self):
+        self.results_plotter.plot()
 
     def save_exit_code(self, code: int):
         with open(str(self.logdir / "exit_code.json"), "w") as fp:
