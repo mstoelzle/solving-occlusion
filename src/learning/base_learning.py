@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from enum import Enum
 import h5py
 import logging
 import pathlib
@@ -26,6 +27,7 @@ class BaseLearning(ABC):
         super().__init__()
 
         self.logger = logger
+        self.logdir = logdir
 
         self.task: Optional[Task] = None
 
@@ -37,9 +39,11 @@ class BaseLearning(ABC):
 
         digest_config: Dict = kwargs.get("digest", {})
         if len(digest_config) > 0:
-            self.digest = TensorboardDigest(logdir=logdir, **digest_config)
+            self.digest = TensorboardDigest(logdir=self.logdir, **digest_config)
         else:
             self.digest = None
+
+        self.results_hdf5_file: Optional[h5py.File] = None
 
     def reset(self):
         self.task = None
@@ -132,6 +136,8 @@ class BaseLearning(ABC):
         pass
 
     def test(self):
+        test_hdf5_group = self.results_hdf5_file.create_group(f"/task_{self.task.uid}/test")
+
         self.model.eval()
         with self.task.loss.new_epoch(0, "test"), torch.no_grad():
             if self.task.type == TaskTypeEnum.SUPERVISED_LEARNING:
@@ -141,9 +147,11 @@ class BaseLearning(ABC):
 
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
+                self.add_batch_data_to_hdf5_results(test_hdf5_group, data, batch_idx, len(dataloader.dataset))
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)
+                self.add_batch_data_to_hdf5_results(test_hdf5_group, output, batch_idx, len(dataloader.dataset))
 
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
@@ -157,3 +165,24 @@ class BaseLearning(ABC):
         for key, value in data.items():
             data[key] = value.to(self.device)
         return data
+
+    def add_batch_data_to_hdf5_results(self, hdf5_group: h5py.Group, batch_data: dict,
+                                       batch_idx: int, total_length: int):
+        for key, value in batch_data.items():
+            if issubclass(type(key), Enum):
+                key = key.value
+
+            if type(value) == torch.Tensor:
+                value = value.detach().cpu()
+                value_shape = list(value.size())
+            else:
+                value_shape = list(value.shape)
+
+            if key not in hdf5_group:
+                max_value_shape = value_shape.copy()
+                max_value_shape[0] = total_length
+                hdf5_dataset = hdf5_group.create_dataset(key, shape=max_value_shape)
+            else:
+                hdf5_dataset = hdf5_group[key]
+
+            hdf5_dataset[batch_idx:batch_idx+value_shape[0], ...] = value
