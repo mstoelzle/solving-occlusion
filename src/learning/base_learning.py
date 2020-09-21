@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 
 from src.enums import *
 from src.learning.models import pick_model
+from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.tasks import Task
 from src.learning.controller import Controller
 from src.utils.log import get_logger, log_memory_usage
@@ -59,7 +60,12 @@ class BaseLearning(ABC):
             model = pick_model(**self.task.config["model"])
 
         self.model = model.to(self.device)
-        self.pick_optimizer()
+
+        # we do not need an optimizer for our baseline models with traditional algorithms
+        if not (issubclass(type(model), BaseBaselineModel)):
+            self.pick_optimizer()
+        else:
+            self.optimizer = None
 
     def pick_optimizer(self):
         optimizer_config = self.task.config["optimizer"]
@@ -85,14 +91,16 @@ class BaseLearning(ABC):
         logger.info(f"Running {self.task.type} task {self.task.name}")
 
         self.validate_epoch(-1)  # validate the model once before any training occurs.
-        for epoch in self.controller:
-            log_memory_usage(f"before epoch {epoch}", logger)
-            self.train_epoch(epoch)
-            self.validate_epoch(epoch)
 
-        best_dict = self.controller.get_best_state()["model_dict"]
-        self.model.load_state_dict(best_dict)
-        self.task.save_model(self.model)
+        if self.optimizer is not None:
+            for epoch in self.controller:
+                log_memory_usage(f"before epoch {epoch}", logger)
+                self.train_epoch(epoch)
+                self.validate_epoch(epoch)
+
+            best_dict = self.controller.get_best_state()["model_dict"]
+            self.model.load_state_dict(best_dict)
+            self.task.save_model(self.model)
 
         self.test()
 
