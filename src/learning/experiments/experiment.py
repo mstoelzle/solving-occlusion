@@ -38,7 +38,8 @@ class Experiment:
 
                 with measure_runtime(task.logdir):
                     if task.type == TaskTypeEnum.SUPERVISED_LEARNING:
-                        task.output_model = self.supervised_learning.train(task)
+                        with self.supervised_learning:
+                            task.output_model = self.supervised_learning.train(task)
                         self.supervised_learning.reset()
                     else:
                         raise NotImplementedError(f"The following task type is not implemented: {task.type}")

@@ -2,7 +2,6 @@ import torch
 
 from .base_learning import BaseLearning
 from src.enums import *
-from src.learning.loss.loss import Loss
 from src.learning.tasks import Task
 from ..utils.log import get_logger
 
@@ -11,11 +10,10 @@ logger = get_logger("supervised_learning")
 
 class SupervisedLearning(BaseLearning):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(logger=logger, **kwargs)
 
     def train(self, task: Task):
         self.set_task(task)
-        self.task.loss = Loss(self.task.logdir, **self.task.config["loss"])
 
         self.set_model(task.model_to_train)
         return self.train_epoches()

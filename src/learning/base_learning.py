@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
+import h5py
+import logging
 import pathlib
 from typing import *
 
@@ -8,10 +10,11 @@ from torch import optim, nn
 from torch.utils.data import DataLoader
 
 from src.enums import *
+from src.learning.controller import Controller
+from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.tasks import Task
-from src.learning.controller import Controller
 from src.utils.log import get_logger, log_memory_usage
 from src.utils.digest import TensorboardDigest
 
@@ -19,11 +22,15 @@ logger = get_logger("base_learning")
 
 
 class BaseLearning(ABC):
-    def __init__(self, logdir: pathlib.Path, device: torch.device, **kwargs):
+    def __init__(self, logdir: pathlib.Path, device: torch.device, logger: logging.Logger, **kwargs):
+        super().__init__()
+
+        self.logger = logger
+
         self.task: Optional[Task] = None
 
         # Is overwritten in set_model_to_device()
-        self.device: torch.device = torch.device("cpu:0")
+        self.device: torch.device = device
 
         self.model = None
         self.optimizer = None
@@ -42,18 +49,20 @@ class BaseLearning(ABC):
 
     def set_task(self, task: Task):
         self.task = task
-        self.controller = Controller(**self.task.config.get("controller", {}))
 
-    def set_model(self, model: Optional[torch.nn.Module] = None):
+        self.controller = Controller(**self.task.config.get("controller", {}))
+        self.task.loss = Loss(self.task.logdir, **self.task.config["loss"])
+
+    def set_model(self, model: Union[str, Optional[torch.nn.Module]] = None):
         if model is None or model == "pretrained":
             model_config = deepcopy(self.task.config["model"])
 
             if model is None:
-                logger.warning(f"An untrained model is used for task {self.task.uid}")
+                self.logger.warning(f"An untrained model is used for task {self.task.uid}")
                 # we need to manually set the use_pretrained parameter to false just for this model config
                 model_config["use_pretrained"] = False
             elif model == "pretrained":
-                logger.warning(f"A pretrained model is used for task {self.task.uid}")
+                self.logger.warning(f"A pretrained model is used for task {self.task.uid}")
                 # we need to manually set the use_pretrained parameter to true just for this model config
                 model_config["use_pretrained"] = True
 
@@ -62,7 +71,7 @@ class BaseLearning(ABC):
         self.model = model.to(self.device)
 
         # we do not need an optimizer for our baseline models with traditional algorithms
-        if not (issubclass(type(model), BaseBaselineModel)):
+        if not (issubclass(type(self.model), BaseBaselineModel)):
             self.pick_optimizer()
         else:
             self.optimizer = None
@@ -81,6 +90,14 @@ class BaseLearning(ABC):
         else:
             raise NotImplementedError("Pick a valid optimizer")
 
+    def __enter__(self):
+        self.results_hdf5_file: h5py.File = h5py.File(str(self.logdir / "learning_results.hdf5"), 'w')
+        self.results_hdf5_file.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # export scalar data to JSON for external processing
+        self.results_hdf5_file.__exit__()
+
     @abstractmethod
     def train(self, task: Task):
         pass
@@ -88,13 +105,13 @@ class BaseLearning(ABC):
     def train_epoches(self):
         self.controller.reset()
 
-        logger.info(f"Running {self.task.type} task {self.task.name}")
+        self.logger.info(f"Running {self.task.type} task {self.task.name}")
 
         self.validate_epoch(-1)  # validate the model once before any training occurs.
 
         if self.optimizer is not None:
             for epoch in self.controller:
-                log_memory_usage(f"before epoch {epoch}", logger)
+                log_memory_usage(f"before epoch {epoch}", self.logger)
                 self.train_epoch(epoch)
                 self.validate_epoch(epoch)
 
