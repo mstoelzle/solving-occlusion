@@ -1,8 +1,9 @@
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pathlib
-import seaborn as sb
+import seaborn as sns
 import torch
 from typing import *
 
@@ -10,6 +11,7 @@ from src.enums import *
 from src.utils.log import get_logger
 
 logger = get_logger("results_plotter")
+sns.set(style="whitegrid")
 
 
 class ResultsPlotter:
@@ -34,39 +36,86 @@ class ResultsPlotter:
 
                 self.plot_task(task_uid, "test", task_hdf5_group)
 
-    def plot_task(self, task_uid: int, purpose: str, task_hdf5_group: h5py.Group, ):
+    def plot_task(self, task_uid: int, purpose: str, task_hdf5_group: h5py.Group):
+        logdir = self.logdir / f"task_{task_uid}"
+
         logger.info(f"Plot task {task_uid}")
         if self.config.get("sample_frequency", 0) > 0:
-            samples_dir = self.logdir / f"task_{task_uid}" / f"{purpose}_samples"
-            samples_dir.mkdir(exist_ok=True, parents=True)
-            data_hdf5_group = task_hdf5_group[f"{purpose}/data"]
-            num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value])/self.config["sample_frequency"])
-            for sample_idx in range(num_samples):
-                idx = sample_idx * self.config["sample_frequency"]
-                params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
-                elevation_map = data_hdf5_group[ChannelEnum.ELEVATION_MAP.value][idx, ...]
-                reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
-                occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
+            self.save_samples(task_hdf5_group["test"], logdir / f"{purpose}_samples")
 
-                fig, axes = plt.subplots(nrows=1, ncols=3)
-                axes[0].set_title("Ground-truth")
-                mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))  # matshow plots x and y swapped
-                axes[1].set_title("Reconstruction")
-                mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1))  # matshow plots x and y swapped
-                axes[2].set_title("Occlusion")
-                mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1))  # matshow plots x and y swapped
+        if self.config.get("correlation_occluded_area", False) is True:
+            self.plot_correlation_area_occluded(task_hdf5_group["test"], logdir / "analysis")
 
-                terrain_resolution = params[0]
-                robot_position_x = params[1]
-                robot_position_y = params[2]
-                robot_plot_x = [elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution]
-                robot_plot_y = [elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution]
-                for ax in axes:
-                    ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+    def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
+        logdir.mkdir(exist_ok=True, parents=True)
+        data_hdf5_group = purpose_hdf5_group[f"data"]
+        num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value])/self.config["sample_frequency"])
+        for sample_idx in range(num_samples):
+            idx = sample_idx * self.config["sample_frequency"]
+            params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
+            elevation_map = data_hdf5_group[ChannelEnum.ELEVATION_MAP.value][idx, ...]
+            reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
+            occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
 
-                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
+            fig, axes = plt.subplots(nrows=1, ncols=3)
+            axes[0].set_title("Ground-truth")
+            mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))  # matshow plots x and y swapped
+            axes[1].set_title("Reconstruction")
+            mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1))  # matshow plots x and y swapped
+            axes[2].set_title("Occlusion")
+            mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1))  # matshow plots x and y swapped
 
-                plt.draw()
-                plt.savefig(str(samples_dir / f"sample_{idx}.pdf"))
-                if self.remote is not True:
-                    plt.show()
+            terrain_resolution = params[0]
+            robot_position_x = params[1]
+            robot_position_y = params[2]
+            robot_plot_x = [elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution]
+            robot_plot_y = [elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution]
+            for ax in axes:
+                ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+
+            fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
+
+            plt.draw()
+            plt.savefig(str(logdir / f"sample_{idx}.pdf"))
+            if self.remote is not True:
+                plt.show()
+
+    def plot_correlation_area_occluded(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
+        logdir.mkdir(exist_ok=True, parents=True)
+        loss_hdf5_group = purpose_hdf5_group["loss"]
+
+        # percentage of entire area which is occluded
+        binary_occlusion_map = purpose_hdf5_group["data"][ChannelEnum.BINARY_OCCLUSION_MAP.value]
+        shape_map = binary_occlusion_map.shape
+        occluded_area = np.sum(binary_occlusion_map, axis=(1, 2)) / (shape_map[1] * shape_map[2])
+
+        bins = [0.01, 0.05, 0.10, 0.2, 1]
+        box_plot_y = np.zeros(shape=occluded_area.shape)
+        bin_decs = []
+        lower_bound = 0
+        idx = 0
+        for higher_bound in bins:
+            selector = np.logical_and(lower_bound <= occluded_area,
+                                      occluded_area <= higher_bound)
+
+            loss_for_bin = np.array(loss_hdf5_group[LossEnum.RECONSTRUCTION_OCCLUSION.value])
+            loss_for_bin = loss_for_bin[selector]
+            box_plot_y[idx:idx + loss_for_bin.shape[0]] = loss_for_bin
+
+            bin_description = f"{lower_bound*100}-{higher_bound*100}\nN={loss_for_bin.shape[0]}"
+            [bin_decs.append(bin_description) for i in range(0, loss_for_bin.shape[0])]
+
+            idx += loss_for_bin.shape[0]
+            lower_bound = higher_bound
+
+        df = pd.DataFrame({"area occluded [%]": bin_decs, "reconstruction occlusion loss (MSE)": box_plot_y})
+
+        plt.figure()
+        ax = sns.boxplot(x="area occluded [%]", y="reconstruction occlusion loss (MSE)", data=df)
+        plt.title("Correlation area-occluded and loss")
+
+        plt.tight_layout()
+        plt.draw()
+        plt.savefig(str(logdir / f"correlation_area_occluded.pdf"))
+        if self.remote is not True:
+            plt.show()
