@@ -14,10 +14,14 @@ class BaseDataset(ABC):
     def __init__(self, purpose: str):
         self.purpose = purpose
 
-    def prepare_item(self, elevation_map: np.array,
-                     occluded_elevation_map: np.array) -> Dict[ChannelEnum, torch.Tensor]:
-        elevation_map = torch.tensor(elevation_map)
-        occluded_elevation_map = torch.tensor(occluded_elevation_map)
-        output = {ChannelEnum.ELEVATION_MAP: elevation_map,
-                  ChannelEnum.OCCLUDED_ELEVATION_MAP: occluded_elevation_map}
+    def prepare_item(self, **kwargs) -> Dict[ChannelEnum, torch.Tensor]:
+        output = {}
+        for key, value in kwargs.items():
+            if type(key) == str:
+                key = ChannelEnum(key)
+
+            value = torch.tensor(value)
+
+            output[key] = value
+
         return output

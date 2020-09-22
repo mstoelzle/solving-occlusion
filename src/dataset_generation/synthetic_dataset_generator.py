@@ -54,6 +54,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         self.reset()
 
     def reset(self):
+        self.params = []
         self.elevation_maps = []
         self.occluded_elevation_maps = []
 
@@ -65,6 +66,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
             dataset_shape = (0, self.terrain_height, self.terrain_width)
             dataset_maxshape = (num_samples, self.terrain_height, self.terrain_width)
+            params_dataset = hdf5_group.create_dataset(name="params", shape=(0, 4),
+                                                       maxshape=(num_samples, 4))
             elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
             occluded_elevation_map_dataset = hdf5_group.create_dataset(name="occluded_elevation_map",
@@ -152,11 +155,14 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     continue
 
                 num_accepted_samples += 1
+                self.params.append(np.array([self.terrain_resolution, robot_position.x,
+                                             robot_position.y, robot_position.yaw]))
                 self.elevation_maps.append(elevation_map)
                 self.occluded_elevation_maps.append(occluded_elevation_map)
 
                 if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
                         num_accepted_samples >= num_samples:
+                    self.extend_dataset(params_dataset, self.params)
                     self.extend_dataset(elevation_map_dataset, self.elevation_maps)
                     self.extend_dataset(occluded_elevation_map_dataset, self.occluded_elevation_maps)
                     self.reset()

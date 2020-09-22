@@ -43,6 +43,7 @@ class ResultsPlotter:
             num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value])/self.config["sample_frequency"])
             for sample_idx in range(num_samples):
                 idx = sample_idx * self.config["sample_frequency"]
+                params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
                 elevation_map = data_hdf5_group[ChannelEnum.ELEVATION_MAP.value][idx, ...]
                 reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
                 occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
@@ -52,8 +53,16 @@ class ResultsPlotter:
                 mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))  # matshow plots x and y swapped
                 axes[1].set_title("Reconstruction")
                 mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1))  # matshow plots x and y swapped
-                axes[2].set_title("Occluded")
+                axes[2].set_title("Occlusion")
                 mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1))  # matshow plots x and y swapped
+
+                terrain_resolution = params[0]
+                robot_position_x = params[1]
+                robot_position_y = params[2]
+                robot_plot_x = [elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution]
+                robot_plot_y = [elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution]
+                for ax in axes:
+                    ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
 
                 fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
 
