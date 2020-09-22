@@ -151,10 +151,10 @@ class BaseLearning(ABC):
             start_idx = 0
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
-                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx, len(dataloader.dataset))
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
 
                 output = self.model(data)
+                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx, len(dataloader.dataset))
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, start_idx, len(dataloader.dataset))
 
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],

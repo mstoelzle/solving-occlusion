@@ -14,6 +14,9 @@ class OpenCVBaseline(BaseBaselineModel):
     def __init__(self, name: str, **kwargs):
         super().__init__(**kwargs)
 
+        self.in_channels = []
+        self.out_channels = [ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+
         if name == "NavierStokes":
             self.inpainting_method = cv.INPAINT_NS
         elif name == "Telea":
@@ -27,11 +30,14 @@ class OpenCVBaseline(BaseBaselineModel):
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        # we need to call this to generate the binary occlusion map into the data dict
+        _ = self.assemble_input(data)
+
         reconstructed_elevation_map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP].clone()
 
         for idx in range(reconstructed_elevation_map.size(0)):
             map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP][idx, ...].clone()
-            binary_occlusion_map = self.create_binary_occlusion_map(map)
+            binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP][idx, ...]
 
             min = torch.min(map[~torch.isnan(map)])
             max = torch.max(map[~torch.isnan(map)])

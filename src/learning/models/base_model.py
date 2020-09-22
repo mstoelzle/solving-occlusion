@@ -25,13 +25,13 @@ class BaseModel(ABC, nn.Module):
         pass
 
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
+        data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+
         input = None
         norm_consts = {}
         for channel_idx, in_channel in enumerate(self.in_channels):
             if in_channel in data:
                 channel_data = data[in_channel]
-            elif in_channel == ChannelEnum.BINARY_OCCLUSION_MAP:
-                channel_data = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
             else:
                 raise NotImplementedError
 
