@@ -62,7 +62,8 @@
                     "dataloaders": {"labeled_dataloader":  "target"}
                 }
             ]
-        }
+        },
+        "visualization": {"sample_frequency":  10}
     },
     "logging": {
         "upload": false
