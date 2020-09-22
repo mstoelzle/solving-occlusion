@@ -49,7 +49,7 @@ class ResultsPlotter:
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
         data_hdf5_group = purpose_hdf5_group[f"data"]
-        num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value])/self.config["sample_frequency"])
+        num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value]) / self.config["sample_frequency"])
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
@@ -64,31 +64,44 @@ class ResultsPlotter:
             cmap = plt.get_cmap("viridis")
 
             fig, axes = plt.subplots(nrows=1, ncols=3)
-            axes[0].set_title("Ground-truth")
+            axes = np.expand_dims(axes, axis=0)
+
+            axes[0, 0].set_title("Ground-truth")
             # matshow plots x and y swapped
-            mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
-            axes[1].set_title("Reconstruction")
+            mat = axes[0, 0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
-            mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
-            axes[2].set_title("Occlusion")
+            mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            axes[0, 2].set_title("Occlusion")
             # matshow plots x and y swapped
-            mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            mat = axes[0, 2].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.015)
 
             terrain_resolution = params[0]
             robot_position_x = params[1]
             robot_position_y = params[2]
             robot_plot_x = [elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution]
             robot_plot_y = [elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution]
-            for ax in axes:
+            for i, ax in enumerate(axes.reshape(-1)):
                 ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
 
                 # Hide grid lines
                 ax.grid(False)
 
-            fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
-
             plt.draw()
             plt.savefig(str(logdir / f"sample_{idx}.pdf"))
+            if self.remote is not True:
+                plt.show()
+
+            fig, ax = plt.subplots()
+            ax.set_title("Reconstruction error")
+            # matshow plots x and y swapped
+            mat = ax.matshow(np.swapaxes(reconstructed_elevation_map - elevation_map, 0, 1), cmap=cmap)
+            ax.grid(False)
+            fig.colorbar(mat, ax=ax)
+
+            plt.draw()
+            plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
 
@@ -114,7 +127,7 @@ class ResultsPlotter:
             loss_for_bin = loss_for_bin[selector]
             box_plot_y[idx:idx + loss_for_bin.shape[0]] = loss_for_bin
 
-            bin_description = f"{lower_bound*100}-{higher_bound*100}\nN={loss_for_bin.shape[0]}"
+            bin_description = f"{lower_bound * 100}-{higher_bound * 100}\nN={loss_for_bin.shape[0]}"
             [bin_decs.append(bin_description) for i in range(0, loss_for_bin.shape[0])]
 
             idx += loss_for_bin.shape[0]
