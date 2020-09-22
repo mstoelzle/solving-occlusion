@@ -14,7 +14,8 @@ from src.utils.sheet_uploader import SheetUploader
 
 
 class Experiment:
-    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, set_name: str, device: torch.device, **kwargs):
+    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, set_name: str, device: torch.device,
+                 remote: bool = False, **kwargs):
         self.config = kwargs
 
         self.logdir: pathlib.Path = logdir
@@ -33,7 +34,9 @@ class Experiment:
         self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device,
                                                       results_hdf5_path=self.results_hdf5_path)
 
-        self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path)
+        self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path,
+                                              logdir=self.logdir,
+                                              **self.config.get("visualization", {}))
 
     def run(self):
         with measure_runtime(self.logdir):

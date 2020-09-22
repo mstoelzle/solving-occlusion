@@ -20,6 +20,7 @@ class ExperimentSet:
         self.name = self.config["name"]
         self.experiment_config = self.config["experiment"]
         self.seeds: List[int] = self.config["seeds"]
+        self.remote: bool = self.config.get("remote", False)
 
         self.logdir = create_logdir(f"learning_{self.name}")
         self.create_set_info()
@@ -41,7 +42,7 @@ class ExperimentSet:
                 self.set_random_seeds(seed)
                 exp_logdir: pathlib.Path = self.create_experiment_logdir(seed)
                 experiment: Experiment = Experiment(exp_logdir, self.datadir, self.name, self.device,
-                                                    **self.experiment_config)
+                                                    remote=self.remote, **self.experiment_config)
                 experiment.run()
                 experiment.plot()
 
