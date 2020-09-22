@@ -1,0 +1,27 @@
+{
+    "name": "synthetic_standard_stairs_dataset_generation",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "synthetic",
+        "terrain_types": ["STANDARD_STAIRS"],
+        "elevation_map": {
+            "resolution": 0.04,
+            "size": 64,
+            "height_viewpoint": {"min":  0.2, "max":  0.3}
+        },
+        "robot_position": {
+            "x": {"min":  0, "max":  1},
+            "y": {"min":  0, "max":  1},
+            "yaw": {"min":  0, "max":  360}
+        },
+        "num_train_samples": 100,
+        "num_val_samples": 100,
+        "num_test_samples": 100,
+        "save_frequency": 10,
+        "visualization": {
+            "frequency": 100
+        }
+    },
+    "remote": false,
+    "seeds": [101]
+}
