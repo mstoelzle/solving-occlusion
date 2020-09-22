@@ -57,13 +57,22 @@ class ResultsPlotter:
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
 
+            non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
+
+            vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
+            vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
+            cmap = plt.get_cmap("viridis")
+
             fig, axes = plt.subplots(nrows=1, ncols=3)
             axes[0].set_title("Ground-truth")
-            mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))  # matshow plots x and y swapped
+            # matshow plots x and y swapped
+            mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[1].set_title("Reconstruction")
-            mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1))  # matshow plots x and y swapped
+            # matshow plots x and y swapped
+            mat = axes[1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[2].set_title("Occlusion")
-            mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1))  # matshow plots x and y swapped
+            # matshow plots x and y swapped
+            mat = axes[2].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
 
             terrain_resolution = params[0]
             robot_position_x = params[1]

@@ -173,11 +173,22 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         fig, axes = plt.subplots(nrows=1, ncols=2)
                         robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
                         robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
+
+                        non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
+
+                        vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
+                        vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
+                        cmap = plt.get_cmap("viridis")
+
                         # matshow plots x and y swapped
-                        mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1))
+                        axes[0].set_title("Ground-truth")
+                        mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax,
+                                              cmap=cmap)
                         axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
                         # matshow plots x and y swapped
-                        mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1))
+                        axes[1].set_title("Occlusion")
+                        mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax,
+                                              cmap=cmap)
                         axes[1].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
 
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
