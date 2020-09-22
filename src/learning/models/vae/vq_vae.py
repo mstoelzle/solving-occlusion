@@ -5,7 +5,7 @@ from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from src.learning.models import BaseVAE
 from src.enums import *
-from src.learning.loss.loss import kld_loss_fct, reconstruction_occlusion_loss_fct
+from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -173,7 +173,7 @@ class VQVAE(BaseVAE):
                                                                           batch=True,
                                                                           norm_consts=ground_truth_norm_consts)
 
-        reconstruction_loss = F.mse_loss(reconstructed_elevation_map, elevation_map, **kwargs)
+        reconstruction_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
         reconstruction_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
                                                                           elevation_map,
                                                                           binary_occlusion_map,

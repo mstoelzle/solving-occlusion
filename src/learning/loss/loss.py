@@ -132,6 +132,9 @@ class Loss(ABC):
         return aggregated_loss_dict
 
 
+def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
+    return F.mse_loss(input, target, size_average, reduce, reduction)
+
 def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
                                       elevation_map: torch.Tensor,
                                       binary_occlusion_map: torch.Tensor,
@@ -140,13 +143,11 @@ def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
         batch_size = elevation_map.size(0)
         recons_loss = elevation_map.new_zeros(size=(batch_size,))
         for i in range(batch_size):
-            recons_loss[i] = F.mse_loss(reconstructed_elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
-                                        elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
-                                        reduction="mean")
+            recons_loss[i] = mse_loss_fct(reconstructed_elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
+                                          elevation_map[i, ...][binary_occlusion_map[i, ...] == 1], reduction="mean")
     else:
-        recons_loss = F.mse_loss(reconstructed_elevation_map[binary_occlusion_map == 1],
-                                 elevation_map[binary_occlusion_map == 1],
-                                 **kwargs)
+        recons_loss = mse_loss_fct(reconstructed_elevation_map[binary_occlusion_map == 1],
+                                   elevation_map[binary_occlusion_map == 1], **kwargs)
     return recons_loss
 
 
