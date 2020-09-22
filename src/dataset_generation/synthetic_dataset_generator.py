@@ -171,8 +171,6 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     if self.config["visualization"] is True \
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
                         fig, axes = plt.subplots(nrows=1, ncols=2)
-                        robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
-                        robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
 
                         non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
@@ -184,12 +182,18 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         axes[0].set_title("Ground-truth")
                         mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax,
                                               cmap=cmap)
-                        axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
                         # matshow plots x and y swapped
                         axes[1].set_title("Occlusion")
                         mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax,
                                               cmap=cmap)
-                        axes[1].plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+
+                        robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
+                        robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
+                        for ax in axes:
+                            ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+
+                            # Hide grid lines
+                            ax.grid(False)
 
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
                         plt.show()

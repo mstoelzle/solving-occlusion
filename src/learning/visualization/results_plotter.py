@@ -82,6 +82,9 @@ class ResultsPlotter:
             for ax in axes:
                 ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
 
+                # Hide grid lines
+                ax.grid(False)
+
             fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
 
             plt.draw()
