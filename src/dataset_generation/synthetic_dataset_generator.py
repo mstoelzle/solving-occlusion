@@ -108,7 +108,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 if type(height_viewpoint_config) is float:
                     height_viewpoint = height_viewpoint_config
                 elif type(height_viewpoint_config) is dict:
-                    height_viewpoint = np.random.uniform(0.3, 0.8)
+                    height_viewpoint = np.random.uniform(height_viewpoint_config["min"],
+                                                         height_viewpoint_config["max"])
                 else:
                     raise ValueError
 
