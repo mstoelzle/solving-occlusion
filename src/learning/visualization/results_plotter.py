@@ -91,7 +91,7 @@ class ResultsPlotter:
                 ax.grid(False)
 
             plt.draw()
-            plt.savefig(str(logdir / f"sample_{idx}.pdf"))
+            plt.savefig(str(logdir / f"sample_2d_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
 
