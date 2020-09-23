@@ -96,8 +96,9 @@ class ResultsPlotter:
             fig, ax = plt.subplots()
             ax.set_title("Reconstruction error")
             # matshow plots x and y swapped
-            mat = ax.matshow(np.swapaxes(reconstructed_elevation_map - elevation_map, 0, 1), cmap=cmap)
-            ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+            mat = ax.matshow(np.swapaxes(np.abs(reconstructed_elevation_map - elevation_map), 0, 1),
+                             cmap=plt.get_cmap("RdYlGn_r"))
+            ax.plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
             ax.grid(False)
             fig.colorbar(mat, ax=ax)
 
