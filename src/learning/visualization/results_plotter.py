@@ -59,6 +59,7 @@ class ResultsPlotter:
 
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
+            # 2D
             vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
             vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
             cmap = plt.get_cmap("viridis")
@@ -90,6 +91,39 @@ class ResultsPlotter:
 
             plt.draw()
             plt.savefig(str(logdir / f"sample_{idx}.pdf"))
+            if self.remote is not True:
+                plt.show()
+
+            # 3D
+            fig = plt.figure()
+            plt.clf()
+            axes = []
+            num_cols = 3
+
+            x_3d = np.arange(start=-int(elevation_map.shape[0]/2),
+                             stop=int(elevation_map.shape[0]/2)) * terrain_resolution
+            y_3d = np.arange(start=-int(elevation_map.shape[1]/2),
+                             stop=int(elevation_map.shape[1]/2)) * terrain_resolution
+            x_3d, y_3d = np.meshgrid(x_3d, y_3d)
+
+            axes.append(fig.add_subplot(100+num_cols*10+1, projection="3d"))
+            axes[0].set_title("Ground-truth")
+            axes[0].scatter(x_3d, y_3d, elevation_map)
+            axes.append(fig.add_subplot(100+num_cols*10+2, projection="3d"))
+            axes[1].set_title("Reconstruction")
+            axes[1].scatter(x_3d, y_3d, reconstructed_elevation_map)
+            axes.append(fig.add_subplot(100+num_cols*10+3, projection="3d"))
+            axes[2].set_title("Occlusion")
+            axes[2].scatter(x_3d, y_3d, occluded_elevation_map)
+
+            for i, ax in enumerate(axes):
+                ax.plot(robot_position_x, robot_position_y, marker="*", color="red")
+
+                # Hide grid lines
+                ax.grid(False)
+
+            plt.draw()
+            plt.savefig(str(logdir / f"sample_3d_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
 
