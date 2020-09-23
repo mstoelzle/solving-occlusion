@@ -11,6 +11,7 @@ from src.enums.terrain_type_enum import TerrainTypeEnum
 class Position:
     x: float = 0.
     y: float = 0.
+    z: float = 0.
     yaw: float = 0.
 
 
@@ -66,8 +67,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
             dataset_shape = (0, self.terrain_height, self.terrain_width)
             dataset_maxshape = (num_samples, self.terrain_height, self.terrain_width)
-            params_dataset = hdf5_group.create_dataset(name="params", shape=(0, 4),
-                                                       maxshape=(num_samples, 4))
+            params_dim = 5
+            params_dataset = hdf5_group.create_dataset(name="params", shape=(0, params_dim),
+                                                       maxshape=(num_samples, params_dim))
             elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
             occluded_elevation_map_dataset = hdf5_group.create_dataset(name="occluded_elevation_map",
@@ -93,7 +95,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 # TODO: activate rotation of terrain origin again
                 terrain_yaw = np.random.uniform(0, 2 * np.pi)
                 # print("terrain_yaw", terrain_yaw)
-                terrain_origin_offset = Position(0., 0., yaw=terrain_yaw)
+                terrain_origin_offset = Position(x=0., y=0., z=0., yaw=terrain_yaw)
 
                 # sample the height map from the generated terrains
                 self.elevation_map_generator.get_height_map(terrain_origin_offset.x, terrain_origin_offset.y,
@@ -156,7 +158,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 num_accepted_samples += 1
                 self.params.append(np.array([self.terrain_resolution, robot_position.x,
-                                             robot_position.y, robot_position.yaw]))
+                                             robot_position.y, robot_position.z, robot_position.yaw]))
                 self.elevation_maps.append(elevation_map)
                 self.occluded_elevation_maps.append(occluded_elevation_map)
 
@@ -187,10 +189,10 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax,
                                               cmap=cmap)
 
-                        robot_plot_x = [self.terrain_height / 2 + robot_position.x / self.terrain_resolution]
-                        robot_plot_y = [self.terrain_width / 2 + robot_position.y / self.terrain_resolution]
+                        robot_plot_x = self.terrain_height / 2 + robot_position.x / self.terrain_resolution
+                        robot_plot_y = self.terrain_width / 2 + robot_position.y / self.terrain_resolution
                         for ax in axes:
-                            ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+                            ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
 
                             # Hide grid lines
                             ax.grid(False)
@@ -218,9 +220,10 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                                               body_position=robot.elevation_map.terrain_origin_offset)
         robot_elevation_scan = np.zeros(shape=(1,))
         self.elevation_map_generator.get_height_scan(robot_world_position, robot_elevation_scan)
-        robot_elevation = robot_elevation_scan.item()
+        robot_planar_elevation = robot_elevation_scan.item()
 
-        camera_elevation = robot_elevation + robot.height_viewpoint
+        camera_elevation = robot_planar_elevation + robot.height_viewpoint
+        robot.robot_position.z = camera_elevation
 
         for i in range(elevation_map.shape[0]):
             for j in range(elevation_map.shape[1]):
@@ -247,7 +250,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 ray_cast_input_1d = np.zeros([ray_x.shape[0], 2])
                 ray_cast_input_1d[:, 0] = ray_x
 
-                ray_trace_in_elevation_map = self.body_to_world_coordinates(ray_cast_input_1d, Position(0, 0, -psi))
+                ray_trace_in_elevation_map = self.body_to_world_coordinates(ray_cast_input_1d,
+                                                                            Position(x=0, y=0, yaw=-psi))
                 ray_trace_in_elevation_map = ray_trace_in_elevation_map + np.array([[robot.robot_position.x,
                                                                                      robot.robot_position.y]])
                 ray_trace_world = self.body_to_world_coordinates(ray_trace_in_elevation_map,
