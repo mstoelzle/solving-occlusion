@@ -81,10 +81,11 @@ class ResultsPlotter:
             terrain_resolution = params[0]
             robot_position_x = params[1]
             robot_position_y = params[2]
-            robot_plot_x = [elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution]
-            robot_plot_y = [elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution]
+            robot_position_z = params[3]
+            robot_plot_x = int(elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
+            robot_plot_y = int(elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
             for i, ax in enumerate(axes.reshape(-1)):
-                ax.plot(robot_plot_x, robot_plot_y, marker="*", color="red")
+                ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
 
                 # Hide grid lines
                 ax.grid(False)
@@ -95,7 +96,7 @@ class ResultsPlotter:
                 plt.show()
 
             # 3D
-            fig = plt.figure()
+            fig = plt.figure(figsize=[1*6.4, 3*4.8])
             plt.clf()
             axes = []
             num_cols = 3
@@ -108,16 +109,21 @@ class ResultsPlotter:
 
             axes.append(fig.add_subplot(100+num_cols*10+1, projection="3d"))
             axes[0].set_title("Ground-truth")
-            axes[0].scatter(x_3d, y_3d, elevation_map)
+            axes[0].plot_surface(x_3d, y_3d, elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             axes.append(fig.add_subplot(100+num_cols*10+2, projection="3d"))
             axes[1].set_title("Reconstruction")
-            axes[1].scatter(x_3d, y_3d, reconstructed_elevation_map)
+            axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             axes.append(fig.add_subplot(100+num_cols*10+3, projection="3d"))
             axes[2].set_title("Occlusion")
-            axes[2].scatter(x_3d, y_3d, occluded_elevation_map)
+            axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
+            fig.colorbar(mat, ax=axes, fraction=0.015)
 
             for i, ax in enumerate(axes):
-                ax.plot(robot_position_x, robot_position_y, marker="*", color="red")
+                ax.scatter(robot_position_x, robot_position_y,
+                           robot_position_z, marker="*", color="red")
+                ax.set_xlabel("x [m]")
+                ax.set_ylabel("y [m]")
+                ax.set_zlabel("z [m]")
 
                 # Hide grid lines
                 ax.grid(False)
