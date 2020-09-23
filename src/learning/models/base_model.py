@@ -88,4 +88,11 @@ class BaseModel(ABC, nn.Module):
                                                                   binary_occlusion_map,
                                                                   **kwargs)
 
-        return {LossEnum.LOSS: recons_occlusion_loss, LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss}
+        recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
+                                                                      elevation_map,
+                                                                      ~binary_occlusion_map,
+                                                                      **kwargs)
+
+        return {LossEnum.LOSS: recons_occlusion_loss,
+                LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
+                LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss}
