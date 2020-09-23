@@ -64,7 +64,7 @@ class ResultsPlotter:
             vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
             cmap = plt.get_cmap("viridis")
 
-            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=[2.5*6.4, 1*4.8], dpi=300)
+            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=[2 * 6.4, 1 * 4.8])
             axes = np.expand_dims(axes, axis=0)
 
             axes[0, 0].set_title("Ground-truth")
@@ -96,24 +96,24 @@ class ResultsPlotter:
                 plt.show()
 
             # 3D
-            fig = plt.figure(figsize=[2.5*6.4, 1*4.8], dpi=300)
+            fig = plt.figure(figsize=[2 * 6.4, 1 * 4.8])
             plt.clf()
             axes = []
             num_cols = 3
 
-            x_3d = np.arange(start=-int(elevation_map.shape[0]/2),
-                             stop=int(elevation_map.shape[0]/2)) * terrain_resolution
-            y_3d = np.arange(start=-int(elevation_map.shape[1]/2),
-                             stop=int(elevation_map.shape[1]/2)) * terrain_resolution
+            x_3d = np.arange(start=-int(elevation_map.shape[0] / 2),
+                             stop=int(elevation_map.shape[0] / 2)) * terrain_resolution
+            y_3d = np.arange(start=-int(elevation_map.shape[1] / 2),
+                             stop=int(elevation_map.shape[1] / 2)) * terrain_resolution
             x_3d, y_3d = np.meshgrid(x_3d, y_3d)
 
-            axes.append(fig.add_subplot(100+num_cols*10+1, projection="3d"))
+            axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
             axes[0].set_title("Ground-truth")
             axes[0].plot_surface(x_3d, y_3d, elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
-            axes.append(fig.add_subplot(100+num_cols*10+2, projection="3d"))
+            axes.append(fig.add_subplot(100 + num_cols * 10 + 2, projection="3d"))
             axes[1].set_title("Reconstruction")
             axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
-            axes.append(fig.add_subplot(100+num_cols*10+3, projection="3d"))
+            axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
             axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             fig.colorbar(mat, ax=axes, fraction=0.015)
@@ -133,14 +133,27 @@ class ResultsPlotter:
             if self.remote is not True:
                 plt.show()
 
-            fig, ax = plt.subplots(dpi=300)
-            ax.set_title("Reconstruction error")
+            fig = plt.figure(figsize=[1.75 * 6.4, 1.25 * 4.8])
+            plt.clf()
+            axes = []
+
+            axes.append(fig.add_subplot(121))
+            axes[0].set_title("Reconstruction error")
             # matshow plots x and y swapped
-            mat = ax.matshow(np.swapaxes(np.abs(reconstructed_elevation_map - elevation_map), 0, 1),
-                             cmap=plt.get_cmap("RdYlGn_r"))
-            ax.plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-            ax.grid(False)
-            fig.colorbar(mat, ax=ax)
+            mat = axes[0].matshow(np.swapaxes(np.abs(reconstructed_elevation_map - elevation_map), 0, 1),
+                                  cmap=plt.get_cmap("RdYlGn_r"))
+            axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+            axes[0].grid(False)
+
+            axes.append(fig.add_subplot(122, projection="3d"))
+            axes[1].set_title("Reconstruction error")
+            axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - elevation_map),
+                                 cmap=plt.get_cmap("RdYlGn_r"))
+            axes[1].set_xlabel("x [m]")
+            axes[1].set_ylabel("y [m]")
+            axes[1].set_zlabel("z [m]")
+
+            fig.colorbar(mat, ax=axes, fraction=0.021)
 
             plt.draw()
             plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))

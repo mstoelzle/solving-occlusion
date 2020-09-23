@@ -173,7 +173,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
-                        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2.5*6.4, 1*4.8], dpi=300)
+                        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2*6.4, 1*4.8])
 
                         non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
