@@ -64,7 +64,7 @@ class ResultsPlotter:
             vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
             cmap = plt.get_cmap("viridis")
 
-            fig, axes = plt.subplots(nrows=1, ncols=3)
+            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=[2.5*6.4, 1*4.8], dpi=300)
             axes = np.expand_dims(axes, axis=0)
 
             axes[0, 0].set_title("Ground-truth")
@@ -96,7 +96,7 @@ class ResultsPlotter:
                 plt.show()
 
             # 3D
-            fig = plt.figure(figsize=[1*6.4, 3*4.8])
+            fig = plt.figure(figsize=[2.5*6.4, 1*4.8], dpi=300)
             plt.clf()
             axes = []
             num_cols = 3
@@ -119,8 +119,8 @@ class ResultsPlotter:
             fig.colorbar(mat, ax=axes, fraction=0.015)
 
             for i, ax in enumerate(axes):
-                ax.scatter(robot_position_x, robot_position_y,
-                           robot_position_z, marker="*", color="red")
+                ax.scatter([robot_position_x], [robot_position_y],
+                           [robot_position_z], marker="*", color="red")
                 ax.set_xlabel("x [m]")
                 ax.set_ylabel("y [m]")
                 ax.set_zlabel("z [m]")
@@ -133,7 +133,7 @@ class ResultsPlotter:
             if self.remote is not True:
                 plt.show()
 
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(dpi=300)
             ax.set_title("Reconstruction error")
             # matshow plots x and y swapped
             mat = ax.matshow(np.swapaxes(np.abs(reconstructed_elevation_map - elevation_map), 0, 1),
