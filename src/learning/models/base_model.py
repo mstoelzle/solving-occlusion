@@ -64,6 +64,30 @@ class BaseModel(ABC, nn.Module):
 
         return binary_occlusion_map
 
+    def denormalize_output(self, output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                           norm_consts: dict) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+
+        if self.input_normalization:
+            denormalized_output = {}
+            for key, value in output.items():
+                if self.input_normalization is True and key == ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
+                    if ChannelEnum.ELEVATION_MAP in norm_consts:
+                        denormalize_norm_const = norm_consts[ChannelEnum.ELEVATION_MAP]
+                    elif ChannelEnum.OCCLUDED_ELEVATION_MAP in norm_consts:
+                        denormalize_norm_const = norm_consts[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+                    else:
+                        raise ValueError
+
+                    denormalized_output[key] = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                                                                              input=value, batch=True,
+                                                                              norm_consts=denormalize_norm_const)
+                else:
+                    denormalized_output[key] = value
+        else:
+            denormalized_output = output
+
+        return denormalized_output
+
     def eval_loss_function(self,
                            loss_config: dict,
                            output: Dict[Union[ChannelEnum, str], torch.Tensor],

@@ -142,15 +142,10 @@ class VQVAE(BaseVAE):
 
         reconstructed_elevation_map = self.decode(quantized_inputs).squeeze()
 
-        if self.input_normalization:
-            reconstructed_elevation_map = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                         input=reconstructed_elevation_map,
-                                                                         batch=True,
-                                                                         norm_consts=norm_consts[
-                                                                             ChannelEnum.OCCLUDED_ELEVATION_MAP])
-
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   LossEnum.VQ: vq_loss}
+
+        output = self.denormalize_output(output, norm_consts)
 
         return output
 

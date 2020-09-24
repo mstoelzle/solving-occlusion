@@ -122,16 +122,11 @@ class VanillaVAE(BaseVAE):
 
         reconstructed_elevation_map = self.decode(z).squeeze()
 
-        if self.input_normalization:
-            reconstructed_elevation_map = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                         input=reconstructed_elevation_map,
-                                                                         batch=True,
-                                                                         norm_consts=norm_consts[
-                                                                             ChannelEnum.OCCLUDED_ELEVATION_MAP])
-
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   "mu": mu,
                   "log_var": log_var}
+
+        output = self.denormalize_output(output, norm_consts)
 
         return output
 
