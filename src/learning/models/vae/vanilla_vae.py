@@ -184,8 +184,8 @@ class VanillaVAE(BaseVAE):
             if kld_weight is None:
                 kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
 
-            loss = weights.get("reconstruction", 1) * reconstruction_loss + \
-                   weights.get("reconstruction_occlusion", 1) * reconstruction_occlusion_loss + \
+            loss = weights.get(LossEnum.RECONSTRUCTION.value, 1) * reconstruction_loss + \
+                   weights.get(LossEnum.RECONSTRUCTION_OCCLUSION, 1) * reconstruction_occlusion_loss + \
                    kld_weight * kld_loss
 
             return {LossEnum.LOSS: loss,

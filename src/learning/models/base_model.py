@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from typing import *
 
 from src.enums import *
-from src.learning.loss.loss import reconstruction_occlusion_loss_fct
+from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -30,7 +30,8 @@ class BaseModel(ABC, nn.Module):
         pass
 
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
-        data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
+            data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
         input = None
         norm_consts = {}
@@ -112,6 +113,8 @@ class BaseModel(ABC, nn.Module):
 
         binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
+        recons_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
+
         recons_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
                                                                   elevation_map,
                                                                   binary_occlusion_map,
@@ -122,6 +125,15 @@ class BaseModel(ABC, nn.Module):
                                                                       ~binary_occlusion_map,
                                                                       **kwargs)
 
-        return {LossEnum.LOSS: recons_occlusion_loss,
+        weights = loss_config.get("eval_weights", {})
+        recons_weight = loss_config.get(LossEnum.RECONSTRUCTION.value, 0)
+        recons_occlusion_weight = loss_config.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+        recons_non_occlusion_weight = loss_config.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 0)
+
+        loss = recons_weight * recons_loss + recons_occlusion_weight * recons_occlusion_loss + \
+               recons_non_occlusion_weight * recons_non_occlusion_loss
+
+        return {LossEnum.LOSS: loss,
+                LossEnum.RECONSTRUCTION: recons_loss,
                 LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
                 LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss}

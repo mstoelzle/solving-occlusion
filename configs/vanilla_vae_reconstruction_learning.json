@@ -11,6 +11,10 @@
                         "reconstruction": 1,
                         "kld": 1,
                         "reconstruction_occlusion": 0
+                    },
+                    "eval_weights": {
+                        "reconstruction": 1,
+                        "reconstruction_occlusion": 0
                     }
                 },
                 "domain_defaults": {
