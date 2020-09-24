@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -20,6 +21,8 @@ class VanillaVAE(BaseVAE):
         if hidden_dims is None:
             hidden_dims = [32, 64, 128, 256, 512]
 
+        self.hidden_dims = hidden_dims.copy()
+
         # Build Encoder
         in_channels = len(self.in_channels)
         for h_dim in hidden_dims:
@@ -33,13 +36,20 @@ class VanillaVAE(BaseVAE):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1] * 4, self.latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * 4, self.latent_dim)
+
+        sample_data = torch.zeros(size=(1, len(self.in_channels), self.input_dim[0], self.input_dim[1]))
+        sample_encoding = self.encoder(sample_data)
+        sample_flattened = torch.flatten(sample_encoding, start_dim=1)
+
+        encoding_output_dim = sample_flattened.size(1)
+
+        self.fc_mu = nn.Linear(encoding_output_dim, self.latent_dim)
+        self.fc_var = nn.Linear(encoding_output_dim, self.latent_dim)
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(self.latent_dim, hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(self.latent_dim, encoding_output_dim)
 
         hidden_dims.reverse()
 
@@ -48,9 +58,7 @@ class VanillaVAE(BaseVAE):
                 nn.Sequential(
                     nn.ConvTranspose2d(hidden_dims[i],
                                        hidden_dims[i + 1],
-                                       kernel_size=3,
-                                       stride=2,
-                                       padding=1,
+                                       kernel_size=3, stride=2, padding=1,
                                        output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
                     nn.LeakyReLU())
@@ -96,7 +104,8 @@ class VanillaVAE(BaseVAE):
         :return: (Tensor) [B x C x H x W]
         """
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 2, 2)
+        resized_height = int(np.sqrt(result.size(1) / self.hidden_dims[-1]))
+        result = result.view(result.size(0), self.hidden_dims[-1], resized_height, -1)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
