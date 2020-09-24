@@ -11,6 +11,11 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 
 class VanillaVAE(BaseVAE):
+    """
+    VanillaVAE
+    Implementation strongly inspired by:
+    https://github.com/AntixK/PyTorch-VAE/blob/master/models/vanilla_vae.py
+    """
 
     def __init__(self,
                  hidden_dims: List = None,
@@ -150,10 +155,6 @@ class VanillaVAE(BaseVAE):
         KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
         """
 
-        kld_weight = self.config.get("kld_weight", None)
-        if kld_weight is None:
-            kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
-
         elevation_map = data[ChannelEnum.ELEVATION_MAP]
         reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
         binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
@@ -177,15 +178,20 @@ class VanillaVAE(BaseVAE):
 
         if self.training:
             weights = loss_config.get("train_weights", {})
+
             # kld_weight: Account for the minibatch samples from the dataset
+            kld_weight = weights.get("kld", None)
+            if kld_weight is None:
+                kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
+
             loss = weights.get("reconstruction", 1) * reconstruction_loss + \
                    weights.get("reconstruction_occlusion", 1) * reconstruction_occlusion_loss + \
-                   weights.get("kld", 1) * kld_weight * kld_loss
+                   kld_weight * kld_loss
 
             return {LossEnum.LOSS: loss,
                     LossEnum.RECONSTRUCTION: reconstruction_loss,
                     LossEnum.RECONSTRUCTION_OCCLUSION: reconstruction_occlusion_loss,
-                    LossEnum.KLD: -kld_loss}
+                    LossEnum.KLD: kld_loss}
         else:
             return self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
 
