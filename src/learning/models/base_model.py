@@ -126,9 +126,9 @@ class BaseModel(ABC, nn.Module):
                                                                       **kwargs)
 
         weights = loss_config.get("eval_weights", {})
-        recons_weight = loss_config.get(LossEnum.RECONSTRUCTION.value, 0)
-        recons_occlusion_weight = loss_config.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
-        recons_non_occlusion_weight = loss_config.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 0)
+        recons_weight = weights.get(LossEnum.RECONSTRUCTION.value, 0)
+        recons_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+        recons_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 0)
 
         loss = recons_weight * recons_loss + recons_occlusion_weight * recons_occlusion_loss + \
                recons_non_occlusion_weight * recons_non_occlusion_loss
