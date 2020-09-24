@@ -3,11 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pathlib
-import os
 import seaborn as sns
-import sys
 import torch
 from typing import *
+import warnings
 
 from src.enums import *
 from src.utils.log import get_logger
@@ -118,9 +117,9 @@ class ResultsPlotter:
             axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
             # the np.NaNs in the occluded elevation maps give us these warnings:
-            sys.stdout = open(os.devnull, 'w')
+            warnings.filterwarnings("ignore", category=UserWarning)
             axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
-            sys.stdout = sys.__stdout__
+            warnings.filterwarnings("default", category=UserWarning)
             fig.colorbar(mat, ax=axes, fraction=0.015)
 
             for i, ax in enumerate(axes):
