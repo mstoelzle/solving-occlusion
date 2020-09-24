@@ -1,5 +1,5 @@
 {
-    "name": "vanilla_vae_learning",
+    "name": "vanilla_vae_reconstruction_learning",
     "cuda": true,
     "experiment": {
         "task_path": {
