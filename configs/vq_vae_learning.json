@@ -17,6 +17,7 @@
                 },
                 "model": {
                     "name": "VQVAE",
+                    "input_dim": [64, 64],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "embedding_dim": 64,

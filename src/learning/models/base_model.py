@@ -10,9 +10,14 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 
 class BaseModel(ABC, nn.Module):
-    def __init__(self, **kwargs):
+    def __init__(self, in_channels: List[str], out_channels: List[str], **kwargs):
         super().__init__()
         self.config = kwargs
+
+        self.input_dim: List = self.config["input_dim"]
+
+        self.in_channels = [ChannelEnum(in_channel) for in_channel in in_channels]
+        self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
 
         self.input_normalization: bool = self.config.get("input_normalization", True)
 

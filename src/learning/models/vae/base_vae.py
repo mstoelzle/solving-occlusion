@@ -8,11 +8,9 @@ from src.enums.channel_enum import ChannelEnum
 
 
 class BaseVAE(BaseModel, ABC):
-    def __init__(self, in_channels: List[str], out_channels: List[str], latent_dim: int, **kwargs) -> None:
+    def __init__(self, latent_dim: int, **kwargs) -> None:
         super(BaseVAE, self).__init__(**kwargs)
 
-        self.in_channels = [ChannelEnum(in_channel) for in_channel in in_channels]
-        self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
         self.latent_dim = latent_dim
 
     def encode(self, input: torch.Tensor) -> Dict:

@@ -43,6 +43,7 @@
                 "model": {
                     "name": "VanillaVAE",
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "input_dim": [64, 64],
                     "out_channels": ["reconstructed_elevation_map"],
                     "latent_dim": 128,
                     "input_normalization": true,
