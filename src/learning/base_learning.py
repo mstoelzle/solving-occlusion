@@ -59,20 +59,27 @@ class BaseLearning(ABC):
         self.controller = Controller(**self.task.config.get("controller", {}))
         self.task.loss = Loss(self.task.logdir, **self.task.config["loss"])
 
-    def set_model(self, model: Union[str, Optional[torch.nn.Module]] = None):
-        if model is None or model == "pretrained":
+    def set_model(self, model: Union[str, Optional[torch.nn.Module], pathlib.Path] = None):
+        if model is None or model == "pretrained" or issubclass(type(model), pathlib.Path):
+            model_spec = model
             model_config = deepcopy(self.task.config["model"])
 
-            if model is None:
-                self.logger.warning(f"An untrained model is used for task {self.task.uid}")
-                # we need to manually set the use_pretrained parameter to false just for this model config
-                model_config["use_pretrained"] = False
-            elif model == "pretrained":
-                self.logger.warning(f"A pretrained model is used for task {self.task.uid}")
+            if model == "pretrained":
+                self.logger.warning(f"An pretrained model is used for task {self.task.uid}")
                 # we need to manually set the use_pretrained parameter to true just for this model config
                 model_config["use_pretrained"] = True
+            else:
+                # self.logger.warning(f"An not pretrained model is used for task {self.task.uid}")
+                # we need to manually set the use_pretrained parameter to false just for this model config
+                model_config["use_pretrained"] = False
 
             model = pick_model(**self.task.config["model"])
+
+            if issubclass(type(model), pathlib.Path):
+                state_dict = torch.load(str(model_spec), map_location=self.device)
+
+                model = model.to(self.device)
+                model.load_state_dict(state_dict)
 
         self.model = model.to(self.device)
 

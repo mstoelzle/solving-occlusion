@@ -60,6 +60,8 @@ class TaskPath:
                     setattr(task, model_to_pick, None)
                 elif task.config[model_to_pick] == 'pretrained':
                     setattr(task, model_to_pick, 'pretrained')
+                elif type(task.config[model_to_pick]) == str and pathlib.Path(task.config[model_to_pick]).exists():
+                    setattr(task, model_to_pick,  pathlib.Path(task.config[model_to_pick]))
                 else:
                     if type(task.config[model_to_pick]) == int:
                         model = deepcopy(self.tasks[task.config[model_to_pick]].output_model)
@@ -68,8 +70,8 @@ class TaskPath:
                     elif task.config[model_to_pick] == 'prior_supervised_learning':
                         model = deepcopy(self.get_prior_model(TaskTypeEnum.SUPERVISED_LEARNING))
                     else:
-                        raise NotImplementedError(f"The following model_to_train config parameter is unknown: "
-                                                  f"{task.config['model_to_train']}")
+                        raise ValueError(f"Cannot interpret the {model_to_pick} config parameter: "
+                                         f"{task.config['model_to_pick']} for task {self.idx}")
 
                     if model is None:
                         ValueError(f"The model could not get properly assigned for {model_to_pick}")
