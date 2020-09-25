@@ -147,11 +147,18 @@ def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
         batch_size = elevation_map.size(0)
         recons_loss = elevation_map.new_zeros(size=(batch_size,))
         for i in range(batch_size):
+            if (binary_occlusion_map == 1).sum().item() == 0:
+                recons_loss[i] = 0
+
             recons_loss[i] = mse_loss_fct(reconstructed_elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
                                           elevation_map[i, ...][binary_occlusion_map[i, ...] == 1], reduction="mean")
     else:
-        recons_loss = mse_loss_fct(reconstructed_elevation_map[binary_occlusion_map == 1],
-                                   elevation_map[binary_occlusion_map == 1], **kwargs)
+        # we need to check if there is any occlusion
+        if (binary_occlusion_map == 1).sum().item() == 0:
+            recons_loss = elevation_map.new_zeros(size=(1, )).mean()
+        else:
+            recons_loss = mse_loss_fct(reconstructed_elevation_map[binary_occlusion_map == 1],
+                                       elevation_map[binary_occlusion_map == 1], **kwargs)
     return recons_loss
 
 
