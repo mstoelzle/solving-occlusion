@@ -61,8 +61,10 @@ class ResultsPlotter:
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
             # 2D
-            vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
-            vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
+            vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map),
+                           np.min(reconstructed_elevation_map)])
+            vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map),
+                           np.max(reconstructed_elevation_map)])
             cmap = plt.get_cmap("viridis")
 
             fig, axes = plt.subplots(nrows=1, ncols=3, figsize=[2 * 6.4, 1 * 4.8])
