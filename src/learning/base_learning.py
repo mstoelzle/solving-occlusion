@@ -66,13 +66,14 @@ class BaseLearning(ABC):
 
             model_config["use_pretrained"] = False
             if model == "pretrained":
-                self.logger.warning(f"An pretrained model is used for task {self.task.uid}")
+                self.logger.info(f"An pretrained model is used for task {self.task.uid}")
                 # we need to manually set the use_pretrained parameter to true just for this model config
                 model_config["use_pretrained"] = True
 
             model = pick_model(**self.task.config["model"])
 
             if issubclass(type(model_spec), pathlib.Path):
+                self.logger.info(f"Loading a model for task {self.task.uid} from {str(model_spec)}")
                 state_dict = torch.load(str(model_spec), map_location=self.device)
 
                 model = model.to(self.device)
