@@ -16,7 +16,7 @@ class SupervisedLearning(BaseLearning):
         self.set_task(task)
 
         self.set_model(task.model_to_train)
-        return self.train_epoches()
+        return self.train_epochs()
 
     def train_epoch(self, epoch) -> None:
         self.model.train()

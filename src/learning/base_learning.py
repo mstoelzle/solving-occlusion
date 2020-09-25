@@ -114,7 +114,7 @@ class BaseLearning(ABC):
     def train(self, task: Task):
         pass
 
-    def train_epoches(self):
+    def train_epochs(self):
         self.controller.reset()
 
         self.logger.info(f"Running {self.task.type} task {self.task.name}")
