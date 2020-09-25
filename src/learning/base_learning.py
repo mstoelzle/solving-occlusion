@@ -75,7 +75,7 @@ class BaseLearning(ABC):
 
             model = pick_model(**self.task.config["model"])
 
-            if issubclass(type(model), pathlib.Path):
+            if issubclass(type(model_spec), pathlib.Path):
                 state_dict = torch.load(str(model_spec), map_location=self.device)
 
                 model = model.to(self.device)
