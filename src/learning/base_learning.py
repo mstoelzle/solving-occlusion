@@ -64,14 +64,11 @@ class BaseLearning(ABC):
             model_spec = model
             model_config = deepcopy(self.task.config["model"])
 
+            model_config["use_pretrained"] = False
             if model == "pretrained":
                 self.logger.warning(f"An pretrained model is used for task {self.task.uid}")
                 # we need to manually set the use_pretrained parameter to true just for this model config
                 model_config["use_pretrained"] = True
-            else:
-                # self.logger.warning(f"An not pretrained model is used for task {self.task.uid}")
-                # we need to manually set the use_pretrained parameter to false just for this model config
-                model_config["use_pretrained"] = False
 
             model = pick_model(**self.task.config["model"])
 
