@@ -161,7 +161,7 @@ class BaseLearning(ABC):
                                                      output=output,
                                                      data=data,
                                                      dataset_length=len(dataloader.dataset),
-                                                     reduction="none")
+                                                     reduction="mean_per_sample")
                 aggregated_loss_dict = self.task.loss.aggregate_mean_loss_dict(loss_dict)
                 loss = aggregated_loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=aggregated_loss_dict)

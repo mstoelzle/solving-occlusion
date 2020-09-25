@@ -133,13 +133,17 @@ class Loss(ABC):
 
 
 def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
-    return F.mse_loss(input, target, size_average, reduce, reduction)
+    if reduction == 'mean_per_sample':
+        mse_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
+        return torch.mean(mse_loss, dim=tuple(range(1, input.dim())))
+    else:
+        return F.mse_loss(input, target, size_average, reduce, reduction)
 
 def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
                                       elevation_map: torch.Tensor,
                                       binary_occlusion_map: torch.Tensor,
                                       **kwargs):
-    if kwargs.get("reduction", 'mean') == 'none':
+    if kwargs.get("reduction", 'mean') == 'mean_per_sample':
         batch_size = elevation_map.size(0)
         recons_loss = elevation_map.new_zeros(size=(batch_size,))
         for i in range(batch_size):
