@@ -55,9 +55,9 @@ class Loss(ABC):
         self.batch_results.append(loss_dict)
         self.batch_sizes.append(batch_size)
 
-        if len(self.batch_results) % self.report_frequency == 0 and self.purpose == "train":
-            logger.info(f"Epoch {self.epoch} - Batch {len(self.batch_results)} - {self.purpose} loss "
-                        f"- {loss_dict[LossEnum.LOSS]:.4f}")
+        # if len(self.batch_results) % self.report_frequency == 0 and self.purpose == "train":
+        #     logger.info(f"Epoch {self.epoch} - Batch {len(self.batch_results)} - {self.purpose} loss "
+        #                 f"- {loss_dict[LossEnum.LOSS]:.4f}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         epoch_result = self.compute_epoch_result()
