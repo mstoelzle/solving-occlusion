@@ -4,6 +4,7 @@ from enum import Enum
 import h5py
 import logging
 import pathlib
+from progress.bar import Bar
 from typing import *
 
 import torch
@@ -154,6 +155,7 @@ class BaseLearning(ABC):
                 raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
             start_idx = 0
+            progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
@@ -173,6 +175,8 @@ class BaseLearning(ABC):
                 self.add_batch_data_to_hdf5_results(test_loss_hdf5_group, loss_dict, start_idx, len(dataloader.dataset))
 
                 start_idx += batch_size
+                progress_bar.next()
+            progress_bar.finish()
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:

@@ -1,3 +1,4 @@
+from progress.bar import Bar
 import torch
 
 from .base_learning import BaseLearning
@@ -23,6 +24,7 @@ class SupervisedLearning(BaseLearning):
         with self.task.loss.new_epoch(epoch, "train"):
             dataloader = self.task.labeled_dataloader.dataloaders['train']
 
+            progress_bar = Bar(f"Train epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 self.optimizer.zero_grad()
 
@@ -40,11 +42,14 @@ class SupervisedLearning(BaseLearning):
 
                 loss.backward()
                 self.optimizer.step()
+                progress_bar.next()
+            progress_bar.finish()
 
     def validate_epoch(self, epoch: int):
         self.model.eval()
         with self.task.loss.new_epoch(epoch, "val"), torch.no_grad():
             dataloader = self.task.labeled_dataloader.dataloaders['val']
+            progress_bar = Bar(f"Validate epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
@@ -57,5 +62,7 @@ class SupervisedLearning(BaseLearning):
                                                      dataset_length=len(dataloader.dataset))
                 loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
+                progress_bar.next()
+            progress_bar.finish()
 
         self.controller.add_state(epoch, self.task.loss.get_epoch_loss(), self.model.state_dict())
