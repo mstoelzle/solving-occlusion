@@ -16,7 +16,7 @@ logger = get_logger("base_dataset")
 
 
 class BaseDataset(VisionDataset):
-    def __init__(self, purpose: str, dataset_path: pathlib.Path,
+    def __init__(self, dataset_path: pathlib.Path, purpose: str = None,
                  transform: Optional[Callable] = None, transforms: Optional[Callable] = None):
         super().__init__(root=str(dataset_path), transform=transform, transforms=transforms)
 
