@@ -7,7 +7,7 @@ from .base_dataset import BaseDataset
 from src.enums import *
 
 
-class OfflineHdf5Dataset(BaseDataset):
+class Hdf5Dataset(BaseDataset):
     def __init__(self, dataset_path: pathlib.Path, **kwargs):
         super().__init__(**kwargs)
         self.dataset_path = dataset_path

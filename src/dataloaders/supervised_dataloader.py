@@ -4,8 +4,9 @@ from torch.utils.data import DataLoader, Dataset
 from typing import *
 
 from .base_dataloader import BaseDataloader
-from ..datasets.offline_hdf5_dataset import OfflineHdf5Dataset
 from ..utils.log import get_logger
+from src.enums import *
+from src.datasets import DATASETS
 
 logger = get_logger("supervised_dataloader")
 
@@ -17,7 +18,9 @@ class SupervisedDataloader(BaseDataloader):
 
         self.dataloaders = {}
         for purpose in ["train", "val", "test"]:
-            dataset = OfflineHdf5Dataset(dataset_path=pathlib.Path(self.config["dataset_path"]), purpose=purpose)
+            dataset_type = DatasetEnum(self.config["dataset"])
+            dataset = DATASETS[dataset_type](purpose=purpose, dataset_path=pathlib.Path(self.config["dataset_path"]))
+
             self.dataloaders[purpose] = DataLoader(dataset=dataset,
                                                    batch_size=self.config["batch_size"],
                                                    shuffle=self.config["shuffle"],
