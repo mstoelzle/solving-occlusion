@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 import torch
 
 from src.enums.task_type_enum import TaskTypeEnum
-from src.dataloaders.supervised_dataloader import SupervisedDataloader
+from src.dataloaders.dataloader import Dataloader
 from .task import Task
 from src.utils.log import get_logger
 
@@ -78,7 +78,7 @@ class TaskPath:
                     setattr(task, model_to_pick, model)
 
         for dataloader_type, dataloader_spec in task.config['dataloaders'].items():
-            dataloader = SupervisedDataloader(**task.config["domains"][dataloader_spec])
+            dataloader = Dataloader(**task.config["domains"][dataloader_spec])
 
             if dataloader is None:
                 ValueError(f"The {dataloader_type} could not get properly assigned")

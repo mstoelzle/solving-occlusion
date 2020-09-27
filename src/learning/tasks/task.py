@@ -5,7 +5,7 @@ from typing import Optional, Type
 import torch
 
 from src.enums.task_type_enum import TaskTypeEnum
-from src.dataloaders.supervised_dataloader import SupervisedDataloader
+from src.dataloaders.dataloader import Dataloader
 from src.learning.loss.loss import Loss
 from src.utils.log import get_logger
 
@@ -25,9 +25,9 @@ class Task:
         self.config = kwargs
         self.name = json.dumps(self.config)
 
-        self.labeled_dataloader: Optional[SupervisedDataloader] = None
-        self.unlabeled_dataloader: Optional[SupervisedDataloader] = None
-        self.inference_dataloader: Optional[SupervisedDataloader] = None
+        self.labeled_dataloader: Optional[Dataloader] = None
+        self.unlabeled_dataloader: Optional[Dataloader] = None
+        self.inference_dataloader: Optional[Dataloader] = None
 
         self.model_to_train = None
         self.model_to_infer = None

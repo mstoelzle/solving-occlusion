@@ -4,15 +4,14 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from typing import *
 
-from .base_dataloader import BaseDataloader
 from ..utils.log import get_logger
 from src.enums import *
 from src.datasets import DATASETS
 
-logger = get_logger("supervised_dataloader")
+logger = get_logger("dataloader")
 
 
-class SupervisedDataloader(BaseDataloader):
+class Dataloader:
     def __init__(self, **kwargs):
         super().__init__()
         self.config = kwargs
