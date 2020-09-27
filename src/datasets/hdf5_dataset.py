@@ -8,9 +8,8 @@ from src.enums import *
 
 
 class Hdf5Dataset(BaseDataset):
-    def __init__(self, dataset_path: pathlib.Path, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dataset_path = dataset_path
 
         self.params_dataset: Optional[h5py.Dataset] = None
         self.elevation_map_dataset: Optional[h5py.Dataset] = None
@@ -22,9 +21,11 @@ class Hdf5Dataset(BaseDataset):
     def __getitem__(self, idx) -> Dict[Union[str, ChannelEnum], torch.Tensor]:
         self.set_hdf5_dataset()
 
-        return self.prepare_item(params=self.params_dataset[idx, ...],
-                                 elevation_map=self.elevation_map_dataset[idx, :],
-                                 occluded_elevation_map=self.occluded_elevation_map_dataset[idx, :])
+        data = {ChannelEnum.PARAMS: self.params_dataset[idx, ...],
+                ChannelEnum.ELEVATION_MAP: self.elevation_map_dataset[idx, :],
+                ChannelEnum.OCCLUDED_ELEVATION_MAP: self.occluded_elevation_map_dataset[idx, :]}
+
+        return self.prepare_item(data)
 
     def __len__(self):
         return self.dataset_length
