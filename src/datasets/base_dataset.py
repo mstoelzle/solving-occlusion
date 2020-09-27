@@ -4,7 +4,7 @@ import pathlib
 from PIL import Image
 import torch
 from torch.utils.data import DataLoader, Dataset as TorchDataset, Subset
-from torchvision.transforms import ToTensor
+from torchvision.transforms import ToTensor, Resize
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import default_loader as torchvision_default_loader
 from typing import *
@@ -39,6 +39,10 @@ class BaseDataset(VisionDataset):
 
             if type(value) != torch.Tensor:
                 if issubclass(type(value), Image.Image):
+                    w, h = value.size
+                    if w != 64 or h != 64:
+                        value = Resize(size=(64, 64))(value)
+
                     value = ToTensor()(value)
 
                     # this code is made for the TrasysPlanetaryDataset
