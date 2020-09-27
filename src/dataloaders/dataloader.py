@@ -46,8 +46,6 @@ class Dataloader:
 
                 start_idx += len_subset
 
-        print(subsets)
-
         self.dataloaders = {}
         for purpose in ["train", "val", "test"]:
             if len(subsets) > 0:
