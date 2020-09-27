@@ -50,6 +50,17 @@ class BaseDataset(VisionDataset):
                 else:
                     value = torch.tensor(value)
 
+            if key == ChannelEnum.BINARY_OCCLUSION_MAP:
+                value = value.to(dtype=torch.bool)
+
             output[key] = value
 
         return output
+
+    def create_occluded_elevation_map(self, elevation_map: torch.Tensor,
+                                      binary_occlusion_map: torch.Tensor) -> torch.Tensor:
+        occluded_elevation_map = elevation_map.clone()
+
+        occluded_elevation_map[binary_occlusion_map == 1] = np.nan
+
+        return occluded_elevation_map
