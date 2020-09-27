@@ -17,7 +17,7 @@ class SupervisedDataloader(BaseDataloader):
 
         self.dataloaders = {}
         for purpose in ["train", "val", "test"]:
-            dataset = OfflineHdf5Dataset(hdf5_dataset_path=pathlib.Path(self.config["dataset_path"]), purpose=purpose)
+            dataset = OfflineHdf5Dataset(dataset_path=pathlib.Path(self.config["dataset_path"]), purpose=purpose)
             self.dataloaders[purpose] = DataLoader(dataset=dataset,
                                                    batch_size=self.config["batch_size"],
                                                    shuffle=self.config["shuffle"],
