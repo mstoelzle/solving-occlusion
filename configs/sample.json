@@ -34,11 +34,14 @@
                     }
                 },
                 "domain_defaults": {
-                    "batch_size": 32,
-                    "dataset": "hdf5",
-                    "dataset_path": "logs/2020-09-23-17-10-13_dataset_generation_sample_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                    "batch_size": 144,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "logs/2020-09-24-13-03-59_dataset_generation_sample_maximilianstoelzle/DATASET_OCCLUSION.hdf5"
+                    },
+                    "num_workers": 4,
                     "shuffle": true,
-                    "num_workers": 4
+                    "size": [64, 64]
                 },
                 "model": {
                     "name": "VanillaVAE",

@@ -19,10 +19,13 @@
                 },
                 "domain_defaults": {
                     "batch_size": 144,
-                    "dataset": "hdf5",
-                    "dataset_path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5"
+                    },
+                    "num_workers": 4,
                     "shuffle": true,
-                    "num_workers": 4
+                    "size": [64, 64]
                 },
                 "model": {
                     "name": "VanillaVAE",

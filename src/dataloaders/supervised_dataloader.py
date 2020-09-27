@@ -16,10 +16,12 @@ class SupervisedDataloader(BaseDataloader):
         super().__init__()
         self.config = kwargs
 
+        dataset_config = self.config["dataset"]
+        dataset_type = DatasetEnum(dataset_config["type"])
+
         self.dataloaders = {}
         for purpose in ["train", "val", "test"]:
-            dataset_type = DatasetEnum(self.config["dataset"])
-            dataset = DATASETS[dataset_type](purpose=purpose, dataset_path=pathlib.Path(self.config["dataset_path"]))
+            dataset = DATASETS[dataset_type](purpose=purpose, dataset_path=pathlib.Path(dataset_config["path"]))
 
             self.dataloaders[purpose] = DataLoader(dataset=dataset,
                                                    batch_size=self.config["batch_size"],

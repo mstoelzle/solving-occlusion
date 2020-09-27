@@ -19,9 +19,12 @@
                 },
                 "domain_defaults": {
                     "batch_size": 144,
-                    "dataset": "trasys_planetary",
-                    "dataset_path": "data/planetary-surface-dataset",
-                    "num_workers": 4,
+                    "dataset": {
+                        "type": "trasys_planetary",
+                        "path": "data/planetary-surface-dataset",
+                        "split": {"train":  0.8, "val":  0.1, "test":  0.1}
+                    },
+                    "num_workers": 1,
                     "shuffle": true,
                     "size": [64, 64]
                 },
