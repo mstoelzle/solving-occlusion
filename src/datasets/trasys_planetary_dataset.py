@@ -1,4 +1,5 @@
 import pathlib
+import numpy as np
 import torch
 from torchvision.datasets.folder import is_image_file
 from typing import *
@@ -39,6 +40,7 @@ class TrasysPlanetaryDataset(BaseDataset):
                                                                     data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
         data[ChannelEnum.OCCLUDED_ELEVATION_MAP] = occluded_elevation_map
+        data[ChannelEnum.PARAMS] = torch.tensor([0.04, 0., 0., 0., 0.])
 
         return data
 
