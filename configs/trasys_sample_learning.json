@@ -1,0 +1,63 @@
+{
+    "name": "trasys_sample_learning",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "reconstruction": 1000,
+                        "kld": 1,
+                        "reconstruction_occlusion": 0
+                    },
+                    "eval_weights": {
+                        "reconstruction": 1,
+                        "reconstruction_occlusion": 0
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 144,
+                    "dataset": "trasys_planetary",
+                    "dataset_path": "data/planetary-surface-dataset",
+                    "num_workers": 4,
+                    "shuffle": true,
+                    "size": [64, 64]
+                },
+                "model": {
+                    "name": "VanillaVAE",
+                    "input_dim": [64, 64],
+                    "in_channels": ["elevation_map"],
+                    "out_channels": ["reconstructed_elevation_map"],
+                    "hidden_dims": [32, 64, 128, 256, 512],
+                    "latent_dim": 256,
+                    "input_normalization": false
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 25,
+                    "max_num_better_results": 20
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  30}
+    },
+    "logging": {
+        "upload": false
+    },
+    "remote": true,
+    "seeds": [101]
+}
