@@ -30,8 +30,9 @@ class BaseModel(ABC, nn.Module):
         pass
 
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
-        data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
-            data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
+            occluded_elevation_map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+            data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(occluded_elevation_map)
 
         input = None
         norm_consts = {}
@@ -111,7 +112,10 @@ class BaseModel(ABC, nn.Module):
                                                                           batch=True,
                                                                           norm_consts=ground_truth_norm_consts)
 
-        binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
+            binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        else:
+            binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP]
 
         recons_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
 
