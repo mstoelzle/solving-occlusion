@@ -39,11 +39,12 @@ class BaseDataset(VisionDataset):
 
                 # this code is made for the TrasysPlanetaryDataset
                 value = value[0, ...]
+            elif issubclass(type(value), np.ndarray):
+                # we need to make sure the array is writable
+                value = torch.tensor(value)
 
             if self.transform is not None and key != ChannelEnum.PARAMS:
                 value = self.transform(value).squeeze()
-            else:
-                value = torch.tensor(value)
 
             if key == ChannelEnum.BINARY_OCCLUSION_MAP:
                 value = value.to(dtype=torch.bool)
