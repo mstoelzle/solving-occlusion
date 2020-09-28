@@ -22,11 +22,12 @@
                     "dataset": {
                         "type": "trasys_planetary",
                         "path": "data/planetary-surface-dataset",
-                        "split": {"train":  0.8, "val":  0.1, "test":  0.1}
+                        "size": [64, 64],
+                        "split": {"train":  0.8, "val":  0.1, "test":  0.1},
+                        "transforms": {"train": {"random_horizontal_flip": {"probability": 0.5}}}
                     },
-                    "num_workers": 1,
-                    "shuffle": true,
-                    "size": [64, 64]
+                    "num_workers": 4,
+                    "shuffle": true
                 },
                 "model": {
                     "name": "VanillaVAE",

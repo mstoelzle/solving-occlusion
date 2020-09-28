@@ -12,7 +12,8 @@
                     "batch_size": 32,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-09-10-10-21-05_dataset_generation_synthetic_maximilianstoelzle/DATASET_OCCLUSION.hdf5"
+                        "path": "data/2020-09-10-10-21-05_dataset_generation_synthetic_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
                     },
                     "num_workers": 4,
                     "shuffle": true,

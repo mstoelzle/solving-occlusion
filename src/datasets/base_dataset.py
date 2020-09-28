@@ -34,21 +34,14 @@ class BaseDataset(VisionDataset):
             if issubclass(type(value), pathlib.Path):
                 value = self.img_loader(value)
 
-            if self.transform is not None and issubclass(type(value), Image.Image):
-                value = self.transform(value)
+            if issubclass(type(value), Image.Image):
+                value = ToTensor()(value)
 
-            if type(value) != torch.Tensor:
-                if issubclass(type(value), Image.Image):
-                    w, h = value.size
-                    if w != 64 or h != 64:
-                        value = Resize(size=(64, 64))(value)
+                # this code is made for the TrasysPlanetaryDataset
+                value = value[0, ...]
 
-                    value = ToTensor()(value)
-
-                    # this code is made for the TrasysPlanetaryDataset
-                    value = value[0, ...]
-                else:
-                    value = torch.tensor(value)
+            if self.transform is not None:
+                value = self.transform(value).squeeze()
 
             if key == ChannelEnum.BINARY_OCCLUSION_MAP:
                 value = value.to(dtype=torch.bool)
