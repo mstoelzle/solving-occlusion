@@ -155,45 +155,31 @@ class VanillaVAE(BaseVAE):
         KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
         """
 
-        elevation_map = data[ChannelEnum.ELEVATION_MAP]
-        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-        binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
-
-        if LossEnum.RECONSTRUCTION.value in loss_config.get("normalization", []):
-            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
-                                                                                   input=elevation_map,
-                                                                                   batch=True)
-            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                          input=reconstructed_elevation_map,
-                                                                          batch=True,
-                                                                          norm_consts=ground_truth_norm_consts)
-
-        reconstruction_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
-        reconstruction_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                          elevation_map,
-                                                                          binary_occlusion_map,
-                                                                          **kwargs)
-
-        kld_loss = kld_loss_fct(output["mu"], output["log_var"])
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
 
         if self.training:
+            kld_loss = kld_loss_fct(output["mu"], output["log_var"])
+
             weights = loss_config.get("train_weights", {})
+
+            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
 
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
                 kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
 
-            loss = weights.get(LossEnum.RECONSTRUCTION.value, 1) * reconstruction_loss + \
-                   weights.get(LossEnum.RECONSTRUCTION_OCCLUSION, 1) * reconstruction_occlusion_loss + \
-                   kld_weight * kld_loss
+            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+                   + kld_weight * kld_loss
 
-            return {LossEnum.LOSS: loss,
-                    LossEnum.RECONSTRUCTION: reconstruction_loss,
-                    LossEnum.RECONSTRUCTION_OCCLUSION: reconstruction_occlusion_loss,
-                    LossEnum.KLD: kld_loss}
+            loss_dict.update({LossEnum.LOSS: loss,
+                              LossEnum.KLD: kld_loss})
+
+            return loss_dict
         else:
-            return self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
+            return loss_dict
 
     def sample(self,
                num_samples: int,

@@ -132,7 +132,6 @@ class VQVAE(BaseVAE):
         result = self.decoder(z)
         return result
 
-
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
@@ -155,39 +154,27 @@ class VQVAE(BaseVAE):
                       data: Dict[ChannelEnum, torch.Tensor],
                       **kwargs) -> dict:
 
-        elevation_map = data[ChannelEnum.ELEVATION_MAP]
-        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-        binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
-
-        if LossEnum.RECONSTRUCTION.value in loss_config.get("normalization", []):
-            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
-                                                                                   input=elevation_map,
-                                                                                   batch=True)
-            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                          input=reconstructed_elevation_map,
-                                                                          batch=True,
-                                                                          norm_consts=ground_truth_norm_consts)
-
-        reconstruction_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
-        reconstruction_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                          elevation_map,
-                                                                          binary_occlusion_map,
-                                                                          **kwargs)
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
 
         if self.training:
             vq_loss = output[LossEnum.VQ]
 
             weights = loss_config.get("train_weights", {})
-            loss = weights.get("reconstruction", 1) * reconstruction_loss + \
-                   weights.get("reconstruction_occlusion", 1) * reconstruction_occlusion_loss + \
-                   weights.get("vq", 1) * vq_loss
 
-            return {LossEnum.LOSS: loss,
-                    LossEnum.RECONSTRUCTION: reconstruction_loss,
-                    LossEnum.RECONSTRUCTION_OCCLUSION: reconstruction_occlusion_loss,
-                    LossEnum.VQ: vq_loss}
+            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            vq_weight = weights.get(LossEnum.VQ.value, 1)
+
+            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+                   + vq_weight * vq_loss
+
+            loss_dict.update({LossEnum.LOSS: loss,
+                              LossEnum.VQ: vq_loss})
+
+            return loss_dict
         else:
-            return self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
+            return loss_dict
 
     def generate(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         """
@@ -204,6 +191,7 @@ class VectorQuantizer(nn.Module):
     Reference:
     [1] https://github.com/deepmind/sonnet/blob/v2/sonnet/src/nets/vqvae.py
     """
+
     def __init__(self,
                  num_embeddings: int,
                  embedding_dim: int,

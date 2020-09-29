@@ -103,38 +103,57 @@ class BaseModel(ABC, nn.Module):
         elevation_map = data[ChannelEnum.ELEVATION_MAP]
         reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
 
-        if LossEnum.RECONSTRUCTION_OCCLUSION.value in loss_config.get("normalization", []):
-            elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
-                                                                                   input=elevation_map,
-                                                                                   batch=True)
-            reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                          input=reconstructed_elevation_map,
-                                                                          batch=True,
-                                                                          norm_consts=ground_truth_norm_consts)
+        normalization_config = loss_config.get("normalization", [])
+        if LossEnum.RECONSTRUCTION.value in normalization_config or \
+                LossEnum.RECONSTRUCTION_OCCLUSION.value in normalization_config or \
+                LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
+            norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
+                                                                                        input=elevation_map,
+                                                                                        batch=True)
+            norm_reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                                                                               input=reconstructed_elevation_map,
+                                                                               batch=True,
+                                                                               norm_consts=ground_truth_norm_consts)
 
         if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
             binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
         else:
             binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP]
 
-        recons_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
+        if LossEnum.RECONSTRUCTION.value in normalization_config:
+            recons_loss = mse_loss_fct(norm_reconstructed_elevation_map, norm_elevation_map, **kwargs)
+        else:
+            recons_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
 
-        recons_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                  elevation_map,
-                                                                  binary_occlusion_map,
-                                                                  **kwargs)
-
-        recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                      elevation_map,
-                                                                      ~binary_occlusion_map,
+        if LossEnum.RECONSTRUCTION_OCCLUSION.value in normalization_config:
+            recons_occlusion_loss = reconstruction_occlusion_loss_fct(norm_reconstructed_elevation_map,
+                                                                      norm_elevation_map,
+                                                                      binary_occlusion_map,
                                                                       **kwargs)
+        else:
+            recons_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
+                                                                      elevation_map,
+                                                                      binary_occlusion_map,
+                                                                      **kwargs)
+
+        if LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(norm_reconstructed_elevation_map,
+                                                                          norm_elevation_map,
+                                                                          ~binary_occlusion_map,
+                                                                          **kwargs)
+        else:
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
+                                                                          elevation_map,
+                                                                          ~binary_occlusion_map,
+                                                                          **kwargs)
 
         weights = loss_config.get("eval_weights", {})
         recons_weight = weights.get(LossEnum.RECONSTRUCTION.value, 0)
         recons_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
         recons_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 0)
 
-        loss = recons_weight * recons_loss + recons_occlusion_weight * recons_occlusion_loss + \
+        loss = recons_weight * recons_loss + \
+               recons_occlusion_weight * recons_occlusion_loss + \
                recons_non_occlusion_weight * recons_non_occlusion_loss
 
         return {LossEnum.LOSS: loss,
