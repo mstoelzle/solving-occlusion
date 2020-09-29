@@ -30,6 +30,7 @@
                 },
                 "model": {
                     "name": "VanillaVAE",
+                    "save_frequency": 10,
                     "input_dim": [64, 64],
                     "in_channels": ["elevation_map"],
                     "out_channels": ["reconstructed_elevation_map"],

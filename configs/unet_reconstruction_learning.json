@@ -17,7 +17,7 @@
                     }
                 },
                 "domain_defaults": {
-                    "batch_size": 144,
+                    "batch_size": 6,
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
@@ -29,12 +29,13 @@
                 },
                 "model": {
                     "name": "UNet",
+                    "save_frequency": 1,
                     "input_dim": [64, 64],
                     "in_channels": ["elevation_map"],
                     "out_channels": ["reconstructed_elevation_map"],
-                    "hidden_dims": [64, 128, 256, 512, 1024],
+                    "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
-                    "bilinear": false
+                    "bilinear": true
                 },
                 "optimizer": {
                     "name": "Adam",
@@ -42,8 +43,8 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 25,
-                    "max_num_better_results": 20
+                    "max_num_epochs": 3,
+                    "max_num_better_results": 2
                 }
             },
             "tasks": [

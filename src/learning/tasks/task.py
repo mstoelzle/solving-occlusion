@@ -1,6 +1,6 @@
 import json
 import pathlib
-from typing import Optional, Type
+from typing import *
 
 import torch
 
@@ -48,10 +48,10 @@ class Task:
         with open(str(self.logdir / "exit_code.json"), "w") as fp:
             json.dump({"code": code}, fp, indent=4)
 
-    def save_model(self, model):
+    def save_state_dict(self, state_dict: Dict):
         model_path = self.logdir / "model.pt"
-        logger.warning(f"Saving model in: {model_path}")
-        torch.save(model.state_dict(), str(model_path))
+        logger.info(f"Saving model in: {model_path}")
+        torch.save(state_dict, str(model_path))
 
     def cleanup(self):
         # cleanup input models

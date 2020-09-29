@@ -120,15 +120,21 @@ class BaseLearning(ABC):
 
         self.validate_epoch(-1)  # validate the model once before any training occurs.
 
+        save_frequency = self.task.config.get("model", {}).get("save_frequency", None)
+
         if self.optimizer is not None:
             for epoch in self.controller:
                 log_memory_usage(f"before epoch {epoch}", self.logger)
                 self.train_epoch(epoch)
                 self.validate_epoch(epoch)
 
+                if save_frequency is not None and epoch % save_frequency == 0:
+                    best_dict = self.controller.get_best_state()["model_dict"]
+                    self.task.save_state_dict(best_dict)
+
             best_dict = self.controller.get_best_state()["model_dict"]
             self.model.load_state_dict(best_dict)
-            self.task.save_model(self.model)
+            self.task.save_state_dict(best_dict)
 
         self.test()
 

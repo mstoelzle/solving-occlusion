@@ -21,6 +21,7 @@
                 },
                 "model": {
                     "name": "VQVAE",
+                    "save_frequency": 10,
                     "input_dim": [64, 64],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
