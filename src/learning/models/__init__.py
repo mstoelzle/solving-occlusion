@@ -3,12 +3,14 @@ from .baseline.open_cv_baseline import OpenCVBaseline
 from .vae.base_vae import BaseVAE
 from .vae.vanilla_vae import VanillaVAE
 from .vae.vq_vae import VQVAE
+from .unet.unet_model import UNet
 
 MODELS = {"VanillaVAE": VanillaVAE,
           "NavierStokes": OpenCVBaseline,
           "Telea": OpenCVBaseline,
           "PatchMatch": OpenCVBaseline,
-          "VQVAE": VQVAE}
+          "VQVAE": VQVAE,
+          "UNet": UNet}
 
 
 def pick_model(**kwargs) -> torch.nn:
