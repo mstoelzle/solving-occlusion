@@ -71,7 +71,18 @@ class BaseModel(ABC, nn.Module):
 
         return binary_occlusion_map
 
-    def denormalize_output(self, output: Dict[Union[ChannelEnum, str], torch.Tensor],
+    def create_inpainted_elevation_map(self, occluded_elevation_map: torch.Tensor,
+                                       reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
+        inpainted_elevation_map = occluded_elevation_map.clone()
+
+        selector = torch.isnan(occluded_elevation_map)
+        inpainted_elevation_map[selector] = reconstructed_elevation_map[selector]
+
+        return inpainted_elevation_map
+
+    def denormalize_output(self,
+                           data: Dict[ChannelEnum, torch.Tensor],
+                           output: Dict[Union[ChannelEnum, str], torch.Tensor],
                            norm_consts: dict) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
 
         if self.input_normalization:
@@ -92,6 +103,11 @@ class BaseModel(ABC, nn.Module):
                     denormalized_output[key] = value
         else:
             denormalized_output = output
+
+        reconstructed_elevation_map = denormalized_output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+        inpainted_elevation_map = self.create_inpainted_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
+                                                                      reconstructed_elevation_map)
+        denormalized_output[ChannelEnum.INPAINTED_ELEVATION_MAP] = inpainted_elevation_map
 
         return denormalized_output
 

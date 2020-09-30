@@ -169,6 +169,23 @@ def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
     return kld_loss
 
 
+def total_variation_loss_fct(image: torch.Tensor):
+    """
+    Total variation loss of an image
+    Source:
+    Johnson, Justin, Alexandre Alahi, and Li Fei-Fei.
+    "Perceptual losses for real-time style transfer and super-resolution."
+    European conference on computer vision. Springer, Cham, 2016.
+    https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/loss.py
+    :param image:
+    :return:
+    """
+    # shift one pixel and get difference (for both x and y direction)
+    loss = torch.mean(torch.abs(image[..., :, :-1] - image[..., :, 1:])) + \
+           torch.mean(torch.abs(image[..., :-1, :] - image[..., 1:, :]))
+    return loss
+
+
 def calc_domain_distance(data_domain_1: torch.Tensor, data_domain_2: torch.Tensor,
                          domain_distance_metric: str = "fid", normalize_activations=True, num_classes=None,
                          targets_domain_1: torch.Tensor = None, targets_domain_2: torch.Tensor = None,

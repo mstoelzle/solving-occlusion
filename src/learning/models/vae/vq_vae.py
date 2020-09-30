@@ -144,7 +144,7 @@ class VQVAE(BaseVAE):
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   LossEnum.VQ: vq_loss}
 
-        output = self.denormalize_output(output, norm_consts)
+        output = self.denormalize_output(data, output, norm_consts)
 
         return output
 

@@ -6,6 +6,7 @@ from typing import *
 from .unet_parts import *
 from ..base_model import BaseModel
 from src.enums import *
+from src.learning.loss.loss import total_variation_loss_fct
 
 
 class UNet(BaseModel):
@@ -62,7 +63,7 @@ class UNet(BaseModel):
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze()}
 
-        output = self.denormalize_output(output, norm_consts)
+        output = self.denormalize_output(data, output, norm_consts)
 
         return output
 
@@ -79,9 +80,13 @@ class UNet(BaseModel):
 
             reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
+
+            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.INPAINTED_ELEVATION_MAP])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION]
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+                   + total_variation_weight * total_variation_loss
 
             loss_dict.update({LossEnum.LOSS: loss})
 

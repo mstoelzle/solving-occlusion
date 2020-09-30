@@ -140,7 +140,7 @@ class VanillaVAE(BaseVAE):
                   "mu": mu,
                   "log_var": log_var}
 
-        output = self.denormalize_output(output, norm_consts)
+        output = self.denormalize_output(data, output, norm_consts)
 
         return output
 

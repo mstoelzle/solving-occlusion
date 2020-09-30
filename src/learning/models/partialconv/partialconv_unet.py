@@ -197,7 +197,7 @@ class PartialConvUNet(BaseModel):
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: h.squeeze()}
 
-        output = self.denormalize_output(output, norm_consts)
+        output = self.denormalize_output(data, output, norm_consts)
 
         return output
 

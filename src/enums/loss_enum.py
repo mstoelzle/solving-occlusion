@@ -8,3 +8,6 @@ class LossEnum(Enum):
     RECONSTRUCTION_NON_OCCLUSION = "reconstruction_non_occlusion"
     KLD = "kld"
     VQ = "vq"
+    STYLE = "style"
+    PERCEPTUAL = "perceptual"
+    TOTAL_VARIATION = "total_variation"
