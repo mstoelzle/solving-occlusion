@@ -13,6 +13,7 @@
                     },
                     "eval_weights": {
                         "reconstruction": 1,
+                        "reconstruction_non_occlusion": 0,
                         "reconstruction_occlusion": 0
                     }
                 },

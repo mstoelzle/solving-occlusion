@@ -95,18 +95,18 @@ class BaseModel(ABC, nn.Module):
 
         return denormalized_output
 
-    def eval_loss_function(self,
-                           loss_config: dict,
-                           output: Dict[Union[ChannelEnum, str], torch.Tensor],
-                           data: Dict[ChannelEnum, torch.Tensor],
-                           **kwargs) -> dict:
-        elevation_map = data[ChannelEnum.ELEVATION_MAP]
-        reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-
+    def get_normalized_data(self,
+                            loss_config: dict,
+                            output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                            data: Dict[ChannelEnum, torch.Tensor],
+                            **kwargs) -> Dict[ChannelEnum, torch.Tensor]:
         normalization_config = loss_config.get("normalization", [])
+        norm_data = {}
         if LossEnum.RECONSTRUCTION.value in normalization_config or \
                 LossEnum.RECONSTRUCTION_OCCLUSION.value in normalization_config or \
                 LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
+            elevation_map = data[ChannelEnum.ELEVATION_MAP]
+            reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
             norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
                                                                                         input=elevation_map,
                                                                                         batch=True)
@@ -114,36 +114,51 @@ class BaseModel(ABC, nn.Module):
                                                                                input=reconstructed_elevation_map,
                                                                                batch=True,
                                                                                norm_consts=ground_truth_norm_consts)
+            norm_data[ChannelEnum.ELEVATION_MAP] = norm_elevation_map
+            norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP] = norm_reconstructed_elevation_map
+
+        return norm_data
+
+    def eval_loss_function(self,
+                           loss_config: dict,
+                           output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                           data: Dict[ChannelEnum, torch.Tensor],
+                           **kwargs) -> dict:
+
+        norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
         if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
             binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+            data[ChannelEnum.BINARY_OCCLUSION_MAP] = binary_occlusion_map
         else:
             binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP]
 
-        if LossEnum.RECONSTRUCTION.value in normalization_config:
-            recons_loss = mse_loss_fct(norm_reconstructed_elevation_map, norm_elevation_map, **kwargs)
+        if LossEnum.RECONSTRUCTION in norm_data:
+            recons_loss = mse_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                       norm_data[ChannelEnum.ELEVATION_MAP], **kwargs)
         else:
-            recons_loss = mse_loss_fct(reconstructed_elevation_map, elevation_map, **kwargs)
+            recons_loss = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                       data[ChannelEnum.ELEVATION_MAP], **kwargs)
 
-        if LossEnum.RECONSTRUCTION_OCCLUSION.value in normalization_config:
-            recons_occlusion_loss = reconstruction_occlusion_loss_fct(norm_reconstructed_elevation_map,
-                                                                      norm_elevation_map,
+        if LossEnum.RECONSTRUCTION_OCCLUSION in norm_data:
+            recons_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                                      norm_data[ChannelEnum.ELEVATION_MAP],
                                                                       binary_occlusion_map,
                                                                       **kwargs)
         else:
-            recons_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                      elevation_map,
+            recons_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                                      data[ChannelEnum.ELEVATION_MAP],
                                                                       binary_occlusion_map,
                                                                       **kwargs)
 
-        if LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(norm_reconstructed_elevation_map,
-                                                                          norm_elevation_map,
+        if LossEnum.RECONSTRUCTION_NON_OCCLUSION in norm_data:
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                                          norm_data[ChannelEnum.ELEVATION_MAP],
                                                                           ~binary_occlusion_map,
                                                                           **kwargs)
         else:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(reconstructed_elevation_map,
-                                                                          elevation_map,
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                                          data[ChannelEnum.ELEVATION_MAP],
                                                                           ~binary_occlusion_map,
                                                                           **kwargs)
 

@@ -77,10 +77,10 @@ class UNet(BaseModel):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
+            reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
 
-            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
+            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION]
 
             loss_dict.update({LossEnum.LOSS: loss})
