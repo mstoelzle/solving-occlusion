@@ -191,3 +191,25 @@ class BaseModel(ABC, nn.Module):
                 LossEnum.RECONSTRUCTION: recons_loss,
                 LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
                 LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss}
+
+    def artistic_loss_function(self,
+                               loss_config: dict,
+                               output: Dict[Union[ChannelEnum, str], torch.Tensor],
+                               data: Dict[ChannelEnum, torch.Tensor],
+                               **kwargs) -> dict:
+        # Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge.
+        # "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
+        # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/loss.py
+        # this requires a self.feature_extractor
+
+        # the feature extractor expects an image with three channels as an input
+
+        # TODO: this needs to get finished
+        # feat_recons = self.feature_extractor(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP])
+        # feat_inpaint = self.feature_extractor(output[ChannelEnum.INPAINTED_ELEVATION_MAP])
+
+        perceptual_loss = 0
+        style_loss = 0
+
+        return {LossEnum.PERCEPTUAL: perceptual_loss,
+                LossEnum.STYLE: style_loss}

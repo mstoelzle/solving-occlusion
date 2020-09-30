@@ -41,6 +41,8 @@ class UNet(BaseModel):
 
         self.decoder = nn.Sequential(*decoder_layers)
 
+        self.feature_extractor = None
+
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
@@ -80,12 +82,18 @@ class UNet(BaseModel):
 
             reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
+            style_weight = weights.get(LossEnum.STYLE.value, 0)
             total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
 
+            artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
+            loss_dict.update(artistic_loss)
             total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.INPAINTED_ELEVATION_MAP])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+                   + perceptual_weight * loss_dict[LossEnum.PERCEPTUAL] \
+                   + style_weight * loss_dict[LossEnum.STYLE] \
                    + total_variation_weight * total_variation_loss
 
             loss_dict.update({LossEnum.LOSS: loss})
@@ -93,3 +101,15 @@ class UNet(BaseModel):
             return loss_dict
         else:
             return loss_dict
+
+    def train(self,  mode: bool = True):
+        if mode is True and self.config.get("feature_extractor", False) is True:
+            from src.learning.models.partialconv.partialconv_unet import VGG16FeatureExtractor
+
+            self.feature_extractor = VGG16FeatureExtractor()
+            device, = list(set(p.device for p in self.parameters()))
+            self.feature_extractor = self.feature_extractor.to(device=device)
+        else:
+            self.feature_extractor = None
+
+        super().train(mode=mode)

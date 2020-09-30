@@ -139,6 +139,13 @@ def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean'
     else:
         return F.mse_loss(input, target, size_average, reduce, reduction)
 
+def l1_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
+    if reduction == 'mean_per_sample':
+        l1_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
+        return torch.mean(l1_loss, dim=tuple(range(1, input.dim())))
+    else:
+        return F.l1_loss(input, target, size_average, reduce, reduction)
+
 def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
                                       elevation_map: torch.Tensor,
                                       binary_occlusion_map: torch.Tensor,
@@ -184,6 +191,36 @@ def total_variation_loss_fct(image: torch.Tensor):
     loss = torch.mean(torch.abs(image[..., :, :-1] - image[..., :, 1:])) + \
            torch.mean(torch.abs(image[..., :-1, :] - image[..., 1:, :]))
     return loss
+
+
+def perceptual_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
+    return l1_loss_fct(input, target, **kwargs)
+
+
+def style_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
+    return l1_loss_fct(gram_matrix(input),  gram_matrix(target), **kwargs)
+
+
+def gram_matrix(feat: torch.Tensor):
+    """
+    Auto correlation on feature map (Gram matrix)
+    https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/utils.py
+    :param feat:
+    :return:
+    """
+    if feat.dim() == 3:
+        # this code is made for the situation, where our feature tensor does not posses channels
+        ch = 1
+        (b, h, w) = feat.size()
+    elif feat.dim() == 4:
+        (b, ch, h, w) = feat.size()
+    else:
+        raise NotImplementedError
+
+    feat = feat.view(b, ch, h * w)
+    feat_t = feat.transpose(1, 2)
+    gram = torch.bmm(feat, feat_t) / (ch * h * w)
+    return gram
 
 
 def calc_domain_distance(data_domain_1: torch.Tensor, data_domain_2: torch.Tensor,
