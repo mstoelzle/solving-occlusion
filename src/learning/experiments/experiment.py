@@ -35,7 +35,7 @@ class Experiment:
                                                       results_hdf5_path=self.results_hdf5_path)
 
         self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path,
-                                              logdir=self.logdir,
+                                              logdir=self.logdir, remote=remote,
                                               **self.config.get("visualization", {}))
 
     def run(self):

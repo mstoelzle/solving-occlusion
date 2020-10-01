@@ -58,7 +58,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  30}
+        "visualization": {"sample_frequency":  1}
     },
     "logging": {
         "upload": false
