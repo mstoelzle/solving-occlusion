@@ -13,13 +13,18 @@ and all required Python packages.
 ### 2. Initialisation of git submodules
 All git submodules need to be initialized and updated:
 ```
-git submodule update --init
+git submodule update --init --recursive
 ```
 
 ### 3. Installation:
 As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins (which only run on Ubuntu),
 the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
 https://bitbucket.org/tamiki/terrain_data_generator
+
+After following the installation instructions, the build directory needs to be added to the CMAKE_PREFIX_PATH:
+```
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$LOCAL_BUILD
+```
 
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
 ```
