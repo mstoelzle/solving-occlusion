@@ -10,7 +10,12 @@ This framework requires **Python 3.8.5**. The generation of synthetic datasets r
 It is recommended to use a package manager like Conda (https://docs.conda.io/en/latest/) to manage the Python version 
 and all required Python packages.
 
-### 2. Initialisation of git submodules
+### 2. Initialisation of git submodule
+After setting the environment variable `$WORKSPACE` to a folder you want to work in, you should clone this repo:
+```
+git clone https://github.com/mstoelzle/solving occlusion $WORKSPACE/solving-occlusion && cd $WORKSPACE/solving-occlusion
+```
+
 All git submodules need to be initialized and updated:
 ```
 git submodule update --init --recursive
@@ -20,32 +25,11 @@ git submodule update --init --recursive
 #### 3.1 Install all required PIP packages
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
 ```
-pip install -r requirements.txt --user
+pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
 ```
 
-#### 3.2 Install the TerrainDataGenerator
-As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins (which only runs on Ubuntu),
-the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
-https://bitbucket.org/tamiki/terrain_data_generator
+#### 3.2 Build OpenCV from source:
 
-After following the installation instructions, the build directory needs to be added to the CMAKE_PREFIX_PATH:
-```
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$LOCAL_BUILD
-```
-
-Additionally, the `terrain_data_generator` submodule has a requirement on OpenCV:
-```
-sudo apt-get install libopencv-dev
-```
-
-Finally, install the `terrain_data_generator` package:
-```
-pip install --user -e src/dataset_generation/synthetic_terrain_data_generator
-```
-
-#### 3.3 Install PyPatchMatch
-We use the PatchMatch [[1]](#1) algorithm as a (traditional) baseline for in-painting of the occluded elevation maps.
-If this baseline is specified for use in the config, the following installation steps to use the dependency [PyPatchMatch](https://github.com/vacancy/PyPatchMatch) need to be taken:
 1. Install the pkg-config package
 for macOS: `brew install pkg-config` for Ubuntu: `sudo apt-get install pkg-config`.
 2. Manual build of OpenCV for [macOS](https://docs.opencv.org/master/d0/db2/tutorial_macos_install.html) and [Linux](https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html).
@@ -68,7 +52,37 @@ cd ${WORKSPACE}/opencv_build && make -j7 && sudo make install
 ```
 
 3. Set the environmental variable `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig`
-4. Install the PyPatchMatch package: `cd "${WORKSPACE}/solving-occlusion/src/learning/models/baseline/py_patch_match" && make`
+
+#### 3.3 Install the TerrainDataGenerator
+As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins (which only runs on Ubuntu),
+the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
+https://bitbucket.org/tamiki/terrain_data_generator
+
+Initialise the raisim build directory: `export LOCAL_BUILD=$WORKSPACE/raisim_build && mkdir $LOCAL_BUILD`
+
+After following the installation instructions, the build directory needs to be added to the CMAKE_PREFIX_PATH:
+```
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$LOCAL_BUILD
+```
+
+Additionally, the `terrain_data_generator` submodule has a requirement on OpenCV:
+```
+sudo apt-get install libopencv-dev
+```
+
+Finally, install the `terrain_data_generator` package:
+```
+pip install --user -e "${WORKSPACE}/solving-occlusion/src/dataset_generation/synthetic_terrain_data_generator"
+```
+
+#### 3.4 Install PyPatchMatch
+We use the PatchMatch [[1]](#1) algorithm as a (traditional) baseline for in-painting of the occluded elevation maps.
+
+If this baseline is specified for use in the config, the following installation steps to use the dependency [PyPatchMatch](https://github.com/vacancy/PyPatchMatch) need to be taken:
+
+```
+cd "${WORKSPACE}/solving-occlusion/src/learning/models/baseline/py_patch_match" && make
+```
 
 ### 4. Generating a dataset
 
