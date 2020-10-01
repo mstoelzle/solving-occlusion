@@ -48,7 +48,7 @@ We use the PatchMatch [[1]](#1) algorithm as a (traditional) baseline for in-pai
 If this baseline is specified for use in the config, the following installation steps to use the dependency [PyPatchMatch](https://github.com/vacancy/PyPatchMatch) need to be taken:
 1. Install the pkg-config package
 for macOS: `brew install pkg-config` for Ubuntu: `sudo apt-get install pkg-config`.
-2. Manual build of OpenCV for [macOS](https://docs.opencv.org/master/d0/db2/tutorial_macos_install.html) and [Linux](https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html) 
+2. Manual build of OpenCV for [macOS](https://docs.opencv.org/master/d0/db2/tutorial_macos_install.html) and [Linux](https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html).
 Run this command (while adjusting the paths):
 ```
 cmake -D CMAKE_BUILD_TYPE=Release -D \
@@ -58,7 +58,7 @@ cmake -D CMAKE_BUILD_TYPE=Release -D \
          PYTHON3_LIBRARY=~/miniconda3/envs/rsl_solving_occlusion/lib/libpython3.so \
          PYTHON3_NUMPY_INCLUDE_DIRS=~/rock/install/pip/lib/python3.8/site-packages/numpy/core/include \
          PYTHON3_PACKAGES_PATH=~/rock/install/pip/lib/python3.8/site-packages \
-         OPENCV_GENERATE_PKGCONFIG=ON \
+         -DOPENCV_GENERATE_PKGCONFIG=ON \
          -S "${WORKSPACE}/opencv" \
          -B "${WORKSPACE}/opencv_build"
 ```
@@ -68,7 +68,7 @@ cd ${WORKSPACE}/opencv_build && make -j7 && sudo make install
 ```
 
 3. Set the environmental variable `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig`
-4. Install the PyPatchMatch package: `cd src/learning/models/baseline/py_patch_match & make`
+4. Install the PyPatchMatch package: `cd "${WORKSPACE}/solving-occlusion/src/learning/models/baseline/py_patch_match" && make`
 
 ### 4. Generating a dataset
 
