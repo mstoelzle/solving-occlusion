@@ -210,6 +210,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                         plt.savefig(str(sample_dir / f"sample_{num_accepted_samples}.pdf"))
                         if self.remote is False:
                             plt.show()
+                        plt.close()
 
                 progress_bar.next()
             progress_bar.finish()

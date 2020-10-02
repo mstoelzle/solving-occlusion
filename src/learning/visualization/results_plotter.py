@@ -97,6 +97,7 @@ class ResultsPlotter:
             plt.savefig(str(logdir / f"sample_2d_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
+            plt.close()
 
             # 3D
             fig = plt.figure(figsize=[2 * 6.4, 1 * 4.8])
@@ -138,6 +139,7 @@ class ResultsPlotter:
             plt.savefig(str(logdir / f"sample_3d_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
+            plt.close()
 
             fig = plt.figure(figsize=[1.75 * 6.4, 1.25 * 4.8])
             plt.clf()
@@ -165,6 +167,7 @@ class ResultsPlotter:
             plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))
             if self.remote is not True:
                 plt.show()
+            plt.close()
 
     def plot_correlation_area_occluded(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
@@ -205,3 +208,4 @@ class ResultsPlotter:
         plt.savefig(str(logdir / f"correlation_area_occluded.pdf"))
         if self.remote is not True:
             plt.show()
+        plt.close()
