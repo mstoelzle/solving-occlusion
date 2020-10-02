@@ -11,11 +11,12 @@ from src.utils.log import create_base_logger, create_logdir
 
 
 class BaseDatasetGenerator(ABC):
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, remote: bool = False, **kwargs):
         self.config = kwargs
 
         self.name = name
         self.type = self.config["type"]
+        self.remote = remote
 
         self.logdir = create_logdir(f"dataset_generation_{self.name}")
         self.logger = create_base_logger(self.logdir)

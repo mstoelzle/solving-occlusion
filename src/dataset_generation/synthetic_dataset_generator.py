@@ -57,7 +57,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
     def reset(self):
         self.params = []
         self.elevation_maps = []
-        self.occluded_elevation_maps = []
+        self.binary_occlusion_maps = []
 
     def run(self):
         for purpose in ["train", "val", "test"]:
@@ -72,8 +72,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                                        maxshape=(num_samples, params_dim))
             elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
-            occluded_elevation_map_dataset = hdf5_group.create_dataset(name="occluded_elevation_map",
-                                                                       shape=dataset_shape, maxshape=dataset_maxshape)
+            binary_occlusion_map_dataset = hdf5_group.create_dataset(name="binary_occlusion_map",
+                                                                     shape=dataset_shape, maxshape=dataset_maxshape)
 
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
             num_accepted_samples = 0
@@ -151,9 +151,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 robot = Robot(robot_position=robot_position, height_viewpoint=height_viewpoint,
                               elevation_map=elevation_map_object)
 
-                occluded_elevation_map = self.raycast_occlusion(robot)
+                binary_occlusion_map = self.raycast_occlusion(robot)
 
-                if not np.isnan(np.sum(occluded_elevation_map)):
+                if np.sum(binary_occlusion_map) == 0:
                     # we skip the elevation map if we do not find any occlusion
                     continue
 
@@ -161,20 +161,22 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.params.append(np.array([self.terrain_resolution, robot_position.x,
                                              robot_position.y, robot_position.z, robot_position.yaw]))
                 self.elevation_maps.append(elevation_map)
-                self.occluded_elevation_maps.append(occluded_elevation_map)
+                self.binary_occlusion_maps.append(binary_occlusion_map)
 
                 if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
                         num_accepted_samples >= num_samples:
                     self.extend_dataset(params_dataset, self.params)
                     self.extend_dataset(elevation_map_dataset, self.elevation_maps)
-                    self.extend_dataset(occluded_elevation_map_dataset, self.occluded_elevation_maps)
+                    self.extend_dataset(binary_occlusion_map_dataset, self.binary_occlusion_maps)
                     self.reset()
 
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
-                        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2*6.4, 1*4.8])
+                        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2 * 6.4, 1 * 4.8])
 
+                        occluded_elevation_map = elevation_map.copy()
+                        occluded_elevation_map[binary_occlusion_map == 1] = np.nan
                         non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
                         vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
@@ -199,7 +201,15 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                             ax.grid(False)
 
                         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
-                        plt.show()
+
+                        sample_dir = self.logdir / f"{purpose}_samples"
+                        if not sample_dir.is_dir():
+                            sample_dir.mkdir(exist_ok=True, parents=True)
+
+                        plt.draw()
+                        plt.savefig(str(sample_dir / f"sample_{num_accepted_samples}.pdf"))
+                        if self.remote is False:
+                            plt.show()
 
                 progress_bar.next()
             progress_bar.finish()
@@ -211,7 +221,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         """
 
         elevation_map = robot.elevation_map.ground_truth_elevation_map
-        occluded_height_map = np.copy(elevation_map)
+        binary_occlusion_map = np.zeros(shape=elevation_map.shape, dtype=np.bool)
 
         center_i = int(elevation_map.shape[0] / 2)
         center_j = int(elevation_map.shape[1] / 2)
@@ -267,7 +277,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 occlusion_condition = ray_cast_world_scan[:, 2] <= ray[:, 1]
 
                 if np.sum(occlusion_condition) < ray_cast_world_scan.shape[0]:
-                    occluded_height_map[i][j] = np.NaN
+                    binary_occlusion_map[i][j] = 1
 
                     # fig = plt.figure()
                     # ax = fig.add_subplot(111, projection='3d')
@@ -275,7 +285,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
                     # plt.show()
 
-        return occluded_height_map
+        return binary_occlusion_map
 
     @staticmethod
     def body_to_world_coordinates(body_coordinates: np.array, body_position: Position,

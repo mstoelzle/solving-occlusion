@@ -22,7 +22,8 @@ def main(config_path: Text):
     with open(config_filepath, "r") as exp_fp:
         config = json.load(exp_fp)
 
-    dataset_generator = pick_dataset_generator(name=config["name"], **config["dataset_generation"])
+    dataset_generator = pick_dataset_generator(name=config["name"], remote=config.get("remote", False),
+                                               **config["dataset_generation"])
     with dataset_generator:
         dataset_generator.run()
 
