@@ -45,8 +45,8 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 3,
-                    "max_num_better_results": 2
+                    "max_num_epochs": 20,
+                    "max_num_better_results": 10
                 }
             },
             "tasks": [
