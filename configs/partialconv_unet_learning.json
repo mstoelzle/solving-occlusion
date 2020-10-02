@@ -8,8 +8,8 @@
                     "report_frequency": 100,
                     "normalization": [],
                     "train_weights": {
-                        "reconstruction": 6,
-                        "reconstruction_occlusion": 1
+                        "reconstruction_occlusion": 6,
+                        "reconstruction_non_occlusion": 1
                     },
                     "eval_weights": {
                         "reconstruction": 0,
@@ -34,8 +34,7 @@
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
-                    "input_normalization": false,
-                    "bilinear": true
+                    "input_normalization": false
                 },
                 "optimizer": {
                     "name": "Adam",
