@@ -56,7 +56,7 @@ class BaseDataset(VisionDataset):
                 elevation_map=output[ChannelEnum.ELEVATION_MAP],
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
         elif ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
-            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_binary_occlusion_map(
+            output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
                 occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
         else:
             raise ValueError
