@@ -14,14 +14,14 @@
             "y": {"min":  0, "max":  1},
             "yaw": {"min":  0, "max":  360}
         },
-        "num_train_samples": 5000,
-        "num_val_samples": 1000,
-        "num_test_samples": 1000,
+        "num_train_samples": 25000,
+        "num_val_samples": 200,
+        "num_test_samples": 200,
         "save_frequency": 10,
         "visualization": {
             "frequency": 1000
         }
     },
-    "remote": false,
+    "remote": true,
     "seeds": [101]
 }
