@@ -8,6 +8,7 @@ from typing import *
 
 from ..base_model import BaseModel
 from src.enums import *
+from src.learning.loss.loss import total_variation_loss_fct
 
 
 def weights_init(init_type='gaussian'):
@@ -222,11 +223,15 @@ class PartialConvUNet(BaseModel):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
+            reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
 
-            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION]
+            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.INPAINTED_ELEVATION_MAP])
+
+            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+                   + total_variation_weight * total_variation_loss
 
             loss_dict.update({LossEnum.LOSS: loss})
 
