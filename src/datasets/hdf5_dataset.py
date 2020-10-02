@@ -11,27 +11,21 @@ class Hdf5Dataset(BaseDataset):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.channels = [ChannelEnum.PARAMS, ChannelEnum.ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP,
+                         ChannelEnum.OCCLUDED_ELEVATION_MAP]
+
         self.hdf5_dataset_set: bool = False
-        self.params_dataset: Optional[h5py.Dataset] = None
-        self.elevation_map_dataset: Optional[h5py.Dataset] = None
-        self.binary_occlusion_map_dataset: Optional[h5py.Dataset] = None
-        self.occluded_elevation_map_dataset: Optional[h5py.Dataset] = None
+        self.hdf5_datasets = {}
 
         with h5py.File(self.dataset_path, 'r') as hdf5_file:
-            self.dataset_length = len(hdf5_file[f"/{self.purpose}/elevation_map"])
+            self.dataset_length = len(hdf5_file[f"/{self.purpose}/{ChannelEnum.ELEVATION_MAP.value}"])
 
     def __getitem__(self, idx) -> Dict[Union[str, ChannelEnum], torch.Tensor]:
         self.set_hdf5_dataset()
 
         data = {}
-        if self.params_dataset is not None:
-            data[ChannelEnum.PARAMS] = self.params_dataset[idx, ...]
-        if self.elevation_map_dataset is not None:
-            data[ChannelEnum.ELEVATION_MAP] = self.elevation_map_dataset[idx, :]
-        if self.binary_occlusion_map_dataset is not None:
-            data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.binary_occlusion_map_dataset[idx, :]
-        if self.occluded_elevation_map_dataset is not None:
-            data[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.occluded_elevation_map_dataset[idx, :]
+        for channel, hdf5_dataset in self.hdf5_datasets.items():
+            data[channel] = hdf5_dataset[idx, ...]
 
         return self.prepare_item(data)
 
@@ -42,16 +36,9 @@ class Hdf5Dataset(BaseDataset):
         if self.hdf5_dataset_set is False:
             hdf5_file = h5py.File(str(self.dataset_path), 'r')
 
-            if f"/{self.purpose}/params" in hdf5_file:
-                self.params_dataset = hdf5_file[f"/{self.purpose}/params"]
-
-            if f"/{self.purpose}/elevation_map" in hdf5_file:
-                self.elevation_map_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
-
-            if f"/{self.purpose}/binary_occlusion_map" in hdf5_file:
-                self.binary_occlusion_map_dataset = hdf5_file[f"/{self.purpose}/binary_occlusion_map"]
-
-            if f"/{self.purpose}/occluded_elevation_map" in hdf5_file:
-                self.occluded_elevation_map_dataset = hdf5_file[f"/{self.purpose}/occluded_elevation_map"]
+            for channel in self.channels:
+                dataset_url = f"/{self.purpose}/{channel.value}"
+                if dataset_url in hdf5_file:
+                    self.hdf5_datasets[channel] = hdf5_file[dataset_url]
 
             self.hdf5_dataset_set = True
