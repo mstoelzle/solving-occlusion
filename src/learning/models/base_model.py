@@ -30,10 +30,6 @@ class BaseModel(ABC, nn.Module):
         pass
 
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
-        if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
-            occluded_elevation_map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP]
-            data[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(occluded_elevation_map)
-
         input = None
         norm_consts = {}
         for channel_idx, in_channel in enumerate(self.in_channels):
@@ -62,14 +58,10 @@ class BaseModel(ABC, nn.Module):
         poem = occluded_elevation_map.clone()
 
         # replace NaNs signifying occluded areas with arbitrary high or low number
-        poem[occluded_elevation_map != occluded_elevation_map] = -10000
+        # poem[occluded_elevation_map != occluded_elevation_map] = -10000
+        poem[occluded_elevation_map != occluded_elevation_map] = 0
 
         return poem
-
-    def create_binary_occlusion_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
-        binary_occlusion_map = (occluded_elevation_map != occluded_elevation_map)
-
-        return binary_occlusion_map
 
     def create_inpainted_elevation_map(self, occluded_elevation_map: torch.Tensor,
                                        reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
@@ -143,12 +135,6 @@ class BaseModel(ABC, nn.Module):
 
         norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
-        if ChannelEnum.BINARY_OCCLUSION_MAP not in data:
-            binary_occlusion_map = self.create_binary_occlusion_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP])
-            data[ChannelEnum.BINARY_OCCLUSION_MAP] = binary_occlusion_map
-        else:
-            binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP]
-
         if LossEnum.RECONSTRUCTION in norm_data:
             recons_loss = mse_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                        norm_data[ChannelEnum.ELEVATION_MAP], **kwargs)
@@ -159,23 +145,23 @@ class BaseModel(ABC, nn.Module):
         if LossEnum.RECONSTRUCTION_OCCLUSION in norm_data:
             recons_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                                       norm_data[ChannelEnum.ELEVATION_MAP],
-                                                                      binary_occlusion_map,
+                                                                      data[ChannelEnum.BINARY_OCCLUSION_MAP],
                                                                       **kwargs)
         else:
             recons_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                                       data[ChannelEnum.ELEVATION_MAP],
-                                                                      binary_occlusion_map,
+                                                                      data[ChannelEnum.BINARY_OCCLUSION_MAP],
                                                                       **kwargs)
 
         if LossEnum.RECONSTRUCTION_NON_OCCLUSION in norm_data:
             recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                                           norm_data[ChannelEnum.ELEVATION_MAP],
-                                                                          ~binary_occlusion_map,
+                                                                          ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
                                                                           **kwargs)
         else:
             recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                                           data[ChannelEnum.ELEVATION_MAP],
-                                                                          ~binary_occlusion_map,
+                                                                          ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
                                                                           **kwargs)
 
         weights = loss_config.get("eval_weights", {})

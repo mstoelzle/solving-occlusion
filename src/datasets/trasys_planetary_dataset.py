@@ -36,10 +36,8 @@ class TrasysPlanetaryDataset(BaseDataset):
 
         data = self.prepare_item(sample_dict)
 
-        occluded_elevation_map = self.create_occluded_elevation_map(data[ChannelEnum.ELEVATION_MAP],
-                                                                    data[ChannelEnum.BINARY_OCCLUSION_MAP])
-
-        data[ChannelEnum.OCCLUDED_ELEVATION_MAP] = occluded_elevation_map
+        # the binary occlusion mask is inverse for the trasys planetary dataset
+        data[ChannelEnum.BINARY_OCCLUSION_MAP] = ~data[ChannelEnum.BINARY_OCCLUSION_MAP]
 
         # TODO: add actual params from dataset metadata
         data[ChannelEnum.PARAMS] = torch.tensor([0.04, 0., 0., 0., 0.])

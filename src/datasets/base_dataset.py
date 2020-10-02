@@ -51,6 +51,16 @@ class BaseDataset(VisionDataset):
 
             output[key] = value
 
+        if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.OCCLUDED_ELEVATION_MAP not in output:
+            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
+                elevation_map=output[ChannelEnum.ELEVATION_MAP],
+                binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
+        elif ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
+            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_binary_occlusion_map(
+                occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        else:
+            raise ValueError
+
         return output
 
     def create_occluded_elevation_map(self, elevation_map: torch.Tensor,
@@ -60,3 +70,8 @@ class BaseDataset(VisionDataset):
         occluded_elevation_map[binary_occlusion_map == 1] = np.nan
 
         return occluded_elevation_map
+
+    def create_binary_occlusion_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
+        binary_occlusion_map = (occluded_elevation_map != occluded_elevation_map)
+
+        return binary_occlusion_map
