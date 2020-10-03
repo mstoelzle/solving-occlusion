@@ -300,9 +300,19 @@ def assemble_transforms(purpose: str, transform_specs: Dict, size_spec, to_pil: 
     resize_transform = transforms.Resize(size_spec)
     transform_sequence.append(resize_transform)
 
-    transform_sequence.append(transforms.ToTensor())
+    # we get the following error if we use transform.ToPILImage and ToTensor sequentially
+    #  UserWarning: The given NumPy array is not writeable, and PyTorch does not support non-writeable tensors.
+    #  This means you can write to the underlying (supposedly non-writeable) NumPy array using the tensor.
+    #  You may want to copy the array to protect its data or make it writeable before converting it to a tensor.
+    #  This type of warning will be suppressed for the rest of this program.
+    transform_sequence.extend([ToNumpy(), transforms.ToTensor()])
 
     logger.info(f"Assembled transforms for purpose {purpose}: {transform_sequence}")
     transformation = transforms.Compose(transform_sequence)
 
     return transformation
+
+
+class ToNumpy(object):
+    def __call__(self, sample):
+        return np.array(sample)
