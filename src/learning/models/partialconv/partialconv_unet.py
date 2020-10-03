@@ -133,7 +133,7 @@ class PartialConvUNet(BaseModel):
         super().__init__(**kwargs)
 
         # we dont have RGB images but rather 1-channel inputs
-        input_channels = 1
+        input_channels = 3
 
         # this only works for input channels occluded elevation map and binary occlusion map
         assert self.in_channels == [ChannelEnum.OCCLUDED_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP]
@@ -166,7 +166,12 @@ class PartialConvUNet(BaseModel):
         h_mask_dict = {}  # for the output of enc_N
 
         # input and mask
-        h_dict['h_0'], h_mask_dict['h_0'] = input[:, 0, ...], input[:, 1, ...]
+        # image = input[:, 0:1, ...]
+        image = torch.cat((input[:, 0:1, ...], input[:, 0:1, ...], input[:, 0:1, ...]), dim=1)
+
+        # mask = input[:, 1:2, ...]
+        mask = torch.cat((input[:, 1:2, ...], input[:, 1:2, ...], input[:, 1:2, ...]), dim=1)
+        h_dict['h_0'], h_mask_dict['h_0'] = image, mask
 
         h_key_prev = 'h_0'
         for i in range(1, self.layer_size + 1):
@@ -189,14 +194,13 @@ class PartialConvUNet(BaseModel):
             dec_l_key = 'dec_{:d}'.format(i)
 
             h = F.interpolate(h, scale_factor=2, mode=self.upsampling_mode)
-            h_mask = F.interpolate(
-                h_mask, scale_factor=2, mode='nearest')
+            h_mask = F.interpolate(h_mask, scale_factor=2, mode='nearest')
 
             h = torch.cat([h, h_dict[enc_h_key]], dim=1)
             h_mask = torch.cat([h_mask, h_mask_dict[enc_h_key]], dim=1)
             h, h_mask = getattr(self, dec_l_key)(h, h_mask)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: h.squeeze()}
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: h[:, 0, ...]}
 
         output = self.denormalize_output(data, output, norm_consts)
 

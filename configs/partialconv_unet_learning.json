@@ -17,11 +17,11 @@
                     }
                 },
                 "domain_defaults": {
-                    "batch_size": 6,
+                    "batch_size": 16,
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [64, 64]
+                        "size": [512, 512]
                     },
                     "num_workers": 4,
                     "shuffle": true,
@@ -30,11 +30,11 @@
                 "model": {
                     "name": "PartialConvUNet",
                     "save_frequency": 1,
-                    "input_dim": [64, 64],
+                    "input_dim": [512, 512],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
-                    "hidden_dims": [64, 128, 256],
-                    "input_normalization": false
+                    "input_normalization": false,
+                    "layer_size": 7
                 },
                 "optimizer": {
                     "name": "Adam",
