@@ -24,7 +24,7 @@ class Dataloader:
         transforms_config = dataset_config.get("transforms", {})
         for purpose in ["train", "val", "test"]:
             transforms[purpose] = assemble_transforms(purpose, transforms_config.get(purpose, {}),
-                                                      dataset_config["size"], True)
+                                                      dataset_config["size"], to_pil=True)
 
         subsets = {}
         if "split" in dataset_config:

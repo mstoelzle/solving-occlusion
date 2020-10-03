@@ -26,11 +26,14 @@ class BaseDataset(VisionDataset):
         self.img_loader = torchvision_default_loader
 
     def prepare_item(self, data: dict) -> Dict[ChannelEnum, torch.Tensor]:
-        output = {}
         for key, value in data.items():
             if type(key) == str:
-                key = ChannelEnum(key)
+                new_key = ChannelEnum(key)
+                data[new_key] = value
+                del data[key]
 
+        output = {}
+        for key, value in data.items():
             if issubclass(type(value), pathlib.Path):
                 value = self.img_loader(value)
 
@@ -40,24 +43,31 @@ class BaseDataset(VisionDataset):
                 # this code is made for the TrasysPlanetaryDataset
                 value = value[0, ...]
             elif issubclass(type(value), np.ndarray):
-                # we need to make sure the array is writable
                 value = torch.tensor(value)
-
-            if self.transform is not None and key != ChannelEnum.PARAMS:
-                value = self.transform(value).squeeze()
 
             if key == ChannelEnum.BINARY_OCCLUSION_MAP:
                 value = value.to(dtype=torch.bool)
 
             output[key] = value
 
-        if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.OCCLUDED_ELEVATION_MAP not in output:
+        if ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
+            output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
+                occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+
+        # apply transforms
+        for key, value in output.items():
+            if self.transform is not None and key != ChannelEnum.PARAMS and key != ChannelEnum.OCCLUDED_ELEVATION_MAP:
+                if value.dtype == torch.bool:
+                    value = value.to(dtype=torch.int)
+
+                value = self.transform(value).squeeze()
+                output[key] = value
+
+        if ChannelEnum.BINARY_OCCLUSION_MAP in output:
+            output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
             output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
                 elevation_map=output[ChannelEnum.ELEVATION_MAP],
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
-        elif ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
-            output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
-                occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
         else:
             raise ValueError
 

@@ -279,10 +279,10 @@ TRANSFORM_GENERATORS = {
 }
 
 
-def assemble_transforms(purpose: str, transform_specs: Dict, size_spec, np_input: bool = False):
+def assemble_transforms(purpose: str, transform_specs: Dict, size_spec, to_pil: bool = False):
     transform_sequence: List = []
 
-    if np_input:
+    if to_pil:
         transform_sequence.append(transforms.ToPILImage())
 
     for transform_name in transform_specs:
