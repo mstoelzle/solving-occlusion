@@ -1,0 +1,62 @@
+{
+    "name": "baseline_standard_stairs_learning",
+    "cuda": false,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": ["reconstruction", "reconstruction_occlusion"],
+                    "train_weights": {
+                        "reconstruction": 1,
+                        "reconstruction_occlusion": 0
+                    },
+                    "eval_weights": {
+                        "reconstruction": 0,
+                        "reconstruction_occlusion": 1
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 144,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
+                    },
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "Telea",
+                    "input_dim": [64, 64],
+                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "out_channels": ["reconstructed_elevation_map"],
+                    "input_normalization": true,
+                    "inpaint_radius": 3
+                },
+                "optimizer": {
+                    "name": "SGD",
+                    "lr": 0.001,
+                    "weight_decay": 0.001,
+                    "momentum": 0.9
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  10, "correlation_occluded_area": true}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101]
+}
