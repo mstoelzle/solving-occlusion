@@ -133,7 +133,7 @@ class PartialConvUNet(BaseModel):
         super().__init__(**kwargs)
 
         # we dont have RGB images but rather 1-channel inputs
-        input_channels = 3
+        input_channels = 1
 
         # this only works for input channels occluded elevation map and binary occlusion map
         assert self.in_channels == [ChannelEnum.OCCLUDED_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP]
@@ -166,11 +166,11 @@ class PartialConvUNet(BaseModel):
         h_mask_dict = {}  # for the output of enc_N
 
         # input and mask
-        # image = input[:, 0:1, ...]
-        image = torch.cat((input[:, 0:1, ...], input[:, 0:1, ...], input[:, 0:1, ...]), dim=1)
+        image = input[:, 0:1, ...]
+        # image = torch.cat((input[:, 0:1, ...], input[:, 0:1, ...], input[:, 0:1, ...]), dim=1)
 
-        # mask = input[:, 1:2, ...]
-        mask = torch.cat((input[:, 1:2, ...], input[:, 1:2, ...], input[:, 1:2, ...]), dim=1)
+        mask = input[:, 1:2, ...]
+        # mask = torch.cat((input[:, 1:2, ...], input[:, 1:2, ...], input[:, 1:2, ...]), dim=1)
         h_dict['h_0'], h_mask_dict['h_0'] = image, mask
 
         h_key_prev = 'h_0'
