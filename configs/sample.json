@@ -40,8 +40,7 @@
                         "path": "logs/2020-09-24-13-03-59_dataset_generation_sample_maximilianstoelzle/DATASET_OCCLUSION.hdf5"
                     },
                     "num_workers": 4,
-                    "shuffle": true,
-                    "size": [64, 64]
+                    "shuffle": true
                 },
                 "model": {
                     "name": "VanillaVAE",

@@ -24,8 +24,7 @@
                         "size": [64, 64]
                     },
                     "num_workers": 4,
-                    "shuffle": true,
-                    "size": [64, 64]
+                    "shuffle": true
                 },
                 "model": {
                     "name": "PartialConvUNet",
@@ -55,7 +54,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  30}
+        "visualization": {"sample_frequency":  10, "correlation_occluded_area": true}
     },
     "logging": {
         "upload": false

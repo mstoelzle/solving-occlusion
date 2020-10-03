@@ -26,8 +26,7 @@
                         "size": [64, 64]
                     },
                     "num_workers": 4,
-                    "shuffle": true,
-                    "size": [64, 64]
+                    "shuffle": true
                 },
                 "model": {
                     "name": "UNet",
