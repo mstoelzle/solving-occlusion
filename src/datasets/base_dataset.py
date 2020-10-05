@@ -73,7 +73,7 @@ class BaseDataset(VisionDataset):
 
             # the encoded elevation map of the trasys dataset measures the orthogonal distance
             # from the camera to the terrain
-            output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP]
+            output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP] * 255
 
         # apply transforms
         if self.transform is not None:
