@@ -62,18 +62,23 @@ class BaseDataset(VisionDataset):
         input_size = output[ChannelEnum.ELEVATION_MAP].size(0)
 
         if trasys is True:
-            # TODO: add actual params from dataset metadata
-            terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
             camera_elevation = 2.  # Camera is elevated on 2m
-
-            output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., camera_elevation, 0.])
 
             # the binary occlusion mask is inverse for the trasys planetary dataset
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
 
             # the encoded elevation map of the trasys dataset measures the orthogonal distance
             # from the camera to the terrain
-            output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP] * 255
+            output[ChannelEnum.ELEVATION_MAP] = output[ChannelEnum.ELEVATION_MAP] * 255
+            # output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP] * 255
+
+            # TODO: add actual params from dataset metadata
+            terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
+            x_grid = output[ChannelEnum.ELEVATION_MAP].size(0) // 2
+            y_grid = output[ChannelEnum.ELEVATION_MAP].size(1) // 2
+            robot_position_z = output[ChannelEnum.ELEVATION_MAP][x_grid, y_grid] + camera_elevation
+
+            output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., robot_position_z, 0.])
 
         # apply transforms
         if self.transform is not None:
