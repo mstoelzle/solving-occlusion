@@ -16,10 +16,11 @@ logger = get_logger("base_dataset")
 
 
 class BaseDataset(VisionDataset):
-    def __init__(self, dataset_path: pathlib.Path, purpose: str = None,
+    def __init__(self, config: dict, dataset_path: pathlib.Path, purpose: str = None,
                  transform: Optional[Callable] = None, transforms: Optional[Callable] = None):
         super().__init__(root=str(dataset_path), transform=transform, transforms=transforms)
 
+        self.config = config
         self.purpose = purpose
         self.dataset_path = dataset_path
 

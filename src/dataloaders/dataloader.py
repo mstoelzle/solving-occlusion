@@ -37,7 +37,7 @@ class Dataloader:
             for purpose in split.keys():
                 split[purpose] /= total_split_sum
 
-            dataset = DATASETS[dataset_type](dataset_path=pathlib.Path(dataset_config["path"]))
+            dataset = DATASETS[dataset_type](config=dataset_config, dataset_path=pathlib.Path(dataset_config["path"]))
 
             indices = np.arange(len(dataset))
 
@@ -52,7 +52,8 @@ class Dataloader:
 
                 # we need to separately create a subset dataset because we need to apply purpose-specific transforms
                 if transforms[purpose] is not None:
-                    subset_dataset = DATASETS[dataset_type](dataset_path=pathlib.Path(dataset_config["path"]),
+                    subset_dataset = DATASETS[dataset_type](config=dataset_config,
+                                                            dataset_path=pathlib.Path(dataset_config["path"]),
                                                             purpose=purpose, transform=transforms[purpose])
                     subsets[purpose] = Subset(subset_dataset, subset_indices)
                 else:
@@ -65,7 +66,8 @@ class Dataloader:
             if len(subsets) > 0:
                 purpose_dataset = subsets[purpose]
             else:
-                purpose_dataset = DATASETS[dataset_type](dataset_path=pathlib.Path(dataset_config["path"]),
+                purpose_dataset = DATASETS[dataset_type](config=dataset_config,
+                                                         dataset_path=pathlib.Path(dataset_config["path"]),
                                                          purpose=purpose, transform=transforms[purpose])
 
             self.dataloaders[purpose] = TorchDataLoader(dataset=purpose_dataset,
