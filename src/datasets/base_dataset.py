@@ -26,7 +26,7 @@ class BaseDataset(VisionDataset):
 
         self.img_loader = torchvision_default_loader
 
-    def prepare_item(self, data: dict) -> Dict[ChannelEnum, torch.Tensor]:
+    def prepare_item(self, data: dict, trasys: bool = False) -> Dict[ChannelEnum, torch.Tensor]:
         for key, value in data.items():
             if type(key) == str:
                 new_key = ChannelEnum(key)
@@ -55,13 +55,49 @@ class BaseDataset(VisionDataset):
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
                 occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
-        # apply transforms
-        for key, value in output.items():
-            if self.transform is not None and key != ChannelEnum.PARAMS and key != ChannelEnum.OCCLUDED_ELEVATION_MAP:
-                if value.dtype == torch.bool:
-                    value = value.to(dtype=torch.int)
+        # we require square dimension for now
+        assert output[ChannelEnum.ELEVATION_MAP].size(0) == output[ChannelEnum.ELEVATION_MAP].size(1)
+        if type(self.config["size"]) == list:
+            assert self.config["size"][0] == self.config["size"][1]
+        input_size = output[ChannelEnum.ELEVATION_MAP].size(0)
 
-                value = self.transform(value).squeeze()
+        if trasys is True:
+            # TODO: add actual params from dataset metadata
+            terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
+            camera_elevation = 2.  # Camera is elevated on 2m
+
+            output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., camera_elevation, 0.])
+
+            # the binary occlusion mask is inverse for the trasys planetary dataset
+            output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
+
+            # the encoded elevation map of the trasys dataset measures the orthogonal distance
+            # from the camera to the terrain
+            output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP]
+
+        # apply transforms
+        if self.transform is not None:
+            for key, value in output.items():
+                if key == ChannelEnum.PARAMS:
+                    # we need to apply the resizing to the terrain resolution
+                    input_resolution = value[0].item()
+                    if type(self.config["size"]) == list:
+                        output_size = self.config["size"][0]
+                    elif type(self.config["size"]) == int:
+                        output_size = self.config["size"]
+                    else:
+                        raise ValueError
+
+                    output_resolution = input_resolution * input_size / output_size
+                    value[0] = output_resolution
+                elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP:
+                    if value.dtype == torch.bool:
+                        value = value.to(dtype=torch.int)
+
+                    value = self.transform(value).squeeze()
+                else:
+                    continue
+
                 output[key] = value
 
         if ChannelEnum.BINARY_OCCLUSION_MAP in output:

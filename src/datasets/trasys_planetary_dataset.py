@@ -34,13 +34,7 @@ class TrasysPlanetaryDataset(BaseDataset):
     def __getitem__(self, idx: int) -> Dict[Union[str, ChannelEnum], torch.Tensor]:
         sample_dict = self.samples[idx]
 
-        data = self.prepare_item(sample_dict)
-
-        # the binary occlusion mask is inverse for the trasys planetary dataset
-        data[ChannelEnum.BINARY_OCCLUSION_MAP] = ~data[ChannelEnum.BINARY_OCCLUSION_MAP]
-
-        # TODO: add actual params from dataset metadata
-        data[ChannelEnum.PARAMS] = torch.tensor([0.04, 0., 0., 0., 0.])
+        data = self.prepare_item(sample_dict, trasys=True)
 
         return data
 
