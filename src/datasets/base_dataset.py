@@ -38,7 +38,7 @@ class BaseDataset(VisionDataset):
         output = {}
         for key, value in data.items():
             if issubclass(type(value), pathlib.Path):
-                if value.suffix == ".tif" or value.suffix == ".tiff":
+                if value.suffix in [".tif", ".tiff", ".TIF", ".TIFF"]:
                     value = tifffile.imread(str(value))
                 else:
                     value = self.img_loader(str(value))
