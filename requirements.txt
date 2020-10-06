@@ -2,6 +2,7 @@
 coloredlogs==14.0
 gspread>=3.6, <4.0
 h5py>=2.10.0, <3.0
+imagecodecs==2020.5.30
 jsonschema>=3.2, <4.0
 matplotlib>=3.3.1, <4.0
 numpy>=1.19.1, <2.0
@@ -12,5 +13,6 @@ progress==1.5
 psutil==5.7.2
 seaborn>=0.11.0
 tensorboard>=2.3.0, <3.0
+tifffile==2020.10.1
 torch>=1.6, <2.0
 torchvision>=0.7, <1.0

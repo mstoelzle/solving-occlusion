@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pathlib
 from PIL import Image
+import tifffile
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset as TorchDataset, Subset
 from torchvision.transforms import ToTensor, Resize
 from torchvision.datasets import VisionDataset
@@ -36,13 +38,15 @@ class BaseDataset(VisionDataset):
         output = {}
         for key, value in data.items():
             if issubclass(type(value), pathlib.Path):
-                value = self.img_loader(value)
+                if value.suffix == ".tif" or value.suffix == ".tiff":
+                    value = tifffile.imread(str(value))
+                else:
+                    value = self.img_loader(str(value))
 
             if issubclass(type(value), Image.Image):
                 value = ToTensor()(value)
-
-                # this code is made for the TrasysPlanetaryDataset
-                value = value[0, ...]
+                if value.dim() > 2:
+                    value = value[0, ...]
             elif issubclass(type(value), np.ndarray):
                 value = torch.tensor(value)
 
@@ -66,11 +70,6 @@ class BaseDataset(VisionDataset):
 
             # the binary occlusion mask is inverse for the trasys planetary dataset
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
-
-            # the encoded elevation map of the trasys dataset measures the orthogonal distance
-            # from the camera to the terrain
-            output[ChannelEnum.ELEVATION_MAP] = output[ChannelEnum.ELEVATION_MAP] * 255
-            # output[ChannelEnum.ELEVATION_MAP] = camera_elevation - output[ChannelEnum.ELEVATION_MAP] * 255
 
             # TODO: add actual params from dataset metadata
             terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
@@ -96,10 +95,23 @@ class BaseDataset(VisionDataset):
                     output_resolution = input_resolution * input_size / output_size
                     value[0] = output_resolution
                 elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP:
-                    if value.dtype == torch.bool:
-                        value = value.to(dtype=torch.int)
+                    # the interpolation / resizing does not work with NaNs in the occluded elevation map
 
-                    value = self.transform(value).squeeze()
+                    # we need to improve this solution
+                    # the torchvision image transformation do not work well with elevation maps (unbounded values)
+                    if trasys:
+                        if value.dtype == torch.bool:
+                            value = value.to(dtype=torch.float)
+
+                        interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
+                        interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
+                        value = interpolation_output.squeeze()
+                    else:
+                        # the transform to a PIL image does not work for bool tensors
+                        if value.dtype == torch.bool:
+                            value = value.to(dtype=torch.int)
+
+                        value = self.transform(value).squeeze()
                 else:
                     continue
 
