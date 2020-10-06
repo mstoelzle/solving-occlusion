@@ -102,14 +102,15 @@ class PCBActiv(nn.Module):
     def __init__(self, in_ch, out_ch, bn=True, sample='none-3', activ='relu',
                  conv_bias=False):
         super().__init__()
-        if sample == 'down-5':
-            self.conv = PartialConv(in_ch, out_ch, 5, 2, 2, bias=conv_bias)
-        elif sample == 'down-7':
-            self.conv = PartialConv(in_ch, out_ch, 7, 2, 3, bias=conv_bias)
+
+        if sample == 'down-7':
+            self.conv = PartialConv(in_ch, out_ch, kernel_size=7, stride=2, padding=3, bias=conv_bias)
+        elif sample == 'down-5':
+            self.conv = PartialConv(in_ch, out_ch, kernel_size=5, stride=2, padding=2, bias=conv_bias)
         elif sample == 'down-3':
-            self.conv = PartialConv(in_ch, out_ch, 3, 2, 1, bias=conv_bias)
+            self.conv = PartialConv(in_ch, out_ch, kernel_size=3, stride=2, padding=1, bias=conv_bias)
         else:
-            self.conv = PartialConv(in_ch, out_ch, 3, 1, 1, bias=conv_bias)
+            self.conv = PartialConv(in_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=conv_bias)
 
         if bn:
             self.bn = nn.BatchNorm2d(out_ch)
