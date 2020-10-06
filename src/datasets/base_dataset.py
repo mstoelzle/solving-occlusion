@@ -64,6 +64,12 @@ class BaseDataset(VisionDataset):
         if type(self.config["size"]) == list:
             assert self.config["size"][0] == self.config["size"][1]
         input_size = output[ChannelEnum.ELEVATION_MAP].size(0)
+        if type(self.config["size"]) == list:
+            output_size = self.config["size"][0]
+        elif type(self.config["size"]) == int:
+            output_size = self.config["size"]
+        else:
+            raise ValueError
 
         if trasys is True:
             camera_elevation = 2.  # Camera is elevated on 2m
@@ -79,43 +85,28 @@ class BaseDataset(VisionDataset):
 
             output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., robot_position_z, 0.])
 
-        # apply transforms
-        if self.transform is not None:
-            for key, value in output.items():
-                if key == ChannelEnum.PARAMS:
-                    # we need to apply the resizing to the terrain resolution
-                    input_resolution = value[0].item()
-                    if type(self.config["size"]) == list:
-                        output_size = self.config["size"][0]
-                    elif type(self.config["size"]) == int:
-                        output_size = self.config["size"]
-                    else:
-                        raise ValueError
+        for key, value in output.items():
+            if key == ChannelEnum.PARAMS:
+                # we need to apply the resizing to the terrain resolution
+                input_resolution = value[0].item()
 
-                    output_resolution = input_resolution * input_size / output_size
-                    value[0] = output_resolution
-                elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP:
-                    # the interpolation / resizing does not work with NaNs in the occluded elevation map
+                output_resolution = input_resolution * input_size / output_size
+                value[0] = output_resolution
+            elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP and input_size != output_size:
+                # the interpolation / resizing does not work with NaNs in the occluded elevation map
 
-                    # we need to improve this solution
-                    # the torchvision image transformation do not work well with elevation maps (unbounded values)
-                    if trasys:
-                        if value.dtype == torch.bool:
-                            value = value.to(dtype=torch.float)
+                # we need to improve this solution
+                # the torchvision image transformation do not work well with elevation maps (unbounded values)
+                if value.dtype == torch.bool:
+                    value = value.to(dtype=torch.float)
 
-                        interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
-                        interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
-                        value = interpolation_output.squeeze()
-                    else:
-                        # the transform to a PIL image does not work for bool tensors
-                        if value.dtype == torch.bool:
-                            value = value.to(dtype=torch.int)
+                interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
+                interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
+                value = interpolation_output.squeeze()
+            else:
+                continue
 
-                        value = self.transform(value).squeeze()
-                else:
-                    continue
-
-                output[key] = value
+            output[key] = value
 
         if ChannelEnum.BINARY_OCCLUSION_MAP in output:
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
