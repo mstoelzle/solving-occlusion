@@ -130,34 +130,65 @@ class PCBActiv(nn.Module):
 
 class PartialConvUNet(BaseModel):
     # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/net.py
-    def __init__(self, layer_size=7, upsampling_mode='nearest', **kwargs):
+    def __init__(self, hidden_dims: List = None, num_layers=None, upsampling_mode='nearest', **kwargs):
         super().__init__(**kwargs)
 
-        # we dont have RGB images but rather 1-channel inputs
-        input_channels = 1
+        # we dont have RGB images but rather 1-channel inputs. The mask channel is accounted for separately
+        input_channels = len(self.in_channels) - 1
 
         # this only works for input channels occluded elevation map and binary occlusion map
         assert self.in_channels == [ChannelEnum.OCCLUDED_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP]
 
+        # either we use the standard Nvidia architecture or our own hidden_dims specification
+        assert hidden_dims is None or num_layers is None
+        assert hidden_dims is not None or num_layers is not None
+
         self.freeze_enc_bn = False
         self.upsampling_mode = upsampling_mode
-        self.layer_size = layer_size
-        self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7')
-        self.enc_2 = PCBActiv(64, 128, sample='down-5')
-        self.enc_3 = PCBActiv(128, 256, sample='down-5')
-        self.enc_4 = PCBActiv(256, 512, sample='down-3')
-        for i in range(4, self.layer_size):
-            name = 'enc_{:d}'.format(i + 1)
-            setattr(self, name, PCBActiv(512, 512, sample='down-3'))
 
-        for i in range(4, self.layer_size):
-            name = 'dec_{:d}'.format(i + 1)
-            setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky'))
-        self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky')
-        self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky')
-        self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky')
-        self.dec_1 = PCBActiv(64 + input_channels, input_channels,
-                              bn=False, activ=None, conv_bias=True)
+        if hidden_dims is None:
+            self.num_layers = num_layers
+
+            self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7')
+            self.enc_2 = PCBActiv(64, 128, sample='down-5')
+            self.enc_3 = PCBActiv(128, 256, sample='down-5')
+            self.enc_4 = PCBActiv(256, 512, sample='down-3')
+            for i in range(4, self.num_layers):
+                name = 'enc_{:d}'.format(i + 1)
+                setattr(self, name, PCBActiv(512, 512, sample='down-3'))
+
+            for i in range(4, self.num_layers):
+                name = 'dec_{:d}'.format(i + 1)
+                setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky'))
+            self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky')
+            self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky')
+            self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky')
+            self.dec_1 = PCBActiv(64 + input_channels, len(self.out_channels),
+                                  bn=False, activ=None, conv_bias=True)
+        else:
+            self.num_layers = len(hidden_dims)
+            self.hidden_dims = hidden_dims
+
+            in_channels = input_channels
+            for i, out_channels in enumerate(self.hidden_dims):
+                bn = True
+                if i == 0:
+                    bn = False
+
+                name = f"enc_{i+1}"
+                self.__setattr__(name, PCBActiv(in_channels, out_channels, bn=bn, sample="down-3"))
+
+                in_channels = out_channels
+
+            for i, out_channels in enumerate(reversed(self.hidden_dims[:-1])):
+                name = f"dec_{len(self.hidden_dims) - i}"
+                self.__setattr__(name, PCBActiv(in_channels + out_channels, out_channels, activ='leaky'))
+
+                in_channels = out_channels
+
+            self.dec_1 = PCBActiv(in_channels + input_channels, len(self.out_channels),
+                                  bn=False, activ=None, conv_bias=True)
+
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
@@ -175,14 +206,14 @@ class PartialConvUNet(BaseModel):
         h_dict['h_0'], h_mask_dict['h_0'] = image, mask
 
         h_key_prev = 'h_0'
-        for i in range(1, self.layer_size + 1):
+        for i in range(1, self.num_layers + 1):
             l_key = 'enc_{:d}'.format(i)
             h_key = 'h_{:d}'.format(i)
             h_dict[h_key], h_mask_dict[h_key] = getattr(self, l_key)(
                 h_dict[h_key_prev], h_mask_dict[h_key_prev])
             h_key_prev = h_key
 
-        h_key = 'h_{:d}'.format(self.layer_size)
+        h_key = 'h_{:d}'.format(self.num_layers)
         h, h_mask = h_dict[h_key], h_mask_dict[h_key]
 
         # concat upsampled output of h_enc_N-1 and dec_N+1, then do dec_N
@@ -190,7 +221,7 @@ class PartialConvUNet(BaseModel):
         #                            input         dec_2            dec_1
         #                            h_enc_7       h_enc_8          dec_8
 
-        for i in range(self.layer_size, 0, -1):
+        for i in range(self.num_layers, 0, -1):
             enc_h_key = 'h_{:d}'.format(i - 1)
             dec_l_key = 'dec_{:d}'.format(i)
 
