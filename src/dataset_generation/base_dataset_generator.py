@@ -36,7 +36,8 @@ class BaseDatasetGenerator(ABC):
         self.hdf5_file: Optional[h5py.File] = None
 
     def __enter__(self):
-        self.hdf5_file = h5py.File(str(self.hdf5_path), 'w')
+        self.hdf5_file = h5py.File(str(self.hdf5_path), 'a')
+        self.hdf5_file.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.hdf5_file.__exit__()
