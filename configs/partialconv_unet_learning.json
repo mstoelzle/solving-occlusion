@@ -33,6 +33,7 @@
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "input_normalization": false,
+                    "NaN_replacement": 0,
                     "layer_size": 4
                 },
                 "optimizer": {
