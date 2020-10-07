@@ -46,9 +46,12 @@ class BaseModel(ABC, nn.Module):
             if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
                 channel_data = self.preprocess_occluded_elevation_map(channel_data)
 
+            if in_channel == ChannelEnum.BINARY_OCCLUSION_MAP:
+                channel_data = ~channel_data
+
             if input is None:
-                input = channel_data.new_zeros(size=(channel_data.size(0), len(self.in_channels),
-                                                     channel_data.size(1), channel_data.size(2)))
+                input_size = (channel_data.size(0), len(self.in_channels), channel_data.size(1), channel_data.size(2))
+                input = channel_data.new_zeros(size=input_size, dtype=torch.float32)
 
             input[:, channel_idx, ...] = channel_data.unsqueeze(dim=1)[:, 0, :, :]
 
