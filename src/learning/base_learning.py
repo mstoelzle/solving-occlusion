@@ -103,7 +103,7 @@ class BaseLearning(ABC):
             raise NotImplementedError("Pick a valid optimizer")
 
     def __enter__(self):
-        self.results_hdf5_file = h5py.File(str(self.results_hdf5_path), 'w')
+        self.results_hdf5_file = h5py.File(str(self.results_hdf5_path), 'a')
         self.results_hdf5_file.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
