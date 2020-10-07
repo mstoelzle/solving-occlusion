@@ -36,7 +36,8 @@
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
-                    "bilinear": true
+                    "bilinear": true,
+                    "NaN_replacement": 0
                 },
                 "optimizer": {
                     "name": "Adam",
