@@ -1,5 +1,5 @@
 {
-    "name": "baseline_standard_stairs_learning",
+    "name": "baseline_height_map_learning",
     "cuda": false,
     "experiment": {
         "task_path": {
@@ -20,7 +20,7 @@
                     "batch_size": 144,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64]
                     },
                     "num_workers": 4,
