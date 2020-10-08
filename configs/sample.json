@@ -49,7 +49,10 @@
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [32, 64],
                     "latent_dim": 128,
-                    "input_normalization": true,
+                    "input_normalization": {
+                        "mean": true,
+                        "stdev": false
+                    },
                     "NaN_replacement": 0,
                     "inpaint_radius": 3
                 },

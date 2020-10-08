@@ -10,7 +10,8 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 
 class BaseModel(ABC, nn.Module):
-    def __init__(self, in_channels: List[str], out_channels: List[str], **kwargs):
+    def __init__(self, in_channels: List[str], out_channels: List[str],
+                 input_normalization: Dict = None, **kwargs):
         super().__init__()
         self.config = kwargs
 
@@ -19,7 +20,10 @@ class BaseModel(ABC, nn.Module):
         self.in_channels = [ChannelEnum(in_channel) for in_channel in in_channels]
         self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
 
-        self.input_normalization: bool = self.config.get("input_normalization", True)
+        if input_normalization is None or input_normalization is False:
+            self.input_normalization = None
+        else:
+            self.input_normalization = input_normalization
 
     @abstractmethod
     def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
@@ -38,9 +42,10 @@ class BaseModel(ABC, nn.Module):
             else:
                 raise NotImplementedError
 
-            if self.input_normalization:
+            if self.input_normalization is not None:
                 if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or in_channel == ChannelEnum.ELEVATION_MAP:
                     channel_data, norm_consts[in_channel] = InputNormalization.normalize(in_channel, channel_data,
+                                                                                         **self.input_normalization,
                                                                                          batch=True)
 
             if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
@@ -82,10 +87,10 @@ class BaseModel(ABC, nn.Module):
                            output: Dict[Union[ChannelEnum, str], torch.Tensor],
                            norm_consts: dict) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
 
-        if self.input_normalization:
+        if self.input_normalization is not None:
             denormalized_output = {}
             for key, value in output.items():
-                if self.input_normalization is True and key == ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
+                if ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
                     if ChannelEnum.ELEVATION_MAP in norm_consts:
                         denormalize_norm_const = norm_consts[ChannelEnum.ELEVATION_MAP]
                     elif ChannelEnum.OCCLUDED_ELEVATION_MAP in norm_consts:
@@ -95,7 +100,8 @@ class BaseModel(ABC, nn.Module):
 
                     denormalized_output[key] = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
                                                                               input=value, batch=True,
-                                                                              norm_consts=denormalize_norm_const)
+                                                                              norm_consts=denormalize_norm_const,
+                                                                              **self.input_normalization)
                 else:
                     denormalized_output[key] = value
         else:
@@ -122,10 +128,11 @@ class BaseModel(ABC, nn.Module):
             reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
             norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.ELEVATION_MAP,
                                                                                         input=elevation_map,
-                                                                                        batch=True)
+                                                                                        batch=True,
+                                                                                        mean=True, stdev=True)
             norm_reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
                                                                                input=reconstructed_elevation_map,
-                                                                               batch=True,
+                                                                               batch=True, mean=True, stdev=True,
                                                                                norm_consts=ground_truth_norm_consts)
             norm_data[ChannelEnum.ELEVATION_MAP] = norm_elevation_map
             norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP] = norm_reconstructed_elevation_map
