@@ -100,17 +100,33 @@ class PartialConv(nn.Module):
 
 class PCBActiv(nn.Module):
     def __init__(self, in_ch, out_ch, bn=True, sample='none-3', activ='relu',
-                 conv_bias=False):
+                 conv_bias=False, partial_conv: bool = True):
         super().__init__()
 
         if sample == 'down-7':
-            self.conv = PartialConv(in_ch, out_ch, kernel_size=7, stride=2, padding=3, bias=conv_bias)
+            kernel_size = 7
+            stride = 2
+            padding = 3
         elif sample == 'down-5':
-            self.conv = PartialConv(in_ch, out_ch, kernel_size=5, stride=2, padding=2, bias=conv_bias)
+            kernel_size = 5
+            stride = 2
+            padding = 2
         elif sample == 'down-3':
-            self.conv = PartialConv(in_ch, out_ch, kernel_size=3, stride=2, padding=1, bias=conv_bias)
+            kernel_size = 3
+            stride = 2
+            padding = 1
         else:
-            self.conv = PartialConv(in_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=conv_bias)
+            kernel_size = 3
+            stride = 1
+            padding = 1
+
+        if partial_conv:
+            self.conv = PartialConv(in_ch, out_ch, kernel_size=kernel_size, stride=stride, padding=padding,
+                                    bias=conv_bias)
+        else:
+            # this uses just vanilla convolutions instead of partial convolutions
+            self.conv = nn.Conv2d(2*in_ch, 2*out_ch, kernel_size=kernel_size,
+                                  stride=stride, padding=padding, bias=conv_bias)
 
         if bn:
             self.bn = nn.BatchNorm2d(out_ch)
@@ -120,7 +136,15 @@ class PCBActiv(nn.Module):
             self.activation = nn.LeakyReLU(negative_slope=0.2)
 
     def forward(self, input, input_mask):
-        h, h_mask = self.conv(input, input_mask)
+        if isinstance(self.conv, PartialConv):
+            h, h_mask = self.conv(input, input_mask)
+        else:
+            # this uses just vanilla convolutions instead of partial convolutions
+            conv_output = self.conv(torch.cat((input, input_mask), dim=1))
+            num_channels = conv_output.size(1)
+            h = conv_output[:, 0:int(num_channels // 2), ...]
+            h_mask = conv_output[:, int(num_channels // 2):, ...]
+
         if hasattr(self, 'bn'):
             h = self.bn(h)
         if hasattr(self, 'activation'):
@@ -130,7 +154,8 @@ class PCBActiv(nn.Module):
 
 class PartialConvUNet(BaseModel):
     # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/net.py
-    def __init__(self, hidden_dims: List = None, num_layers=None, upsampling_mode='nearest', **kwargs):
+    def __init__(self, hidden_dims: List = None, num_layers=None, upsampling_mode='nearest', partial_conv: bool = True,
+                 **kwargs):
         super().__init__(**kwargs)
 
         # we dont have RGB images but rather 1-channel inputs. The mask channel is accounted for separately
@@ -143,28 +168,29 @@ class PartialConvUNet(BaseModel):
         assert hidden_dims is None or num_layers is None
         assert hidden_dims is not None or num_layers is not None
 
+        self.partial_conv = partial_conv
         self.freeze_enc_bn = False
         self.upsampling_mode = upsampling_mode
 
         if hidden_dims is None:
             self.num_layers = num_layers
 
-            self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7')
-            self.enc_2 = PCBActiv(64, 128, sample='down-5')
-            self.enc_3 = PCBActiv(128, 256, sample='down-5')
-            self.enc_4 = PCBActiv(256, 512, sample='down-3')
+            self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7', partial_conv=self.partial_conv)
+            self.enc_2 = PCBActiv(64, 128, sample='down-5', partial_conv=self.partial_conv)
+            self.enc_3 = PCBActiv(128, 256, sample='down-5', partial_conv=self.partial_conv)
+            self.enc_4 = PCBActiv(256, 512, sample='down-3', partial_conv=self.partial_conv)
             for i in range(4, self.num_layers):
                 name = 'enc_{:d}'.format(i + 1)
-                setattr(self, name, PCBActiv(512, 512, sample='down-3'))
+                setattr(self, name, PCBActiv(512, 512, sample='down-3', partial_conv=self.partial_conv))
 
             for i in range(4, self.num_layers):
                 name = 'dec_{:d}'.format(i + 1)
-                setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky'))
-            self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky')
-            self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky')
-            self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky')
+                setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky', partial_conv=self.partial_conv))
+            self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky', partial_conv=self.partial_conv)
+            self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky', partial_conv=self.partial_conv)
+            self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky', partial_conv=self.partial_conv)
             self.dec_1 = PCBActiv(64 + input_channels, len(self.out_channels),
-                                  bn=False, activ=None, conv_bias=True)
+                                  bn=False, activ=None, conv_bias=True, partial_conv=self.partial_conv)
         else:
             self.num_layers = len(hidden_dims)
             self.hidden_dims = hidden_dims
@@ -176,18 +202,20 @@ class PartialConvUNet(BaseModel):
                     bn = False
 
                 name = f"enc_{i+1}"
-                self.__setattr__(name, PCBActiv(in_channels, out_channels, bn=bn, sample="down-3"))
+                self.__setattr__(name, PCBActiv(in_channels, out_channels, bn=bn, sample="down-3",
+                                                partial_conv=self.partial_conv))
 
                 in_channels = out_channels
 
             for i, out_channels in enumerate(reversed(self.hidden_dims[:-1])):
                 name = f"dec_{len(self.hidden_dims) - i}"
-                self.__setattr__(name, PCBActiv(in_channels + out_channels, out_channels, activ='leaky'))
+                self.__setattr__(name, PCBActiv(in_channels + out_channels, out_channels, activ='leaky',
+                                                partial_conv=self.partial_conv))
 
                 in_channels = out_channels
 
             self.dec_1 = PCBActiv(in_channels + input_channels, len(self.out_channels),
-                                  bn=False, activ=None, conv_bias=True)
+                                  bn=False, activ=None, conv_bias=True, partial_conv=self.partial_conv)
 
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
