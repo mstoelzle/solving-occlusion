@@ -51,83 +51,8 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {"batch_size":  6}},
+                    "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {"batch_size":  24}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {"batch_size":  48}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {"batch_size":  128}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "optimizer": {"lr": 0.001}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "optimizer": {"lr": 0.0005}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "optimizer": {"lr": 0.0001}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader": "target"},
-                    "loss": {
-                        "train_weights": {
-                            "reconstruction_occlusion": 1,
-                            "reconstruction_non_occlusion": 1
-                        }
-                    }
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader": "target"},
-                    "loss": {
-                        "train_weights": {
-                            "reconstruction_occlusion": 1,
-                            "reconstruction_non_occlusion": 1
-                        }
-                    }
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader": "target"},
-                    "loss": {
-                        "train_weights": {
-                            "reconstruction_occlusion": 0,
-                            "reconstruction_non_occlusion": 1
-                        }
-                    }
                 }
             ]
         },
