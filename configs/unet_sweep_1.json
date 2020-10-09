@@ -1,5 +1,5 @@
 {
-    "name": "unet_learning.json",
+    "name": "unet_sweep_1",
     "cuda": true,
     "experiment": {
         "task_path": {
