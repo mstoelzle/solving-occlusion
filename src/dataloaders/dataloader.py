@@ -70,9 +70,13 @@ class Dataloader:
                                                          dataset_path=pathlib.Path(dataset_config["path"]),
                                                          purpose=purpose, transform=transforms[purpose])
 
+            shuffle = self.config.get("shuffle", True)
+            if purpose in ["test"]:
+                shuffle = False
+
             self.dataloaders[purpose] = TorchDataLoader(dataset=purpose_dataset,
                                                         batch_size=self.config["batch_size"],
-                                                        shuffle=self.config.get("shuffle", True),
+                                                        shuffle=shuffle,
                                                         num_workers=self.config["num_workers"])
 
     def __str__(self):
