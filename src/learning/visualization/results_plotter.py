@@ -57,18 +57,19 @@ class ResultsPlotter:
             elevation_map = data_hdf5_group[ChannelEnum.ELEVATION_MAP.value][idx, ...]
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
+            inpainted_elevation_map = data_hdf5_group[ChannelEnum.INPAINTED_ELEVATION_MAP.value][idx, ...]
 
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
             # 2D
             vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map),
-                           np.min(reconstructed_elevation_map)])
+                           np.min(reconstructed_elevation_map), np.min(inpainted_elevation_map)])
             vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map),
-                           np.max(reconstructed_elevation_map)])
+                           np.max(reconstructed_elevation_map), np.max(inpainted_elevation_map)])
             cmap = plt.get_cmap("viridis")
 
-            fig, axes = plt.subplots(nrows=1, ncols=3, figsize=[2 * 6.4, 1 * 4.8])
-            axes = np.expand_dims(axes, axis=0)
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
+            # axes = np.expand_dims(axes, axis=0)
 
             axes[0, 0].set_title("Ground-truth")
             # matshow plots x and y swapped
@@ -76,10 +77,13 @@ class ResultsPlotter:
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
             mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
-            axes[0, 2].set_title("Occlusion")
+            axes[1, 0].set_title("Inpainting")
             # matshow plots x and y swapped
-            mat = axes[0, 2].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
-            fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.015)
+            mat = axes[1, 0].matshow(np.swapaxes(inpainted_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            axes[1, 1].set_title("Occlusion")
+            # matshow plots x and y swapped
+            mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
             terrain_resolution = params[0]
             robot_position_x = params[1]
