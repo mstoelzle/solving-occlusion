@@ -7,7 +7,7 @@ from typing import *
 from ..utils.log import get_logger
 from src.enums import *
 from src.datasets import DATASETS
-from src.datasets.transforms import assemble_transforms
+from src.datasets.transforms import Transformer
 
 logger = get_logger("dataloader")
 
@@ -23,8 +23,10 @@ class Dataloader:
         transforms = {}
         transforms_config = dataset_config.get("transforms", {})
         for purpose in ["train", "val", "test"]:
-            transforms[purpose] = assemble_transforms(purpose, transforms_config.get(purpose, {}),
-                                                      dataset_config["size"], to_pil=True)
+            if purpose in transforms_config and len(transforms_config.get(purpose, [])) > 0:
+                transforms[purpose] = Transformer(purpose, transforms_config.get(purpose, []))
+            else:
+                transforms[purpose] = None
 
         subsets = {}
         if "split" in dataset_config:

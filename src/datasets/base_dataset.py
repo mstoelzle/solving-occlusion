@@ -6,8 +6,6 @@ import tifffile
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset as TorchDataset, Subset
-from torchvision.transforms import ToTensor, Resize
-from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import default_loader as torchvision_default_loader
 from typing import *
 
@@ -17,14 +15,14 @@ from src.utils.log import get_logger
 logger = get_logger("base_dataset")
 
 
-class BaseDataset(VisionDataset):
+class BaseDataset(ABC):
     def __init__(self, config: dict, dataset_path: pathlib.Path, purpose: str = None,
-                 transform: Optional[Callable] = None, transforms: Optional[Callable] = None):
-        super().__init__(root=str(dataset_path), transform=transform, transforms=transforms)
-
+                 transform: Optional[Callable] = None):
         self.config = config
         self.purpose = purpose
         self.dataset_path = dataset_path
+
+        self.transform = transform
 
         self.img_loader = torchvision_default_loader
 
@@ -44,7 +42,7 @@ class BaseDataset(VisionDataset):
                     value = self.img_loader(str(value))
 
             if issubclass(type(value), Image.Image):
-                value = ToTensor()(value)
+                value = torch.tensor(np.array(value))
                 if value.dim() > 2:
                     value = value[0, ...]
             elif issubclass(type(value), np.ndarray):
@@ -113,6 +111,9 @@ class BaseDataset(VisionDataset):
             output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
                 elevation_map=output[ChannelEnum.ELEVATION_MAP],
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
+
+            if self.transform is not None:
+                output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.transform(output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
         else:
             raise ValueError
 

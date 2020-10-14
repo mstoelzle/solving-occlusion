@@ -12,8 +12,13 @@
                     "batch_size": 32,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-09-10-10-21-05_dataset_generation_synthetic_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [64, 64]
+                        "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64],
+                        "transforms": {
+                            "train": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
+                            "val": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
+                            "test": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}]
+                        }
                     },
                     "num_workers": 4,
                     "shuffle": true
