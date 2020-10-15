@@ -62,10 +62,12 @@
                     "model_to_train": "untrained",
                     "domains": {
                         "target": {
-                            "transforms": {
-                                "train": [{"type": "random_noise", "stdev": 0.05, "deterministic": false}],
-                                "val": [{"type": "random_noise", "stdev": 0.05, "deterministic": false}],
-                                "test": [{"type": "random_noise", "stdev": 0.05, "deterministic": true}]
+                            "dataset": {
+                                "transforms": {
+                                    "train": [{"type": "random_noise", "stdev": 0.05, "deterministic": false}],
+                                    "val": [{"type": "random_noise", "stdev": 0.05, "deterministic": false}],
+                                    "test": [{"type": "random_noise", "stdev": 0.05, "deterministic": true}]
+                                }
                             }
                         }
                     },
@@ -76,10 +78,12 @@
                     "model_to_train": "untrained",
                     "domains": {
                         "target": {
-                            "transforms": {
-                                "train": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
-                                "val": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
-                                "test": [{"type": "random_noise", "stdev": 0.1, "deterministic": true}]
+                            "dataset": {
+                                "transforms": {
+                                    "train": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
+                                    "val": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
+                                    "test": [{"type": "random_noise", "stdev": 0.1, "deterministic": true}]
+                                }
                             }
                         }
                     },
@@ -90,10 +94,12 @@
                     "model_to_train": "untrained",
                     "domains": {
                         "target": {
-                            "transforms": {
-                                "train": [{"type": "random_noise", "stdev": 0.2, "deterministic": false}],
-                                "val": [{"type": "random_noise", "stdev": 0.2, "deterministic": false}],
-                                "test": [{"type": "random_noise", "stdev": 0.2, "deterministic": true}]
+                            "dataset": {
+                                "transforms": {
+                                    "train": [{"type": "random_noise", "stdev": 0.2, "deterministic": false}],
+                                    "val": [{"type": "random_noise", "stdev": 0.2, "deterministic": false}],
+                                    "test": [{"type": "random_noise", "stdev": 0.2, "deterministic": true}]
+                                }
                             }
                         }
                     },
