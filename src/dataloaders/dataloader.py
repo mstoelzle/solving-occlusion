@@ -23,8 +23,9 @@ class Dataloader:
         transforms = {}
         transforms_config = dataset_config.get("transforms", {})
         for purpose in ["train", "val", "test"]:
-            if purpose in transforms_config and len(transforms_config.get(purpose, [])) > 0:
-                transforms[purpose] = Transformer(purpose, transforms_config.get(purpose, []))
+            purpose_transforms_config = transforms_config.get(purpose, [])
+            if len(purpose_transforms_config) > 0:
+                transforms[purpose] = Transformer(purpose, purpose_transforms_config)
             else:
                 transforms[purpose] = None
 
