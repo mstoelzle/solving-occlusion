@@ -93,8 +93,6 @@ class BaseDataset(ABC):
             elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP and input_size != output_size:
                 # the interpolation / resizing does not work with NaNs in the occluded elevation map
 
-                # we need to improve this solution
-                # the torchvision image transformation do not work well with elevation maps (unbounded values)
                 if value.dtype == torch.bool:
                     value = value.to(dtype=torch.float)
 
