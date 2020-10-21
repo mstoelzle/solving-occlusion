@@ -4,7 +4,7 @@ import numpy as np
 from progress.bar import Bar
 
 from .base_dataset_generator import BaseDatasetGenerator
-from src.enums.terrain_type_enum import TerrainTypeEnum
+from src.enums.synthetic_terrain_type_enum import SyntheticTerrainTypeEnum
 
 
 @dataclass
@@ -43,7 +43,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         self.terrain_types = []
         assert len(self.config.get("terrain_types", [])) > 0
         for terrain_type_name in self.config.get("terrain_types", []):
-            terrain_type = TerrainTypeEnum[terrain_type_name]
+            terrain_type = SyntheticTerrainTypeEnum[terrain_type_name]
             self.terrain_types.append(terrain_type)
 
         self.terrain_width = self.config["elevation_map"]["size"]

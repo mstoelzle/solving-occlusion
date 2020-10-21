@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-class TerrainTypeEnum(IntEnum):
+class SyntheticTerrainTypeEnum(IntEnum):
     HEIGHT_MAP = 0
     HEIGHT_MAP_DISCRETE = 1
     HEIGHT_MAP_STEPS = 2
