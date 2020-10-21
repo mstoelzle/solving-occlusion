@@ -144,6 +144,12 @@ class BaseModel(ABC, nn.Module):
                            output: Dict[Union[ChannelEnum, str], torch.Tensor],
                            data: Dict[ChannelEnum, torch.Tensor],
                            **kwargs) -> dict:
+        if ChannelEnum.ELEVATION_MAP not in data:
+            return {LossEnum.LOSS: torch.tensor(0),
+                    LossEnum.RECONSTRUCTION: torch.tensor(0),
+                    LossEnum.RECONSTRUCTION_OCCLUSION: torch.tensor(0),
+                    LossEnum.RECONSTRUCTION_NON_OCCLUSION: torch.tensor(0),
+                    LossEnum.INPAINTING: torch.tensor(0)}
 
         norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
