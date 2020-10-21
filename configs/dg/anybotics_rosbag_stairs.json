@@ -1,0 +1,14 @@
+{
+    "name": "synthetic_height_map_dataset_generation",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anybotics_rosbag",
+        "rosbag_path": "data/elevation_map_stairs.bag",
+        "save_frequency": 10,
+        "visualization": {
+            "frequency": 1000
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}

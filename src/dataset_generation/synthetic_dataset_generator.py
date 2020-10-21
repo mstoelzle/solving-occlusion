@@ -4,7 +4,7 @@ import numpy as np
 from progress.bar import Bar
 
 from .base_dataset_generator import BaseDatasetGenerator
-from src.enums.synthetic_terrain_type_enum import SyntheticTerrainTypeEnum
+from src.enums import *
 
 
 @dataclass
