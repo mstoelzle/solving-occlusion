@@ -27,12 +27,13 @@ class BaseDataset(ABC):
         self.img_loader = torchvision_default_loader
 
     @staticmethod
-    def prepare_keys(data: dict):
+    def prepare_keys(data: dict) -> np.array:
         for key, value in data.items():
             if type(key) == str:
                 new_key = ChannelEnum(key)
                 data[new_key] = value
                 del data[key]
+        return data
 
     def prepare_item(self, data: dict) -> Dict[ChannelEnum, torch.Tensor]:
         output = {}
@@ -60,10 +61,17 @@ class BaseDataset(ABC):
                 occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
         # we require square dimension for now
-        assert output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) == output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(1)
+        if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
+            sample_map = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
+        elif ChannelEnum.BINARY_OCCLUSION_MAP in output:
+            sample_map = output[ChannelEnum.BINARY_OCCLUSION_MAP]
+        else:
+            raise ValueError
+
+        assert sample_map.size(0) == sample_map.size(1)
         if type(self.config["size"]) == list:
             assert self.config["size"][0] == self.config["size"][1]
-        input_size = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
+        input_size = sample_map.size(0)
         if type(self.config["size"]) == list:
             output_size = self.config["size"][0]
         elif type(self.config["size"]) == int:
@@ -71,37 +79,42 @@ class BaseDataset(ABC):
         else:
             raise ValueError
 
-        for key, value in output.items():
-            if key == ChannelEnum.PARAMS:
-                # we need to apply the resizing to the terrain resolution
-                input_resolution = value[0].item()
+        if input_size != output_size:
+            for key, value in output.items():
+                if key == ChannelEnum.PARAMS:
+                    # we need to apply the resizing to the terrain resolution
+                    input_resolution = value[0].item()
 
-                output_resolution = input_resolution * input_size / output_size
-                value[0] = output_resolution
-            elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP and input_size != output_size:
-                # the interpolation / resizing does not work with NaNs in the occluded elevation map
+                    output_resolution = input_resolution * input_size / output_size
+                    value[0] = output_resolution
+                elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP and input_size != output_size:
+                    # the interpolation / resizing does not work with NaNs in the occluded elevation map
 
-                if value.dtype == torch.bool:
-                    value = value.to(dtype=torch.float)
+                    if value.dtype == torch.bool:
+                        value = value.to(dtype=torch.float)
 
-                interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
-                interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
-                value = interpolation_output.squeeze()
-            else:
-                continue
+                    interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
+                    interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
+                    value = interpolation_output.squeeze()
+                else:
+                    continue
 
-            output[key] = value
+                output[key] = value
 
-        if ChannelEnum.BINARY_OCCLUSION_MAP in output:
+        if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
             output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
                 elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
 
-            if self.transform is not None:
-                output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.transform(output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        elif ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
+            # TODO: we also need to do resizing for occluded elevation maps if we cannot freshly generate them
+            pass
         else:
             raise ValueError
+
+        if self.transform is not None:
+            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.transform(output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
         return output
 

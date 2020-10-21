@@ -60,7 +60,8 @@ class BaseLearning(ABC):
         self.controller = Controller(**self.task.config.get("controller", {}))
         self.task.loss = Loss(self.task.logdir, **self.task.config["loss"])
 
-    def set_model(self, model: Union[str, Optional[torch.nn.Module], pathlib.Path] = None):
+    def set_model(self, model: Union[str, Optional[torch.nn.Module], pathlib.Path] = None,
+                  pick_optimizer: bool = True):
         if model is None or model == "pretrained" or issubclass(type(model), pathlib.Path):
             model_spec = model
             model_config = deepcopy(self.task.config["model"])
@@ -83,7 +84,7 @@ class BaseLearning(ABC):
         self.model = model.to(self.device)
 
         # we do not need an optimizer for our baseline models with traditional algorithms
-        if not (issubclass(type(self.model), BaseBaselineModel)):
+        if pick_optimizer is True and not (issubclass(type(self.model), BaseBaselineModel)):
             self.pick_optimizer()
         else:
             self.optimizer = None
@@ -110,9 +111,9 @@ class BaseLearning(ABC):
         # export scalar data to JSON for external processing
         self.results_hdf5_file.__exit__()
 
-    @abstractmethod
-    def train(self, task: Task):
-        pass
+    # @abstractmethod
+    # def train(self, task: Task):
+    #     pass
 
     def train_epochs(self):
         self.controller.reset()
@@ -141,13 +142,13 @@ class BaseLearning(ABC):
 
         return self.model
 
-    @abstractmethod
-    def train_epoch(self, epoch) -> None:
-        pass
-
-    @abstractmethod
-    def validate_epoch(self, epoch: int) -> None:
-        pass
+    # @abstractmethod
+    # def train_epoch(self, epoch) -> None:
+    #     pass
+    #
+    # @abstractmethod
+    # def validate_epoch(self, epoch: int) -> None:
+    #     pass
 
     def test(self):
         hdf5_group_prefix = f"/task_{self.task.uid}/test"
@@ -184,6 +185,30 @@ class BaseLearning(ABC):
                 start_idx += batch_size
                 progress_bar.next()
             progress_bar.finish()
+
+    def infer(self):
+        hdf5_group_prefix = f"/task_{self.task.uid}/inference"
+        data_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/data")
+
+        self.model.eval()
+        if self.task.type in [TaskTypeEnum.SUPERVISED_LEARNING, TaskTypeEnum.INFERENCE]:
+            dataloader = self.task.labeled_dataloader.dataloaders['test']
+        else:
+            raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
+
+        start_idx = 0
+        progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
+        for batch_idx, data in enumerate(dataloader):
+            data = self.dict_to_device(data)
+            batch_size = data[ChannelEnum.OCCLUDED_ELEVATION_MAP].size(0)
+
+            output = self.model(data)
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, len(dataloader.dataset))
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, len(dataloader.dataset))
+
+            start_idx += batch_size
+            progress_bar.next()
+        progress_bar.finish()
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:

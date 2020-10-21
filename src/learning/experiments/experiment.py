@@ -5,6 +5,7 @@ import traceback
 import torch
 
 from src.enums.task_type_enum import TaskTypeEnum
+from src.learning.inference import Inference
 from src.learning.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
 from src.learning.visualization.results_plotter import ResultsPlotter
@@ -34,6 +35,8 @@ class Experiment:
         self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device,
                                                       results_hdf5_path=self.results_hdf5_path)
 
+        self.inference = Inference(logdir=self.logdir, device=self.device, results_hdf5_path=self.results_hdf5_path)
+
         self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path,
                                               logdir=self.logdir, remote=remote,
                                               **self.config.get("visualization", {}))
@@ -49,6 +52,10 @@ class Experiment:
                         with self.supervised_learning:
                             task.output_model = self.supervised_learning.train(task)
                         self.supervised_learning.reset()
+                    if task.type == TaskTypeEnum.INFERENCE:
+                        with self.inference:
+                            task.output_model = self.inference.run(task)
+                        self.inference.reset()
                     else:
                         raise NotImplementedError(f"The following task type is not implemented: {task.type}")
 

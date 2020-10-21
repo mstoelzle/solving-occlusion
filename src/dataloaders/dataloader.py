@@ -13,7 +13,7 @@ logger = get_logger("dataloader")
 
 
 class Dataloader:
-    def __init__(self, **kwargs):
+    def __init__(self, purposes=["train", "val", "test"], **kwargs):
         super().__init__()
         self.config = kwargs
 
@@ -65,7 +65,7 @@ class Dataloader:
                 start_idx += len_subset
 
         self.dataloaders = {}
-        for purpose in ["train", "val", "test"]:
+        for purpose in purposes:
             if len(subsets) > 0:
                 purpose_dataset = subsets[purpose]
             else:

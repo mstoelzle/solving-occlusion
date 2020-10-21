@@ -1,0 +1,40 @@
+{
+    "name": "baseline_anybotics_rosbag_stairs_inference",
+    "cuda": false,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "domain_defaults": {
+                    "batch_size": 144,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2020-10-22-00-07-49_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [300, 300]
+                    },
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "Telea",
+                    "input_dim": [300, 300],
+                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "out_channels": ["reconstructed_elevation_map"],
+                    "input_normalization": false,
+                    "inpaint_radius": 3
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  100, "correlation_occluded_area": true}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101]
+}

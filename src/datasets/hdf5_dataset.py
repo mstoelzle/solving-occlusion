@@ -22,6 +22,8 @@ class Hdf5Dataset(BaseDataset):
                 self.dataset_length = len(hdf5_file[f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}"])
             elif f"/{self.purpose}/elevation_map" in hdf5_file:
                 self.dataset_length = len(hdf5_file[f"/{self.purpose}/elevation_map"])
+            elif f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}" in hdf5_file:
+                self.dataset_length = len(hdf5_file[f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}"])
             else:
                 raise ValueError
 

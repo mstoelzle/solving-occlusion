@@ -78,7 +78,10 @@ class TaskPath:
                     setattr(task, model_to_pick, model)
 
         for dataloader_type, dataloader_spec in task.config['dataloaders'].items():
-            dataloader = Dataloader(**task.config["domains"][dataloader_spec])
+            if task.type == TaskTypeEnum.INFERENCE:
+                dataloader = Dataloader(purposes=["test"], **task.config["domains"][dataloader_spec])
+            else:
+                dataloader = Dataloader(**task.config["domains"][dataloader_spec])
 
             if dataloader is None:
                 ValueError(f"The {dataloader_type} could not get properly assigned")
