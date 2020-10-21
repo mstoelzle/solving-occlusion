@@ -43,7 +43,8 @@ class BaseModel(ABC, nn.Module):
                 raise NotImplementedError
 
             if self.input_normalization is not None:
-                if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or in_channel == ChannelEnum.GROUND_TRUTH_ELEVATION_MAP:
+                if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or \
+                        in_channel == ChannelEnum.GROUND_TRUTH_ELEVATION_MAP:
                     channel_data, norm_consts[in_channel] = InputNormalization.normalize(in_channel, channel_data,
                                                                                          **self.input_normalization,
                                                                                          batch=True)
