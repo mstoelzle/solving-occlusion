@@ -154,11 +154,19 @@ class BaseModel(ABC, nn.Module):
             recons_loss = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                        data[ChannelEnum.ELEVATION_MAP], **kwargs)
 
+        if LossEnum.INPAINTING in norm_data:
+            inpainting_loss = mse_loss_fct(norm_data[ChannelEnum.INPAINTED_ELEVATION_MAP],
+                                           norm_data[ChannelEnum.ELEVATION_MAP], **kwargs)
+        else:
+            inpainting_loss = mse_loss_fct(output[ChannelEnum.INPAINTED_ELEVATION_MAP],
+                                           data[ChannelEnum.ELEVATION_MAP], **kwargs)
+
         if LossEnum.RECONSTRUCTION_OCCLUSION in norm_data:
-            recons_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                                      norm_data[ChannelEnum.ELEVATION_MAP],
-                                                                      data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                                                                      **kwargs)
+            recons_occlusion_loss = reconstruction_occlusion_loss_fct(
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
         else:
             recons_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                                       data[ChannelEnum.ELEVATION_MAP],
@@ -166,15 +174,17 @@ class BaseModel(ABC, nn.Module):
                                                                       **kwargs)
 
         if LossEnum.RECONSTRUCTION_NON_OCCLUSION in norm_data:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                                          norm_data[ChannelEnum.ELEVATION_MAP],
-                                                                          ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                                                                          **kwargs)
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
         else:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                                          data[ChannelEnum.ELEVATION_MAP],
-                                                                          ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                                                                          **kwargs)
+            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
 
         weights = loss_config.get("eval_weights", {})
         recons_weight = weights.get(LossEnum.RECONSTRUCTION.value, 0)
@@ -188,7 +198,8 @@ class BaseModel(ABC, nn.Module):
         return {LossEnum.LOSS: loss,
                 LossEnum.RECONSTRUCTION: recons_loss,
                 LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
-                LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss}
+                LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss,
+                LossEnum.INPAINTING: inpainting_loss}
 
     def artistic_loss_function(self,
                                loss_config: dict,

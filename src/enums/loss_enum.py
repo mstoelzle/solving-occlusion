@@ -6,6 +6,7 @@ class LossEnum(Enum):
     RECONSTRUCTION = "reconstruction"
     RECONSTRUCTION_OCCLUSION = "reconstruction_occlusion"
     RECONSTRUCTION_NON_OCCLUSION = "reconstruction_non_occlusion"
+    INPAINTING = "inpainting"
     KLD = "kld"
     VQ = "vq"
     STYLE = "style"
