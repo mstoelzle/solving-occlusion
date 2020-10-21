@@ -68,11 +68,11 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
             dataset_shape = (0, self.terrain_height, self.terrain_width)
             dataset_maxshape = (num_samples, self.terrain_height, self.terrain_width)
             params_dim = 5
-            params_dataset = hdf5_group.create_dataset(name="params", shape=(0, params_dim),
+            params_dataset = hdf5_group.create_dataset(name=ChannelEnum.PARAMS.value, shape=(0, params_dim),
                                                        maxshape=(num_samples, params_dim))
-            elevation_map_dataset = hdf5_group.create_dataset(name="elevation_map",
+            elevation_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value,
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
-            binary_occlusion_map_dataset = hdf5_group.create_dataset(name="binary_occlusion_map",
+            binary_occlusion_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.BINARY_OCCLUSION_MAP.value,
                                                                      shape=dataset_shape, maxshape=dataset_maxshape)
 
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)

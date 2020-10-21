@@ -58,10 +58,10 @@ class BaseDataset(ABC):
                 occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
 
         # we require square dimension for now
-        assert output[ChannelEnum.ELEVATION_MAP].size(0) == output[ChannelEnum.ELEVATION_MAP].size(1)
+        assert output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) == output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(1)
         if type(self.config["size"]) == list:
             assert self.config["size"][0] == self.config["size"][1]
-        input_size = output[ChannelEnum.ELEVATION_MAP].size(0)
+        input_size = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
         if type(self.config["size"]) == list:
             output_size = self.config["size"][0]
         elif type(self.config["size"]) == int:
@@ -77,9 +77,9 @@ class BaseDataset(ABC):
 
             # TODO: add actual params from dataset metadata
             terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
-            x_grid = output[ChannelEnum.ELEVATION_MAP].size(0) // 2
-            y_grid = output[ChannelEnum.ELEVATION_MAP].size(1) // 2
-            robot_position_z = output[ChannelEnum.ELEVATION_MAP][x_grid, y_grid] + camera_elevation
+            x_grid = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) // 2
+            y_grid = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(1) // 2
+            robot_position_z = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP][x_grid, y_grid] + camera_elevation
 
             output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., robot_position_z, 0.])
 
@@ -107,7 +107,7 @@ class BaseDataset(ABC):
         if ChannelEnum.BINARY_OCCLUSION_MAP in output:
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
             output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
-                elevation_map=output[ChannelEnum.ELEVATION_MAP],
+                elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
 
             if self.transform is not None:

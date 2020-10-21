@@ -168,7 +168,7 @@ class VanillaVAE(BaseVAE):
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
-                kld_weight = data[ChannelEnum.ELEVATION_MAP].size(0) / dataset_length
+                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataset_length
 
             loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \

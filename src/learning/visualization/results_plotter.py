@@ -50,11 +50,11 @@ class ResultsPlotter:
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
         data_hdf5_group = purpose_hdf5_group[f"data"]
-        num_samples = int(len(data_hdf5_group[ChannelEnum.ELEVATION_MAP.value]) / self.config["sample_frequency"])
+        num_samples = int(len(data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value]) / self.config["sample_frequency"])
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
-            elevation_map = data_hdf5_group[ChannelEnum.ELEVATION_MAP.value][idx, ...]
+            elevation_map = data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value][idx, ...]
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
             inpainted_elevation_map = data_hdf5_group[ChannelEnum.INPAINTED_ELEVATION_MAP.value][idx, ...]

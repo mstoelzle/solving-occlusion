@@ -11,14 +11,19 @@ class Hdf5Dataset(BaseDataset):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.channels = [ChannelEnum.PARAMS, ChannelEnum.ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP,
+        self.channels = [ChannelEnum.PARAMS, ChannelEnum.GROUND_TRUTH_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP,
                          ChannelEnum.OCCLUDED_ELEVATION_MAP]
 
         self.hdf5_dataset_set: bool = False
         self.hdf5_datasets = {}
 
         with h5py.File(self.dataset_path, 'r') as hdf5_file:
-            self.dataset_length = len(hdf5_file[f"/{self.purpose}/{ChannelEnum.ELEVATION_MAP.value}"])
+            if f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}" in hdf5_file:
+                self.dataset_length = len(hdf5_file[f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}"])
+            elif f"/{self.purpose}/elevation_map" in hdf5_file:
+                self.dataset_length = len(hdf5_file[f"/{self.purpose}/elevation_map"])
+            else:
+                raise ValueError
 
     def __getitem__(self, idx) -> Dict[Union[str, ChannelEnum], torch.Tensor]:
         self.set_hdf5_dataset()
@@ -40,5 +45,8 @@ class Hdf5Dataset(BaseDataset):
                 dataset_url = f"/{self.purpose}/{channel.value}"
                 if dataset_url in hdf5_file:
                     self.hdf5_datasets[channel] = hdf5_file[dataset_url]
+
+            if f"/{self.purpose}/elevation_map" in hdf5_file:
+                self.hdf5_datasets[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = hdf5_file[f"/{self.purpose}/elevation_map"]
 
             self.hdf5_dataset_set = True

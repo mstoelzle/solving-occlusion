@@ -29,7 +29,7 @@ class SupervisedLearning(BaseLearning):
                 self.optimizer.zero_grad()
 
                 data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
+                batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
 
                 output = self.model(data)
 
@@ -52,7 +52,7 @@ class SupervisedLearning(BaseLearning):
             progress_bar = Bar(f"Validate epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.ELEVATION_MAP].size(0)
+                batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
 
                 output = self.model(data)
 

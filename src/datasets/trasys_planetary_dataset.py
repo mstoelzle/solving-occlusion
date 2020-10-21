@@ -23,7 +23,7 @@ class TrasysPlanetaryDataset(BaseDataset):
                     if filepath.is_file() and is_image_file(str(filepath)):
                         filename = filepath.stem
                         if filename == "height":
-                            sample_dict[ChannelEnum.ELEVATION_MAP] = filepath
+                            sample_dict[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = filepath
                         elif filename == "occlusion":
                             sample_dict[ChannelEnum.BINARY_OCCLUSION_MAP] = filepath
                         else:
