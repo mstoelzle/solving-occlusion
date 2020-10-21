@@ -32,6 +32,8 @@ class Hdf5Dataset(BaseDataset):
         for channel, hdf5_dataset in self.hdf5_datasets.items():
             data[channel] = hdf5_dataset[idx, ...]
 
+        data = self.prepare_keys(data)
+
         return self.prepare_item(data)
 
     def __len__(self):

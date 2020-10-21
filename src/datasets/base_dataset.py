@@ -26,13 +26,15 @@ class BaseDataset(ABC):
 
         self.img_loader = torchvision_default_loader
 
-    def prepare_item(self, data: dict, trasys: bool = False) -> Dict[ChannelEnum, torch.Tensor]:
+    @staticmethod
+    def prepare_keys(data: dict):
         for key, value in data.items():
             if type(key) == str:
                 new_key = ChannelEnum(key)
                 data[new_key] = value
                 del data[key]
 
+    def prepare_item(self, data: dict) -> Dict[ChannelEnum, torch.Tensor]:
         output = {}
         for key, value in data.items():
             if issubclass(type(value), pathlib.Path):
@@ -68,20 +70,6 @@ class BaseDataset(ABC):
             output_size = self.config["size"]
         else:
             raise ValueError
-
-        if trasys is True:
-            camera_elevation = 2.  # Camera is elevated on 2m
-
-            # the binary occlusion mask is inverse for the trasys planetary dataset
-            output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
-
-            # TODO: add actual params from dataset metadata
-            terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
-            x_grid = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) // 2
-            y_grid = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(1) // 2
-            robot_position_z = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP][x_grid, y_grid] + camera_elevation
-
-            output[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., robot_position_z, 0.])
 
         for key, value in output.items():
             if key == ChannelEnum.PARAMS:
