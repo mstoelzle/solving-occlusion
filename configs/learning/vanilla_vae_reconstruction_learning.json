@@ -1,5 +1,5 @@
 {
-    "name": "trasys_sample_learning",
+    "name": "vanilla_vae_reconstruction_learning",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -20,11 +20,9 @@
                 "domain_defaults": {
                     "batch_size": 144,
                     "dataset": {
-                        "type": "trasys_planetary",
-                        "path": "data/planetary-surface-dataset",
-                        "size": [64, 64],
-                        "split": {"train":  0.8, "val":  0.1, "test":  0.1},
-                        "transforms": {"train": {"random_horizontal_flip": {"probability": 0.5}}}
+                        "type": "hdf5",
+                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
                     },
                     "num_workers": 4,
                     "shuffle": true
@@ -58,7 +56,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  1}
+        "visualization": {"sample_frequency":  30}
     },
     "logging": {
         "upload": false

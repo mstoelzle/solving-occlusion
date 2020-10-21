@@ -39,8 +39,8 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 100,
-                    "max_num_better_results": 40
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
                 }
             },
             "tasks": [
@@ -54,9 +54,7 @@
         },
         "visualization": {"sample_frequency":  10}
     },
-    "logging": {
-        "upload": false
-    },
+    "logging": {"upload": false},
     "remote": true,
     "seeds": [101]
 }

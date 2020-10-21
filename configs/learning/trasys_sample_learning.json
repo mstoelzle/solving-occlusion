@@ -1,5 +1,5 @@
 {
-    "name": "vanilla_vae_reconstruction_learning",
+    "name": "trasys_sample_learning",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -20,22 +20,24 @@
                 "domain_defaults": {
                     "batch_size": 144,
                     "dataset": {
-                        "type": "hdf5",
-                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [64, 64]
+                        "type": "trasys_planetary",
+                        "path": "data/planetary-surface-dataset",
+                        "size": [128, 128],
+                        "transforms": {"train": {"random_horizontal_flip": {"probability": 0.5}}}
                     },
-                    "num_workers": 4,
+                    "num_workers": 1,
                     "shuffle": true
                 },
                 "model": {
-                    "name": "VanillaVAE",
+                    "name": "Telea",
                     "save_frequency": 10,
-                    "input_dim": [64, 64],
+                    "input_dim": [128, 128],
                     "in_channels": ["elevation_map"],
                     "out_channels": ["reconstructed_elevation_map"],
-                    "hidden_dims": [8, 16, 32],
+                    "hidden_dims": [32, 64, 128, 256, 512],
                     "latent_dim": 256,
-                    "input_normalization": false
+                    "input_normalization": false,
+                    "inpaint_radius": 3
                 },
                 "optimizer": {
                     "name": "Adam",
@@ -43,8 +45,8 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 30,
-                    "max_num_better_results": 30
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
                 }
             },
             "tasks": [
@@ -56,7 +58,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  30}
+        "visualization": {"sample_frequency":  1}
     },
     "logging": {
         "upload": false
