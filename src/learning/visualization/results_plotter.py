@@ -35,45 +35,56 @@ class ResultsPlotter:
                 task_string_split = task_string.split("_")
                 task_uid = int(task_string_split[1])
 
-                self.plot_task(task_uid, "test", task_hdf5_group)
+                self.plot_task(task_uid, task_hdf5_group)
 
-    def plot_task(self, task_uid: int, purpose: str, task_hdf5_group: h5py.Group):
+    def plot_task(self, task_uid: int, task_hdf5_group: h5py.Group):
         logdir = self.logdir / f"task_{task_uid}"
 
         logger.info(f"Plot task {task_uid}")
         if self.config.get("sample_frequency", 0) > 0:
-            self.save_samples(task_hdf5_group["test"], logdir / f"{purpose}_samples")
+            for purpose, purpose_hdf5_group in task_hdf5_group.items():
+                self.save_samples(purpose_hdf5_group, logdir / f"{purpose}_samples")
 
         if self.config.get("correlation_occluded_area", False) is True:
-            self.plot_correlation_area_occluded(task_hdf5_group["test"], logdir / "analysis")
+            for purpose, purpose_hdf5_group in task_hdf5_group.items():
+                self.plot_correlation_area_occluded(purpose_hdf5_group, logdir / f"{purpose}_analysis")
 
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
         data_hdf5_group = purpose_hdf5_group[f"data"]
-        num_samples = int(len(data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value]) / self.config["sample_frequency"])
+        dataset_length = len(data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value])
+        num_samples = int(dataset_length / self.config["sample_frequency"])
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
-            elevation_map = data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value][idx, ...]
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
             inpainted_elevation_map = data_hdf5_group[ChannelEnum.INPAINTED_ELEVATION_MAP.value][idx, ...]
 
+            ground_truth_elevation_map = None
+            if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value in data_hdf5_group:
+                ground_truth_elevation_map = data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value][idx, ...]
+
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
             # 2D
-            vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map),
-                           np.min(reconstructed_elevation_map), np.min(inpainted_elevation_map)])
-            vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map),
-                           np.max(reconstructed_elevation_map), np.max(inpainted_elevation_map)])
+            vmin = np.min([np.min(non_occluded_elevation_map), np.min(reconstructed_elevation_map),
+                           np.min(inpainted_elevation_map)])
+            vmax = np.max([np.max(non_occluded_elevation_map), np.max(reconstructed_elevation_map),
+                           np.max(inpainted_elevation_map)])
+            if ground_truth_elevation_map is not None:
+                vmin = np.min([vmin, np.min(ground_truth_elevation_map)])
+                vmax = np.max([vmax, np.max(ground_truth_elevation_map)])
+
             cmap = plt.get_cmap("viridis")
 
             fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
             # axes = np.expand_dims(axes, axis=0)
 
-            axes[0, 0].set_title("Ground-truth")
-            # matshow plots x and y swapped
-            mat = axes[0, 0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            if ground_truth_elevation_map is not None:
+                axes[0, 0].set_title("Ground-truth")
+                # matshow plots x and y swapped
+                mat = axes[0, 0].matshow(np.swapaxes(ground_truth_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
             mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
@@ -89,8 +100,8 @@ class ResultsPlotter:
             robot_position_x = params[1]
             robot_position_y = params[2]
             robot_position_z = params[3]
-            robot_plot_x = int(elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
-            robot_plot_y = int(elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
+            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
+            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
             for i, ax in enumerate(axes.reshape(-1)):
                 ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
 
@@ -109,15 +120,16 @@ class ResultsPlotter:
             axes = []
             num_cols = 3
 
-            x_3d = np.arange(start=-int(elevation_map.shape[0] / 2),
-                             stop=int(elevation_map.shape[0] / 2)) * terrain_resolution
-            y_3d = np.arange(start=-int(elevation_map.shape[1] / 2),
-                             stop=int(elevation_map.shape[1] / 2)) * terrain_resolution
+            x_3d = np.arange(start=-int(occluded_elevation_map.shape[0] / 2),
+                             stop=int(occluded_elevation_map.shape[0] / 2)) * terrain_resolution
+            y_3d = np.arange(start=-int(occluded_elevation_map.shape[1] / 2),
+                             stop=int(occluded_elevation_map.shape[1] / 2)) * terrain_resolution
             x_3d, y_3d = np.meshgrid(x_3d, y_3d)
 
             axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
-            axes[0].set_title("Ground-truth")
-            axes[0].plot_surface(x_3d, y_3d, elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
+            if ground_truth_elevation_map is not None:
+                axes[0].set_title("Ground-truth")
+                axes[0].plot_surface(x_3d, y_3d, ground_truth_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 2, projection="3d"))
             axes[1].set_title("Reconstruction")
             axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
@@ -145,33 +157,34 @@ class ResultsPlotter:
                 plt.show()
             plt.close()
 
-            fig = plt.figure(figsize=[1.75 * 6.4, 1.25 * 4.8])
-            plt.clf()
-            axes = []
+            if ground_truth_elevation_map is not None:
+                fig = plt.figure(figsize=[1.75 * 6.4, 1.25 * 4.8])
+                plt.clf()
+                axes = []
 
-            axes.append(fig.add_subplot(121))
-            axes[0].set_title("Reconstruction error")
-            # matshow plots x and y swapped
-            mat = axes[0].matshow(np.swapaxes(np.abs(reconstructed_elevation_map - elevation_map), 0, 1),
-                                  cmap=plt.get_cmap("RdYlGn_r"))
-            axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-            axes[0].grid(False)
+                axes.append(fig.add_subplot(121))
+                axes[0].set_title("Reconstruction error")
+                # matshow plots x and y swapped
+                mat = axes[0].matshow(np.swapaxes(np.abs(reconstructed_elevation_map - ground_truth_elevation_map), 0, 1),
+                                      cmap=plt.get_cmap("RdYlGn_r"))
+                axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                axes[0].grid(False)
 
-            axes.append(fig.add_subplot(122, projection="3d"))
-            axes[1].set_title("Reconstruction error")
-            axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - elevation_map),
-                                 cmap=plt.get_cmap("RdYlGn_r"))
-            axes[1].set_xlabel("x [m]")
-            axes[1].set_ylabel("y [m]")
-            axes[1].set_zlabel("z [m]")
+                axes.append(fig.add_subplot(122, projection="3d"))
+                axes[1].set_title("Reconstruction error")
+                axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - ground_truth_elevation_map),
+                                     cmap=plt.get_cmap("RdYlGn_r"))
+                axes[1].set_xlabel("x [m]")
+                axes[1].set_ylabel("y [m]")
+                axes[1].set_zlabel("z [m]")
 
-            fig.colorbar(mat, ax=axes, fraction=0.021)
+                fig.colorbar(mat, ax=axes, fraction=0.021)
 
-            plt.draw()
-            plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))
-            if self.remote is not True:
-                plt.show()
-            plt.close()
+                plt.draw()
+                plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))
+                if self.remote is not True:
+                    plt.show()
+                plt.close()
 
     def plot_correlation_area_occluded(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
