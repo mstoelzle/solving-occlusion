@@ -38,7 +38,8 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         # TODO: maybe we need to add additional purposes later
         purpose = "test"
 
-        num_samples = self.bag.get_message_count()
+        topics = ['/elevation_mapping/elevation_map_recordable']
+        num_samples = self.bag.get_message_count(topic_filters=topics)
 
         hdf5_group = self.hdf5_file.create_group(purpose)
 
@@ -46,8 +47,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         occluded_elevation_map_dataset = None
 
         progress_bar = Bar(f"Reading {purpose} anybotics bag", max=num_samples)
-
-        topics = ['/elevation_mapping/elevation_map_recordable']
         initialized_hdf5_datasets = False
         sample_idx = 0
         for msg_idx, (topic, msg, t) in enumerate(self.bag.read_messages(topics=topics)):
