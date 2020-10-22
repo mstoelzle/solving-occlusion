@@ -3,7 +3,7 @@
 ## Instructions
 
 ### 1. Prerequisites
-This framework requires **Python 3.9**. The generation of synthetic datasets requires an Ubuntu environment. 
+This framework requires **Python 3.8.5**. The generation of synthetic datasets requires an Ubuntu environment. 
 
 **Note:** To use efficient neural network training, Cuda 10.2 needs to be installed and available.
 
