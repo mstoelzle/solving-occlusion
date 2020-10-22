@@ -9,14 +9,14 @@
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-10-22-00-07-49_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [300, 300]
+                        "size": [256, 256]
                     },
                     "num_workers": 4,
                     "shuffle": true
                 },
                 "model": {
                     "name": "Telea",
-                    "input_dim": [300, 300],
+                    "input_dim": [256, 256],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "input_normalization": false,
