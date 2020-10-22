@@ -99,9 +99,9 @@ class BaseDataset(ABC):
 
         if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
-            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.create_occluded_elevation_map(
-                elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
+            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = \
+                self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                                                   binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
 
         elif ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
             pass
