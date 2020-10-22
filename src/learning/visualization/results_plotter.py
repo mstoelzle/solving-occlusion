@@ -47,7 +47,8 @@ class ResultsPlotter:
 
         if self.config.get("correlation_occluded_area", False) is True:
             for purpose, purpose_hdf5_group in task_hdf5_group.items():
-                self.plot_correlation_area_occluded(purpose_hdf5_group, logdir / f"{purpose}_analysis")
+                if 'loss' in purpose_hdf5_group:
+                    self.plot_correlation_area_occluded(purpose_hdf5_group, logdir / f"{purpose}_analysis")
 
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
