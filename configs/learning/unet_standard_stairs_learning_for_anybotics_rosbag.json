@@ -44,14 +44,6 @@
                                     "stdev": 0.1,
                                     "apply_to": ["occluded_elevation_map"]
                                 }
-                            ],
-                            "train": [
-                                {
-                                    "type": "random_vertical_scale",
-                                    "min": 6,
-                                    "max": 10,
-                                    "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
-                                }
                             ]
                         }
                     },
