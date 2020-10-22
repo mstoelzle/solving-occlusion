@@ -109,7 +109,8 @@ class BaseDataset(ABC):
             raise ValueError
 
         if self.transform is not None:
-            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = self.transform(output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+            for channel, value in output.items():
+                output[channel] = self.transform(output[channel], channel=channel)
 
         return output
 
