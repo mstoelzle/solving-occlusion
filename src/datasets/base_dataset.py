@@ -104,7 +104,6 @@ class BaseDataset(ABC):
                 binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
 
         elif ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
-            # TODO: we also need to do resizing for occluded elevation maps if we cannot freshly generate them
             pass
         else:
             raise ValueError
