@@ -35,9 +35,15 @@ class TaskPath:
         # update task level with defaults from task_path
         recursive_default_setting(self.default_values, task_config)
 
+        domain_defaults = task_config["domain_defaults"]
+
+        set_transforms_default(domain_defaults.get("dataset", {}).get("transforms", {}))
+
         # update domain with defaults from task level domain defaults
         for domain, domain_config in task_config['domains'].items():
-            recursive_default_setting(task_config["domain_defaults"], domain_config)
+            recursive_default_setting(domain_defaults, domain_config)
+
+            set_transforms_default(domain_config.get("dataset", {}).get("transforms", {}))
 
         logger.info(f"Loaded defaults for task {self.idx}")
         return task_config
@@ -129,3 +135,10 @@ def recursive_default_setting(source_config: dict, target_config: dict):
             target_config.update({default_key: default_value})
         elif isinstance(default_value, dict):
             recursive_default_setting(source_config[default_key], target_config[default_key])
+
+
+def set_transforms_default(transforms_config: dict):
+    transforms_defaults = transforms_config.get("defaults", {})
+    for purpose in ["train", "val", "test"]:
+        if purpose not in transforms_config:
+            transforms_config[purpose] = transforms_defaults
