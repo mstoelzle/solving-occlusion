@@ -87,17 +87,13 @@ class BaseDataset(ABC):
 
                     output_resolution = input_resolution * input_size / output_size
                     value[0] = output_resolution
-                elif key != ChannelEnum.OCCLUDED_ELEVATION_MAP and input_size != output_size:
-                    # the interpolation / resizing does not work with NaNs in the occluded elevation map
-
+                else:
                     if value.dtype == torch.bool:
                         value = value.to(dtype=torch.float)
 
                     interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
                     interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
                     value = interpolation_output.squeeze()
-                else:
-                    continue
 
                 output[key] = value
 
