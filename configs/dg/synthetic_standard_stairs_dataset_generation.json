@@ -6,7 +6,7 @@
         "terrain_types": ["STANDARD_STAIRS"],
         "elevation_map": {
             "resolution": 0.04,
-            "size": 64,
+            "size": 256,
             "height_viewpoint": {"min":  0.2, "max":  0.3}
         },
         "robot_position": {
