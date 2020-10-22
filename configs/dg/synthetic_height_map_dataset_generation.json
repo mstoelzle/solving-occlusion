@@ -6,7 +6,7 @@
         "terrain_types": ["HEIGHT_MAP"],
         "elevation_map": {
             "resolution": 0.04,
-            "size": 64,
+            "size": 256,
             "height_viewpoint": {"min":  0.2, "max":  0.5}
         },
         "robot_position": {
