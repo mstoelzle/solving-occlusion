@@ -103,8 +103,13 @@ class ResultsPlotter:
             robot_position_z = params[3]
             robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
             robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
+            # we only visualize the robot position if its inside the elevation map
+            plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
+                                    and 0 < robot_plot_y < occluded_elevation_map.shape[1]
+
             for i, ax in enumerate(axes.reshape(-1)):
-                ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
+                if plot_robot_position:
+                    ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
 
                 # Hide grid lines
                 ax.grid(False)
@@ -143,8 +148,9 @@ class ResultsPlotter:
             fig.colorbar(mat, ax=axes, fraction=0.015)
 
             for i, ax in enumerate(axes):
-                ax.scatter([robot_position_x], [robot_position_y],
-                           [robot_position_z], marker="*", color="red")
+                if plot_robot_position:
+                    ax.scatter([robot_position_x], [robot_position_y],
+                               [robot_position_z], marker="*", color="red")
                 ax.set_xlabel("x [m]")
                 ax.set_ylabel("y [m]")
                 ax.set_zlabel("z [m]")
@@ -165,10 +171,11 @@ class ResultsPlotter:
 
                 axes.append(fig.add_subplot(121))
                 axes[0].set_title("Reconstruction error")
+                abs_error = np.abs(reconstructed_elevation_map - ground_truth_elevation_map)
                 # matshow plots x and y swapped
-                mat = axes[0].matshow(np.swapaxes(np.abs(reconstructed_elevation_map - ground_truth_elevation_map), 0, 1),
-                                      cmap=plt.get_cmap("RdYlGn_r"))
-                axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                mat = axes[0].matshow(np.swapaxes(abs_error, 0, 1), cmap=plt.get_cmap("RdYlGn_r"))
+                if plot_robot_position:
+                    axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
                 axes[0].grid(False)
 
                 axes.append(fig.add_subplot(122, projection="3d"))
