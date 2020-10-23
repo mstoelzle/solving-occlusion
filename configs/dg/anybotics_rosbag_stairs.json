@@ -4,6 +4,7 @@
     "dataset_generation": {
         "type": "anybotics_rosbag",
         "rosbag_path": "data/elevation_map_stairs.bag",
+        "size": 75,
         "save_frequency": 10,
         "visualization": {
             "frequency": 1000
