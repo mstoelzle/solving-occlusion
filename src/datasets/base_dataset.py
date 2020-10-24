@@ -109,8 +109,7 @@ class BaseDataset(ABC):
             raise ValueError
 
         if self.transform is not None:
-            for channel, value in output.items():
-                output[channel] = self.transform(output[channel], channel=channel)
+            output = self.transform(output)
 
         return output
 

@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from typing import *
 
 from src.enums import *
 
@@ -15,71 +16,79 @@ class Transformer:
         if self.purpose == "test":
             self.deterministic = True
 
-    def __call__(self, input: torch.Tensor, channel: ChannelEnum = None) -> torch.Tensor:
-        transformed_input = input
+    def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) ->Dict[ChannelEnum, torch.Tensor]:
+        transformed_data = data
 
         for transform_config in self.transforms:
             if transform_config["type"] == "random_noise":
-                transformed_input = self.random_noise(transform_config, transformed_input, channel=channel)
+                transformed_data = self.random_noise(transform_config, transformed_data)
             elif transform_config["type"] == "random_vertical_scale":
-                transformed_input = self.random_vertical_scale(transform_config, transformed_input, channel=channel)
+                transformed_data = self.random_vertical_scale(transform_config, transformed_data)
             elif transform_config["type"] == "random_vertical_offset":
-                transformed_input = self.random_vertical_offset(transform_config, transformed_input, channel=channel)
+                transformed_data = self.random_vertical_offset(transform_config, transformed_data)
             else:
                 raise NotImplementedError
 
-        return transformed_input
+        return transformed_data
 
-    def random_noise(self, transform_config: dict, input: np.array, channel: ChannelEnum = None) -> np.array:
-        if channel is None or channel.value in transform_config["apply_to"]:
-            stdev = transform_config["stdev"]
+    def random_noise(self, transform_config: dict,
+                     data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        stdev = transform_config["stdev"]
 
-            if self.deterministic:
-                noise = self.rng.normal(loc=0, scale=stdev, size=tuple(input.size()))
-            else:
-                noise = np.random.normal(loc=0, scale=stdev, size=tuple(input.size()))
+        noise = None
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if noise is None:
+                    if self.deterministic:
+                        noise_value = self.rng.normal(loc=0, scale=stdev, size=tuple(value.size()))
+                    else:
+                        noise_value = np.random.normal(loc=0, scale=stdev, size=tuple(value.size()))
+                    noise = value.new_tensor(noise_value, dtype=value.dtype)
 
-            noise = input.new_tensor(noise, dtype=input.dtype)
+                transformed_value = value + noise
 
-            transformed_input = input + noise
-            return transformed_input
+                data[channel] = transformed_value
 
-        return input
+        return data
 
-    def random_vertical_scale(self, transform_config: dict, input: np.array, channel: ChannelEnum = None) -> np.array:
-        if channel is None or channel.value in transform_config["apply_to"]:
-            min, max = transform_config["min"], transform_config["max"]
+    def random_vertical_scale(self, transform_config: dict,
+                              data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        min, max = transform_config["min"], transform_config["max"]
 
-            if self.deterministic:
-                scale = self.rng.uniform(low=min, high=max)
-            else:
-                scale = np.random.uniform(low=min, high=max)
+        if self.deterministic:
+            scale = self.rng.uniform(low=min, high=max)
+        else:
+            scale = np.random.uniform(low=min, high=max)
 
-            if channel is ChannelEnum.PARAMS:
-                transformed_input = input.clone()
-                transformed_input[3] = scale * transformed_input[3]
-            else:
-                transformed_input = scale * input
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if channel is ChannelEnum.PARAMS:
+                    transformed_value = value.clone()
+                    transformed_value[3] = scale * transformed_value[3]
+                else:
+                    transformed_value = scale * value
 
-            return transformed_input
+                data[channel] = transformed_value
 
-        return input
+        return data
 
-    def random_vertical_offset(self, transform_config: dict, input: np.array, channel: ChannelEnum = None) -> np.array:
-        if channel is None or channel.value in transform_config["apply_to"]:
-            min, max = transform_config["min"], transform_config["max"]
+    def random_vertical_offset(self, transform_config: dict,
+                               data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        min, max = transform_config["min"], transform_config["max"]
 
-            if self.deterministic:
-                offset = self.rng.uniform(low=min, high=max)
-            else:
-                offset = np.random.uniform(low=min, high=max)
+        if self.deterministic:
+            offset = self.rng.uniform(low=min, high=max)
+        else:
+            offset = np.random.uniform(low=min, high=max)
 
-            if channel is ChannelEnum.PARAMS:
-                transformed_input = input.clone()
-                transformed_input[3] = offset + transformed_input[3]
-            else:
-                transformed_input = offset + input
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if channel is ChannelEnum.PARAMS:
+                    transformed_value = value.clone()
+                    transformed_value[3] = offset + transformed_value[3]
+                else:
+                    transformed_value = offset + value
 
-            return transformed_input
+                data[channel] = transformed_value
 
-        return input
+        return data
