@@ -52,7 +52,7 @@ class Experiment:
                         with self.supervised_learning:
                             task.output_model = self.supervised_learning.train(task)
                         self.supervised_learning.reset()
-                    if task.type == TaskTypeEnum.INFERENCE:
+                    elif task.type == TaskTypeEnum.INFERENCE:
                         with self.inference:
                             task.output_model = self.inference.run(task)
                         self.inference.reset()
