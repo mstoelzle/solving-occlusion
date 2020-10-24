@@ -8,11 +8,10 @@ from progress.bar import Bar
 from typing import *
 
 import torch
-from torch import optim, nn
-from torch.utils.data import DataLoader
+from torch import optim
 
 from src.enums import *
-from src.learning.controller import Controller
+from src.learning.controller.controller import Controller
 from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel

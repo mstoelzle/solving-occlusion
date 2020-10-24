@@ -1,10 +1,10 @@
 from progress.bar import Bar
 import torch
 
-from .base_learning import BaseLearning
+from src.learning.learning_classes.base_learning import BaseLearning
 from src.enums import *
 from src.learning.tasks import Task
-from ..utils.log import get_logger
+from src.utils.log import get_logger
 
 logger = get_logger("supervised_learning")
 

@@ -5,8 +5,8 @@ import traceback
 import torch
 
 from src.enums.task_type_enum import TaskTypeEnum
-from src.learning.inference import Inference
-from src.learning.supervised_learning import SupervisedLearning
+from src.learning.learning_classes.inference import Inference
+from src.learning.learning_classes.supervised_learning import SupervisedLearning
 from src.learning.tasks import TaskPath
 from src.learning.visualization.results_plotter import ResultsPlotter
 from src.utils import hash_dict, measure_runtime
