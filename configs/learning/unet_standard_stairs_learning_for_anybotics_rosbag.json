@@ -75,9 +75,7 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {
-                        "target": {}
-                    },
+                    "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
                 }
             ]
