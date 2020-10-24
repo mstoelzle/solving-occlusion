@@ -24,12 +24,12 @@
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [256, 256],
+                        "size": [64, 64],
                         "transforms": {
                             "defaults": [
                                 {
                                     "type": "random_vertical_scale",
-                                    "min": 1,
+                                    "min": 0.8,
                                     "max": 3,
                                     "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
                                 },
@@ -41,7 +41,7 @@
                                 },
                                 {
                                     "type": "random_noise",
-                                    "stdev": 0.1,
+                                    "stdev": 0.05,
                                     "apply_to": ["occluded_elevation_map"]
                                 }
                             ]
