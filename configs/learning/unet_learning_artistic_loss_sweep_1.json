@@ -1,0 +1,122 @@
+{
+    "name": "unet_learning_artistic_loss_sweep_1",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "reconstruction": 0,
+                        "reconstruction_non_occlusion": 1,
+                        "reconstruction_occlusion": 6,
+                        "perceptual": 0,
+                        "style": 0,
+                        "total_variation": 0
+                    },
+                    "eval_weights": {
+                        "reconstruction": 0,
+                        "reconstruction_non_occlusion": 0,
+                        "reconstruction_occlusion": 1
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
+                    },
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "out_channels": ["reconstructed_elevation_map"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": 0,
+                    "bilinear": true,
+                    "feature_extractor": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 50,
+                    "max_num_better_results": 20
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "perceptual": 0.05,
+                            "style": 0,
+                            "total_variation": 0
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "perceptual": 0,
+                            "style": 120,
+                            "total_variation": 0
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "perceptual": 0,
+                            "style": 0,
+                            "total_variation": 0.1
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "perceptual": 0.05,
+                            "style": 120,
+                            "total_variation": 0.1
+                        }
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  30}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101]
+}
