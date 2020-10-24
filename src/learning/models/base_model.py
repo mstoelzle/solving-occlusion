@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from typing import *
 
 from src.enums import *
-from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct
+from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct, perceptual_loss_fct, style_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -220,14 +220,25 @@ class BaseModel(ABC, nn.Module):
         # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/loss.py
         # this requires a self.feature_extractor
 
-        # the feature extractor expects an image with three channels as an input
+        perceptual_loss = 0.
+        style_loss = 0.
+        if self.feature_extractor is not None:
+            ground_truth_elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
+            reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+            inpainted_elevation_map = output[ChannelEnum.INPAINTED_ELEVATION_MAP]
 
-        # TODO: this needs to get finished
-        # feat_recons = self.feature_extractor(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP])
-        # feat_inpaint = self.feature_extractor(output[ChannelEnum.INPAINTED_ELEVATION_MAP])
+            # features for the ground-truth, the reconstructed elevation map and the inpainted elevation map
+            # the feature extractor expects an image with three channels as an input
+            feat_gt = self.feature_extractor(ground_truth_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_recons = self.feature_extractor(reconstructed_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_inpaint = self.feature_extractor(inpainted_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
 
-        perceptual_loss = 0
-        style_loss = 0
+            for i in range(len(feat_gt)):
+                perceptual_loss += perceptual_loss_fct(feat_recons[i], feat_gt[i], **kwargs)
+                perceptual_loss += perceptual_loss_fct(feat_inpaint[i], feat_gt[i], **kwargs)
+
+                style_loss += style_loss_fct(feat_recons[i], feat_gt[i], **kwargs)
+                style_loss += style_loss_fct(feat_inpaint[i], feat_gt[i], **kwargs)
 
         return {LossEnum.PERCEPTUAL: perceptual_loss,
                 LossEnum.STYLE: style_loss}

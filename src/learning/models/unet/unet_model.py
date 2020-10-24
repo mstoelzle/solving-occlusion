@@ -86,14 +86,15 @@ class UNet(BaseModel):
             style_weight = weights.get(LossEnum.STYLE.value, 0)
             total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
 
-            artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
-            loss_dict.update(artistic_loss)
+            if perceptual_weight > 0 or style_weight > 0:
+                artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
+                loss_dict.update(artistic_loss)
             total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.INPAINTED_ELEVATION_MAP])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
-                   + perceptual_weight * loss_dict[LossEnum.PERCEPTUAL] \
-                   + style_weight * loss_dict[LossEnum.STYLE] \
+                   + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
+                   + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
                    + total_variation_weight * total_variation_loss
 
             loss_dict.update({LossEnum.LOSS: loss})
@@ -104,8 +105,6 @@ class UNet(BaseModel):
 
     def train(self,  mode: bool = True):
         if mode is True and self.config.get("feature_extractor", False) is True:
-            from src.learning.models.partialconv.partialconv_unet import VGG16FeatureExtractor
-
             self.feature_extractor = VGG16FeatureExtractor()
             device, = list(set(p.device for p in self.parameters()))
             self.feature_extractor = self.feature_extractor.to(device=device)
