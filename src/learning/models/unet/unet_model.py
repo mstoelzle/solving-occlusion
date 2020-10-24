@@ -105,8 +105,8 @@ class UNet(BaseModel):
 
     def train(self,  mode: bool = True):
         if mode is True and self.config.get("feature_extractor", False) is True:
-            self.feature_extractor = VGG16FeatureExtractor()
             device, = list(set(p.device for p in self.parameters()))
+            self.feature_extractor = VGG16FeatureExtractor()
             self.feature_extractor = self.feature_extractor.to(device=device)
         else:
             self.feature_extractor = None
