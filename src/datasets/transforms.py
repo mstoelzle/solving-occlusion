@@ -124,4 +124,6 @@ class Transformer:
                 else:
                     raise NotImplementedError
 
+                data[channel] = value
+
         return data
