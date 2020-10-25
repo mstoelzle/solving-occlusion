@@ -16,7 +16,7 @@ class Transformer:
         if self.purpose == "test":
             self.deterministic = True
 
-    def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) ->Dict[ChannelEnum, torch.Tensor]:
+    def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
 
         for transform_config in self.transforms:
@@ -26,6 +26,8 @@ class Transformer:
                 transformed_data = self.random_vertical_scale(transform_config, transformed_data)
             elif transform_config["type"] == "random_vertical_offset":
                 transformed_data = self.random_vertical_offset(transform_config, transformed_data)
+            elif transform_config["type"] == "random_occlusion":
+                transformed_data = self.random_occlusion(transform_config, transformed_data)
             else:
                 raise NotImplementedError
 
@@ -90,5 +92,36 @@ class Transformer:
                     transformed_value = offset + value
 
                 data[channel] = transformed_value
+
+        return data
+
+    def random_occlusion(self, transform_config: dict,
+                         data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        probability = transform_config["probability"]
+
+        occlusion = None
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if occlusion is None:
+                    if self.deterministic:
+                        occlusion = self.rng.choice([0, 1], p=[1-probability, probability], size=tuple(value.size()))
+                    else:
+                        occlusion = np.random.choice([0, 1], p=[1-probability, probability], size=tuple(value.size()))
+                    occlusion = torch.tensor(occlusion)
+
+                if channel == ChannelEnum.BINARY_OCCLUSION_MAP:
+                    # assert value.dtype == torch.bool
+                    #
+                    # transformed_value = value.to(dtype=torch.int) + occlusion
+                    #
+                    # transformed_value[transformed_value > 1] = 1
+                    #
+                    # data[channel] = transformed_value.to(dtype=torch.bool)
+
+                    value[occlusion == 1] = True
+                elif channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
+                    value[occlusion == 1] = np.nan
+                else:
+                    raise NotImplementedError
 
         return data

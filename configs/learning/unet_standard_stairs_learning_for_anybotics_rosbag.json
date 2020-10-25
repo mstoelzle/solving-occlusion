@@ -42,6 +42,11 @@
                                     "type": "random_noise",
                                     "stdev": 0.05,
                                     "apply_to": ["occluded_elevation_map"]
+                                },
+                                {
+                                    "type": "random_occlusion",
+                                    "probability": 0.0025,
+                                    "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
                                 }
                             ]
                         }
