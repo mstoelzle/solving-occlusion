@@ -59,7 +59,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  30}
+        "visualization": {"sample_frequency":  10}
     },
     "logging": {
         "upload": false
