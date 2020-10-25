@@ -10,10 +10,7 @@
                     "train_weights": {
                         "reconstruction": 0,
                         "reconstruction_non_occlusion": 1,
-                        "reconstruction_occlusion": 6,
-                        "perceptual": 0.05,
-                        "style": 120,
-                        "total_variation": 0.1
+                        "reconstruction_occlusion": 6
                     },
                     "eval_weights": {
                         "reconstruction": 0,
@@ -79,6 +76,19 @@
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "perceptual": 0.05,
+                            "style": 120,
+                            "total_variation": 0.1
+                        }
+                    }
                 }
             ]
         },
