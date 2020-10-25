@@ -12,5 +12,5 @@ class Inference(BaseLearning):
     def run(self, task: Task):
         self.task = task
 
-        self.set_model(task.model_to_train, pick_optimizer=False)
+        self.set_model(task.model_to_infer, pick_optimizer=False)
         return self.infer()
