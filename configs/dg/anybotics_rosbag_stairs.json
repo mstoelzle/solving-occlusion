@@ -1,5 +1,5 @@
 {
-    "name": "synthetic_height_map_dataset_generation",
+    "name": "anybotics_rosbag_stairs",
     "cuda": false,
     "dataset_generation": {
         "type": "anybotics_rosbag",
