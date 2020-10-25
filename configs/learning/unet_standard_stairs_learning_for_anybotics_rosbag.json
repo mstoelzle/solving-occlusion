@@ -10,8 +10,10 @@
                     "train_weights": {
                         "reconstruction": 0,
                         "reconstruction_non_occlusion": 1,
-                        "reconstruction_occlusion": 1,
-                        "total_variation": 0
+                        "reconstruction_occlusion": 6,
+                        "perceptual": 0.05,
+                        "style": 120,
+                        "total_variation": 0.1
                     },
                     "eval_weights": {
                         "reconstruction": 0,
@@ -23,7 +25,7 @@
                     "batch_size": 6,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64],
                         "transforms": {
                             "defaults": [
