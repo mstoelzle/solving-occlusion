@@ -1,5 +1,5 @@
 {
-    "name": "baseline_anybotics_rosbag_stairs_inference",
+    "name": "trained_model_anybotics_rosbag_stairs_inference",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -15,18 +15,26 @@
                     "shuffle": true
                 },
                 "model": {
-                    "name": "Telea",
+                    "name": "UNet",
                     "input_dim": [64, 64],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
+                    "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
-                    "inpaint_radius": 3
+                    "NaN_replacement": 0,
+                    "bilinear": true
                 }
             },
             "tasks": [
                 {
                     "task_type": "inference",
-                    "model_to_infer": "untrained",
+                    "model_to_infer": "data/2020-10-25-12-01-49_learning_unet_standard_stairs_learning_for_anybotics_rosbag_heimdal/seed_101/task_0/model.pt",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "data/2020-10-25-12-01-49_learning_unet_standard_stairs_learning_for_anybotics_rosbag_heimdal/seed_101/task_1/model.pt",
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
                 }
