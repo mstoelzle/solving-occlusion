@@ -88,17 +88,21 @@ class BaseDataset(ABC):
                     output_resolution = input_resolution * input_size / output_size
                     value[0] = output_resolution
                 else:
+                    channel_is_bool = False
                     if value.dtype == torch.bool:
+                        channel_is_bool = True
                         value = value.to(dtype=torch.float)
 
                     interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
                     interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
                     value = interpolation_output.squeeze()
 
+                    if channel_is_bool is True:
+                        value = value.to(dtype=torch.bool)
+
                 output[key] = value
 
         if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
-            output[ChannelEnum.BINARY_OCCLUSION_MAP] = output[ChannelEnum.BINARY_OCCLUSION_MAP].to(dtype=torch.bool)
             output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = \
                 self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                                                    binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
