@@ -1,4 +1,4 @@
-# requires Python 3.8.5
+# requires Python 3.8.6
 coloredlogs==14.0
 gspread>=3.6, <4.0
 h5py>=2.10.0, <3.0
@@ -18,5 +18,5 @@ rospkg==1.2.8
 seaborn>=0.11.0
 tensorboard>=2.3.0, <3.0
 tifffile==2020.10.1
-torch>=1.6, <2.0
-torchvision>=0.7, <1.0
+torch>=1.7, <2.0
+torchvision>=0.8.1, <1.0
