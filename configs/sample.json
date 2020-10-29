@@ -37,7 +37,8 @@
                     "batch_size": 144,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "logs/2020-09-24-13-03-59_dataset_generation_sample_maximilianstoelzle/DATASET_OCCLUSION.hdf5"
+                        "path": "logs/2020-09-24-13-03-59_dataset_generation_sample_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
                     },
                     "num_workers": 4,
                     "shuffle": true
