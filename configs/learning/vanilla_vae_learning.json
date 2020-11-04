@@ -15,9 +15,7 @@
                         "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64],
                         "transforms": {
-                            "train": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
-                            "val": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}],
-                            "test": [{"type": "random_noise", "stdev": 0.1, "deterministic": false}]
+                            "defaults": [{"type": "random_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}]
                         }
                     },
                     "num_workers": 4,
