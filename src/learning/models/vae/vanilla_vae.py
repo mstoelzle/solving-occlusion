@@ -115,18 +115,6 @@ class VanillaVAE(BaseVAE):
         result = self.final_layer(result)
         return result
 
-    def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
-        """
-        Reparameterization trick to sample from N(mu, var) from
-        N(0,1).
-        :param mu: (Tensor) Mean of the latent Gaussian [B x D]
-        :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
-        :return: (Tensor) [B x D]
-        """
-        std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std)
-        return eps * std + mu
-
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)

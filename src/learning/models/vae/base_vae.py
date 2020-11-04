@@ -19,6 +19,18 @@ class BaseVAE(BaseModel, ABC):
     def decode(self, input: torch.Tensor) -> Any:
         raise NotImplementedError
 
+    def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
+        """
+        Reparameterization trick to sample from N(mu, var) from
+        N(0,1).
+        :param mu: (Tensor) Mean of the latent Gaussian [B x D]
+        :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
+        :return: (Tensor) [B x D]
+        """
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return eps * std + mu
+
     def sample(self, batch_size: int, device: torch.device, **kwargs) -> torch.Tensor:
         raise RuntimeWarning()
 
