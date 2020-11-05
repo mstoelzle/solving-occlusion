@@ -30,10 +30,14 @@ class UNetVAE(BaseVAE):
 
         self.encoder = nn.Sequential(*encoder_layers)
 
-        # we dynamically initialise the fully connected latent space layer on the fly
-        self.fc_mu = None
-        self.fc_var = None
-        self.fc_decoder_input = None
+        # we send a sample input through the model to infer dynamically the needed size of the fc layers
+        sample_input = torch.zeros(size=(1, len(self.in_channels), self.input_dim[0], self.input_dim[1]))
+        sample_encodings = self.encode(sample_input)
+        sample_x_flat = torch.flatten(sample_encodings[-1], start_dim=1)
+
+        self.fc_mu = nn.Linear(sample_x_flat.size(1), self.latent_dim)
+        self.fc_var = nn.Linear(sample_x_flat.size(1), self.latent_dim)
+        self.fc_decoder_input = nn.Linear(self.latent_dim, sample_x_flat.size(1))
 
         decoder_layers = []
         reversed_hidden_dims = self.hidden_dims.copy()
@@ -53,16 +57,9 @@ class UNetVAE(BaseVAE):
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
-        encodings = []
-        for encoding_idx, encoder_layer in enumerate(self.encoder):
-            if len(encodings) == 0:
-                encodings.append(encoder_layer(input))
-            else:
-                encodings.append(encoder_layer(encodings[-1]))
+        encodings = self.encode(input)
 
-        encodings.reverse()
-
-        x = encodings[0]
+        x = encodings[-1]
         x_flat = torch.flatten(x, start_dim=1)
 
         # Split the result into mu and var components
@@ -79,13 +76,9 @@ class UNetVAE(BaseVAE):
         z = self.reparameterize(mu, log_var)
 
         x = self.fc_decoder_input(z)
-        x = x.view(encodings[0].size(0), encodings[0].size(1), encodings[0].size(2), encodings[0].size(3))
+        x = x.view(encodings[-1].size(0), encodings[-1].size(1), encodings[-1].size(2), encodings[-1].size(3))
 
-        for decoding_idx, decoder_layer in enumerate(self.decoder):
-            if decoding_idx + 1 < len(self.decoder):
-                x = decoder_layer(x, encodings[decoding_idx+1])
-            else:
-                x = decoder_layer(x)
+        x = self.decode(x, encodings)
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(),
                   "mu": mu,
@@ -94,6 +87,29 @@ class UNetVAE(BaseVAE):
         output = self.denormalize_output(data, output, norm_consts)
 
         return output
+
+    def encode(self, input: torch.Tensor) -> List[torch.Tensor]:
+        encodings = []
+        for encoding_idx, encoder_layer in enumerate(self.encoder):
+            if len(encodings) == 0:
+                encodings.append(encoder_layer(input))
+            else:
+                encodings.append(encoder_layer(encodings[-1]))
+
+        return encodings
+
+    def decode(self, input: torch.Tensor, encodings: List[torch.Tensor]) -> torch.Tensor:
+        reversed_encodings = encodings.copy()
+        reversed_encodings.reverse()
+
+        x = input
+        for decoding_idx, decoder_layer in enumerate(self.decoder):
+            if decoding_idx + 1 < len(self.decoder):
+                x = decoder_layer(x, reversed_encodings[decoding_idx+1])
+            else:
+                x = decoder_layer(x)
+
+        return x
 
     def loss_function(self,
                       loss_config: dict,
