@@ -10,7 +10,7 @@
                     "train_weights": {
                         "reconstruction": 0,
                         "reconstruction_non_occlusion": 1,
-                        "reconstruction_occlusion": 1,
+                        "reconstruction_occlusion": 6,
                         "perceptual": 0,
                         "style": 0,
                         "total_variation": 0,
@@ -39,7 +39,7 @@
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
-                    "latent_dim": 128,
+                    "latent_dim": 1024,
                     "input_normalization": false,
                     "NaN_replacement": 0,
                     "bilinear": true
