@@ -7,4 +7,4 @@ class ChannelEnum(Enum):
     RECONSTRUCTED_ELEVATION_MAP = "reconstructed_elevation_map"
     OCCLUDED_ELEVATION_MAP = "occluded_elevation_map"
     BINARY_OCCLUSION_MAP = "binary_occlusion_map"
-    INPAINTED_ELEVATION_MAP = "inpainted_elevation_map"
+    COMPOSED_ELEVATION_MAP = "composed_elevation_map"

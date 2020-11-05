@@ -291,7 +291,7 @@ class PartialConvUNet(BaseModel):
             reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
             total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
 
-            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.INPAINTED_ELEVATION_MAP])
+            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \

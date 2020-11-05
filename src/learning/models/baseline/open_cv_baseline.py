@@ -80,7 +80,7 @@ class OpenCVBaseline(BaseBaselineModel):
                                                                       reconstructed_elevation_map)
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
-                  ChannelEnum.INPAINTED_ELEVATION_MAP: inpainted_elevation_map}
+                  ChannelEnum.COMPOSED_ELEVATION_MAP: inpainted_elevation_map}
 
         return output
 

@@ -111,7 +111,7 @@ class BaseModel(ABC, nn.Module):
         reconstructed_elevation_map = denormalized_output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
         inpainted_elevation_map = self.create_inpainted_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
                                                                       reconstructed_elevation_map)
-        denormalized_output[ChannelEnum.INPAINTED_ELEVATION_MAP] = inpainted_elevation_map
+        denormalized_output[ChannelEnum.COMPOSED_ELEVATION_MAP] = inpainted_elevation_map
 
         return denormalized_output
 
@@ -127,10 +127,11 @@ class BaseModel(ABC, nn.Module):
                 LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
             elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
             reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-            norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(ChannelEnum.GROUND_TRUTH_ELEVATION_MAP,
-                                                                                        input=elevation_map,
-                                                                                        batch=True,
-                                                                                        mean=True, stdev=True)
+            norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(
+                ChannelEnum.GROUND_TRUTH_ELEVATION_MAP,
+                input=elevation_map,
+                batch=True,
+                mean=True, stdev=True)
             norm_reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
                                                                                input=reconstructed_elevation_map,
                                                                                batch=True, mean=True, stdev=True,
@@ -152,7 +153,7 @@ class BaseModel(ABC, nn.Module):
                     LossEnum.RECONSTRUCTION: sample_tensor.new_tensor(0),
                     LossEnum.RECONSTRUCTION_OCCLUSION: sample_tensor.new_tensor(0),
                     LossEnum.RECONSTRUCTION_NON_OCCLUSION: sample_tensor.new_tensor(0),
-                    LossEnum.INPAINTING: sample_tensor.new_tensor(0)}
+                    LossEnum.COMPOSITION: sample_tensor.new_tensor(0)}
 
         norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
@@ -163,12 +164,12 @@ class BaseModel(ABC, nn.Module):
             recons_loss = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                        data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
 
-        if LossEnum.INPAINTING in norm_data:
-            inpainting_loss = mse_loss_fct(norm_data[ChannelEnum.INPAINTED_ELEVATION_MAP],
-                                           norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+        if LossEnum.COMPOSITION in norm_data:
+            composition_loss = mse_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                            norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
         else:
-            inpainting_loss = mse_loss_fct(output[ChannelEnum.INPAINTED_ELEVATION_MAP],
-                                           data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            composition_loss = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                            data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
 
         if LossEnum.RECONSTRUCTION_OCCLUSION in norm_data:
             recons_occlusion_loss = reconstruction_occlusion_loss_fct(
@@ -208,7 +209,7 @@ class BaseModel(ABC, nn.Module):
                 LossEnum.RECONSTRUCTION: recons_loss,
                 LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
                 LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss,
-                LossEnum.INPAINTING: inpainting_loss}
+                LossEnum.COMPOSITION: composition_loss}
 
     def artistic_loss_function(self,
                                loss_config: dict,
@@ -225,7 +226,7 @@ class BaseModel(ABC, nn.Module):
         if self.feature_extractor is not None:
             ground_truth_elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
             reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-            inpainted_elevation_map = output[ChannelEnum.INPAINTED_ELEVATION_MAP]
+            inpainted_elevation_map = output[ChannelEnum.COMPOSED_ELEVATION_MAP]
 
             # features for the ground-truth, the reconstructed elevation map and the inpainted elevation map
             # the feature extractor expects an image with three channels as an input

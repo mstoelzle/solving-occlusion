@@ -60,7 +60,7 @@ class ResultsPlotter:
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
-            inpainted_elevation_map = data_hdf5_group[ChannelEnum.INPAINTED_ELEVATION_MAP.value][idx, ...]
+            inpainted_elevation_map = data_hdf5_group[ChannelEnum.COMPOSED_ELEVATION_MAP.value][idx, ...]
 
             ground_truth_elevation_map = None
             if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value in data_hdf5_group:
@@ -89,7 +89,7 @@ class ResultsPlotter:
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
             mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
-            axes[1, 0].set_title("Inpainting")
+            axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
             mat = axes[1, 0].matshow(np.swapaxes(inpainted_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[1, 1].set_title("Occlusion")
