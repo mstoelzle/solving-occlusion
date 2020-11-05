@@ -60,6 +60,20 @@
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"latent_dim":  256}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"latent_dim":  4096}
                 }
             ]
         },
