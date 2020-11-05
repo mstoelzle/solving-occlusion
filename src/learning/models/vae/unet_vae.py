@@ -68,9 +68,11 @@ class UNetVAE(BaseVAE):
         # Split the result into mu and var components
         # of the latent Gaussian distribution
         if self.fc_mu is None or self.fc_var is None or self.fc_decoder_input is None:
-            self.fc_mu = nn.Linear(x_flat.size(1), self.latent_dim)
-            self.fc_var = nn.Linear(x_flat.size(1), self.latent_dim)
-            self.fc_decoder_input = nn.Linear(self.latent_dim, x_flat.size(1))
+            device, = list(set(p.device for p in self.parameters()))
+
+            self.fc_mu = nn.Linear(x_flat.size(1), self.latent_dim).to(device=device)
+            self.fc_var = nn.Linear(x_flat.size(1), self.latent_dim).to(device=device)
+            self.fc_decoder_input = nn.Linear(self.latent_dim, x_flat.size(1)).to(device=device)
 
         mu = self.fc_mu(x_flat)
         log_var = self.fc_var(x_flat)
