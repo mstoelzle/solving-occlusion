@@ -7,7 +7,7 @@ from typing import *
 from .base_vae import BaseVAE
 from ..unet.unet_parts import *
 from src.enums import *
-from src.learning.loss.loss import kld_loss_fct, total_variation_loss_fct
+from src.learning.loss.loss import kld_loss_fct, total_variation_loss_fct, masked_total_variation_loss_fct
 
 
 class UNetVAE(BaseVAE):
@@ -121,7 +121,8 @@ class UNetVAE(BaseVAE):
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 

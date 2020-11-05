@@ -6,7 +6,7 @@ from typing import *
 from .unet_parts import *
 from ..base_model import BaseModel
 from src.enums import *
-from src.learning.loss.loss import total_variation_loss_fct
+from src.learning.loss.loss import total_variation_loss_fct, masked_total_variation_loss_fct
 
 
 class UNet(BaseModel):
@@ -89,7 +89,8 @@ class UNet(BaseModel):
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \

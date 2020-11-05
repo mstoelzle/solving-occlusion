@@ -193,6 +193,42 @@ def total_variation_loss_fct(image: torch.Tensor):
     return loss
 
 
+def masked_total_variation_loss_fct(image: torch.Tensor, mask: torch.Tensor):
+    """
+    Total variation loss of a masked image
+    Source:
+    Johnson, Justin, Alexandre Alahi, and Li Fei-Fei.
+    "Perceptual losses for real-time style transfer and super-resolution."
+    European conference on computer vision. Springer, Cham, 2016.
+    Adapted from:
+    https://github.com/ryanwongsa/Image-Inpainting/blob/master/src/loss/loss_compute.py
+    :param mask:
+    :param image:
+    :return:
+    """
+    if image.dim() == 3:
+        # we need a channel composition foe 2d convolutions
+        image = image.unsqueeze(dim=1)
+
+    if mask.dim() == 3:
+        # we need a channel composition foe 2d convolutions
+        mask = mask.unsqueeze(dim=1)
+
+    if mask.dtype == torch.bool:
+        mask = mask.to(dtype=torch.float)
+
+    kernel = torch.ones((image.size(1), image.size(1), mask.shape[1], mask.shape[1]), requires_grad=False)
+    kernel = kernel.to(device=image.device)
+    dilated_mask = F.conv2d(mask, weight=kernel, padding=1) > 0
+    dilated_mask = dilated_mask.clone().detach().float()
+
+    P = dilated_mask[..., 1:-1, 1:-1] * image
+
+    a = torch.mean(torch.abs(P[:, :, :, 1:] - P[:, :, :, :-1]))
+    b = torch.mean(torch.abs(P[:, :, 1:, :] - P[:, :, :-1, :]))
+    return a + b
+
+
 def perceptual_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
     return l1_loss_fct(input, target, **kwargs)
 
