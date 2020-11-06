@@ -52,9 +52,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
         self.robot_position_config = self.config.get("robot_position", {})
 
-        self.reset()
+        self.reset_cache()
 
-    def reset(self):
+    def reset_cache(self):
         self.params = []
         self.elevation_maps = []
         self.binary_occlusion_maps = []
@@ -168,7 +168,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     self.extend_dataset(params_dataset, self.params)
                     self.extend_dataset(elevation_map_dataset, self.elevation_maps)
                     self.extend_dataset(binary_occlusion_map_dataset, self.binary_occlusion_maps)
-                    self.reset()
+                    self.reset_cache()
 
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
