@@ -35,12 +35,19 @@ class BaseDatasetGenerator(ABC):
         self.hdf5_path = pathlib.Path(self.logdir / "DATASET_OCCLUSION.hdf5")
         self.hdf5_file: Optional[h5py.File] = None
 
+        self.min = None
+        self.max = None
+
     def __enter__(self):
         self.hdf5_file = h5py.File(str(self.hdf5_path), 'a')
         self.hdf5_file.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.hdf5_file.__exit__()
+
+    def reset(self):
+        self.min = None
+        self.max = None
 
     @abstractmethod
     def run(self):
@@ -56,3 +63,23 @@ class BaseDatasetGenerator(ABC):
 
         dataset.resize((dataset.shape[0] + data.shape[0]), axis=0)
         dataset[-data.shape[0]:] = data
+
+    def update_dataset_range(self, elevation_map: np.array):
+        # update min and max
+        sample_min = np.min(elevation_map).item()
+        sample_max = np.max(elevation_map).item()
+        if self.min is None:
+            self.min = sample_min
+        else:
+            self.min = min(self.min, sample_min)
+
+        if self.max is None:
+            self.max = sample_max
+        else:
+            self.max = max(self.max, sample_max)
+
+    def write_metadata(self, purpose_group: h5py.Group):
+        for name, dataset in purpose_group.items():
+            if isinstance(dataset, h5py.Dataset):
+                dataset.attrs["min"] = self.min
+                dataset.attrs["max"] = self.max

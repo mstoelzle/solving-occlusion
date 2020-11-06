@@ -21,6 +21,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         self.reset()
 
     def reset(self):
+        super().reset()
         self.reset_cache()
 
         self.initialized_datasets = False
@@ -85,6 +86,8 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 else:
                     raise ValueError
 
+                self.update_dataset_range(grid_map[~np.isnan(grid_map)])
+
                 target_size_x = self.config.get("size", grid_map.shape[0])
                 target_size_y = self.config.get("size", grid_map.shape[1])
                 num_subgrids_x = int(np.floor(grid_map.shape[0] / target_size_x))
@@ -126,6 +129,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
         self.extend_dataset(self.params_dataset, self.params)
         self.extend_dataset(self.occluded_elevation_map_dataset, self.occluded_elevation_maps)
+        self.write_metadata(self.hdf5_group)
         self.reset()
 
         progress_bar.finish()

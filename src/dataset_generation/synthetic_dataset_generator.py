@@ -52,6 +52,10 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
         self.robot_position_config = self.config.get("robot_position", {})
 
+        self.reset()
+
+    def reset(self):
+        super().reset()
         self.reset_cache()
 
     def reset_cache(self):
@@ -162,6 +166,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                              robot_position.y, robot_position.z, robot_position.yaw]))
                 self.elevation_maps.append(elevation_map)
                 self.binary_occlusion_maps.append(binary_occlusion_map)
+                self.update_dataset_range(elevation_map)
 
                 if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
                         num_accepted_samples >= num_samples:
@@ -214,6 +219,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 progress_bar.next()
             progress_bar.finish()
+            self.write_metadata(hdf5_group)
+            self.reset()
 
     def raycast_occlusion(self, robot: Robot) -> np.array:
         """
