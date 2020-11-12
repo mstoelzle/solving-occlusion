@@ -64,13 +64,10 @@ class BaseModel(ABC, nn.Module):
         return input, norm_consts
 
     def preprocess_occluded_elevation_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
-        poem = occluded_elevation_map.clone()
-
         NaN_replacement = self.config.get("NaN_replacement", 0)
 
-        # replace NaNs signifying occluded areas with arbitrary high or low number
-        # poem[occluded_elevation_map != occluded_elevation_map] = -10000
-        poem[occluded_elevation_map != occluded_elevation_map] = NaN_replacement
+        # replace NaNs signifying occluded areas with a specified number
+        poem = torch.nan_to_num(occluded_elevation_map, nan=NaN_replacement)
 
         return poem
 
