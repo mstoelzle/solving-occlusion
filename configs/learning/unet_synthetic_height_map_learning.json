@@ -1,5 +1,5 @@
 {
-    "name": "unet_learning",
+    "name": "unet_synthetic_height_map_learning",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -10,8 +10,10 @@
                     "train_weights": {
                         "mse_rec_all": 0,
                         "mse_rec_nocc": 1,
-                        "mse_rec_occ": 1,
-                        "total_variation": 0
+                        "mse_rec_occ": 6,
+                        "perceptual": 0.05,
+                        "style": 120,
+                        "total_variation": 0.1
                     },
                     "eval_weights": {
                         "mse_rec_all": 0,
