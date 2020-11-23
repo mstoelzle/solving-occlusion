@@ -5,7 +5,8 @@ from torch.nn import functional as F
 from typing import *
 
 from src.enums import *
-from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct, perceptual_loss_fct, style_loss_fct
+from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
+    l1_loss_fct, perceptual_loss_fct, style_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -125,9 +126,9 @@ class BaseModel(ABC, nn.Module):
                             **kwargs) -> Dict[ChannelEnum, torch.Tensor]:
         normalization_config = loss_config.get("normalization", [])
         norm_data = {}
-        if LossEnum.RECONSTRUCTION.value in normalization_config or \
-                LossEnum.RECONSTRUCTION_OCCLUSION.value in normalization_config or \
-                LossEnum.RECONSTRUCTION_NON_OCCLUSION.value in normalization_config:
+        if LossEnum.MSE_REC_ALL.value in normalization_config or \
+                LossEnum.MSE_REC_OCC.value in normalization_config or \
+                LossEnum.MSE_REC_NOCC.value in normalization_config:
             elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
             reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
             norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(
@@ -151,68 +152,123 @@ class BaseModel(ABC, nn.Module):
                            **kwargs) -> dict:
         sample_tensor = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
 
+        loss_dict = {}
+
         if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP not in data:
             return {LossEnum.LOSS: sample_tensor.new_tensor(0),
-                    LossEnum.RECONSTRUCTION: sample_tensor.new_tensor(0),
-                    LossEnum.RECONSTRUCTION_OCCLUSION: sample_tensor.new_tensor(0),
-                    LossEnum.RECONSTRUCTION_NON_OCCLUSION: sample_tensor.new_tensor(0),
-                    LossEnum.COMPOSITION: sample_tensor.new_tensor(0)}
+                    LossEnum.L1_REC_ALL: sample_tensor.new_tensor(0),
+                    LossEnum.L1_REC_OCC: sample_tensor.new_tensor(0),
+                    LossEnum.L1_REC_NOCC: sample_tensor.new_tensor(0),
+                    LossEnum.L1_COMP_ALL: sample_tensor.new_tensor(0),
+                    LossEnum.MSE_REC_ALL: sample_tensor.new_tensor(0),
+                    LossEnum.MSE_REC_OCC: sample_tensor.new_tensor(0),
+                    LossEnum.MSE_REC_NOCC: sample_tensor.new_tensor(0),
+                    LossEnum.MSE_COMP_ALL: sample_tensor.new_tensor(0),
+                    LossEnum.PSNR_REC_ALL: sample_tensor.new_tensor(0),
+                    LossEnum.PSNR_REC_OCC: sample_tensor.new_tensor(0),
+                    LossEnum.PSNR_REC_NOCC: sample_tensor.new_tensor(0),
+                    LossEnum.PSNR_COMP_ALL: sample_tensor.new_tensor(0)}
 
         norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
-        if LossEnum.RECONSTRUCTION in norm_data:
-            recons_loss = mse_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                       norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+        if LossEnum.L1_REC_ALL in norm_data:
+            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                         norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
         else:
-            recons_loss = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                       data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                         data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
 
-        if LossEnum.COMPOSITION in norm_data:
-            composition_loss = mse_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                            norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
-        else:
-            composition_loss = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                            data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
-
-        if LossEnum.RECONSTRUCTION_OCCLUSION in norm_data:
-            recons_occlusion_loss = reconstruction_occlusion_loss_fct(
+        if LossEnum.L1_REC_OCC in norm_data:
+            loss_dict[LossEnum.L1_REC_OCC] = masked_loss_fct(
+                l1_loss_fct,
                 norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                 norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                 data[ChannelEnum.BINARY_OCCLUSION_MAP],
                 **kwargs)
         else:
-            recons_occlusion_loss = reconstruction_occlusion_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                                      data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                                      data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                                                                      **kwargs)
+            loss_dict[LossEnum.L1_REC_OCC] = masked_loss_fct(
+                l1_loss_fct,
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
 
-        if LossEnum.RECONSTRUCTION_NON_OCCLUSION in norm_data:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(
+        if LossEnum.L1_REC_NOCC in norm_data:
+            loss_dict[LossEnum.L1_REC_NOCC] = masked_loss_fct(
+                l1_loss_fct,
                 norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                 norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                 ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
                 **kwargs)
         else:
-            recons_non_occlusion_loss = reconstruction_occlusion_loss_fct(
+            loss_dict[LossEnum.L1_REC_NOCC] = masked_loss_fct(
+                l1_loss_fct,
                 output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                 data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
                 ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
                 **kwargs)
 
+        if LossEnum.L1_COMP_ALL in norm_data:
+            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                          norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+        else:
+            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                          data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+
+        if LossEnum.MSE_REC_ALL in norm_data:
+            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                           norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+        else:
+            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                           data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+
+        if LossEnum.MSE_REC_OCC in norm_data:
+            loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
+                mse_loss_fct,
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
+        else:
+            loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
+                mse_loss_fct,
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
+
+        if LossEnum.MSE_REC_NOCC in norm_data:
+            loss_dict[LossEnum.MSE_REC_NOC] = masked_loss_fct(
+                mse_loss_fct,
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
+        else:
+            loss_dict[LossEnum.MSE_REC_NOCC] = masked_loss_fct(
+                mse_loss_fct,
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                **kwargs)
+
+        if LossEnum.MSE_COMP_ALL in norm_data:
+            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                            norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+        else:
+            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                            data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+
         weights = loss_config.get("eval_weights", {})
-        recons_weight = weights.get(LossEnum.RECONSTRUCTION.value, 0)
-        recons_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
-        recons_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 0)
+        recons_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
+        recons_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
+        recons_non_occlusion_weight = weights.get(LossEnum.MSE_REC_NOCC.value, 0)
 
-        loss = recons_weight * recons_loss + \
-               recons_occlusion_weight * recons_occlusion_loss + \
-               recons_non_occlusion_weight * recons_non_occlusion_loss
+        loss_dict[LossEnum.LOSS] = recons_weight * loss_dict[LossEnum.MSE_REC_ALL] + \
+                                   recons_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] + \
+                                   recons_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC]
 
-        return {LossEnum.LOSS: loss,
-                LossEnum.RECONSTRUCTION: recons_loss,
-                LossEnum.RECONSTRUCTION_OCCLUSION: recons_occlusion_loss,
-                LossEnum.RECONSTRUCTION_NON_OCCLUSION: recons_non_occlusion_loss,
-                LossEnum.COMPOSITION: composition_loss}
+        return loss_dict
 
     def artistic_loss_function(self,
                                loss_config: dict,

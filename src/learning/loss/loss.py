@@ -132,12 +132,26 @@ class Loss(ABC):
         return aggregated_loss_dict
 
 
-def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
-    if reduction == 'mean_per_sample':
-        mse_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
-        return torch.mean(mse_loss, dim=tuple(range(1, input.dim())))
+def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tensor,
+                    mask: torch.Tensor, **kwargs):
+    if kwargs.get("reduction", 'mean') == 'mean_per_sample':
+        batch_size = target.size(0)
+        recons_loss = target.new_zeros(size=(batch_size,))
+        for i in range(batch_size):
+            if (mask[i, ...] == 1).sum().item() == 0:
+                recons_loss[i] = 0
+                continue
+
+            recons_loss[i] = loss_fct(input[i, ...][mask[i, ...] == 1], target[i, ...][mask[i, ...] == 1],
+                                      reduction="mean")
     else:
-        return F.mse_loss(input, target, size_average, reduce, reduction)
+        # we need to check if there is any occlusion
+        if (mask == 1).sum().item() == 0:
+            recons_loss = target.new_zeros(size=(1,)).mean()
+        else:
+            recons_loss = loss_fct(input[mask == 1], target[mask == 1], **kwargs)
+    return recons_loss
+
 
 def l1_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
     if reduction == 'mean_per_sample':
@@ -146,27 +160,33 @@ def l1_loss_fct(input, target, size_average=None, reduce=None, reduction='mean',
     else:
         return F.l1_loss(input, target, size_average, reduce, reduction)
 
-def reconstruction_occlusion_loss_fct(reconstructed_elevation_map: torch.Tensor,
-                                      elevation_map: torch.Tensor,
-                                      binary_occlusion_map: torch.Tensor,
-                                      **kwargs):
+
+def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
+    if reduction == 'mean_per_sample':
+        mse_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
+        return torch.mean(mse_loss, dim=tuple(range(1, input.dim())))
+    else:
+        return F.mse_loss(input, target, size_average, reduce, reduction)
+
+
+def mse_mask_loss_fct(input: torch.Tensor, target: torch.Tensor, mask: torch.Tensor, **kwargs):
     if kwargs.get("reduction", 'mean') == 'mean_per_sample':
-        batch_size = elevation_map.size(0)
-        recons_loss = elevation_map.new_zeros(size=(batch_size,))
+        batch_size = target.size(0)
+        recons_loss = target.new_zeros(size=(batch_size,))
         for i in range(batch_size):
-            if (binary_occlusion_map[i, ...] == 1).sum().item() == 0:
+            if (mask[i, ...] == 1).sum().item() == 0:
                 recons_loss[i] = 0
                 continue
 
-            recons_loss[i] = mse_loss_fct(reconstructed_elevation_map[i, ...][binary_occlusion_map[i, ...] == 1],
-                                          elevation_map[i, ...][binary_occlusion_map[i, ...] == 1], reduction="mean")
+            recons_loss[i] = mse_loss_fct(input[i, ...][mask[i, ...] == 1],
+                                          target[i, ...][mask[i, ...] == 1], reduction="mean")
     else:
         # we need to check if there is any occlusion
-        if (binary_occlusion_map == 1).sum().item() == 0:
-            recons_loss = elevation_map.new_zeros(size=(1, )).mean()
+        if (mask == 1).sum().item() == 0:
+            recons_loss = target.new_zeros(size=(1,)).mean()
         else:
-            recons_loss = mse_loss_fct(reconstructed_elevation_map[binary_occlusion_map == 1],
-                                       elevation_map[binary_occlusion_map == 1], **kwargs)
+            recons_loss = mse_loss_fct(input[mask == 1],
+                                       target[mask == 1], **kwargs)
     return recons_loss
 
 

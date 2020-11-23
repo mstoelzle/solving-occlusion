@@ -212,7 +212,7 @@ class ResultsPlotter:
             selector = np.logical_and(lower_bound <= occluded_area,
                                       occluded_area <= higher_bound)
 
-            loss_for_bin = np.array(loss_hdf5_group[LossEnum.RECONSTRUCTION_OCCLUSION.value])
+            loss_for_bin = np.array(loss_hdf5_group[LossEnum.MSE_REC_OCC.value])
             loss_for_bin = loss_for_bin[selector]
             box_plot_y[idx:idx + loss_for_bin.shape[0]] = loss_for_bin
 

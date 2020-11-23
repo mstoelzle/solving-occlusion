@@ -150,16 +150,16 @@ class VanillaVAE(BaseVAE):
 
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
-            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            reconstruction_weight = weights.get(LossEnum.MSE_REC_ALL.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
 
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
                 kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataset_length
 
-            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+            loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + kld_weight * kld_loss
 
             loss_dict.update({LossEnum.LOSS: loss,

@@ -287,15 +287,15 @@ class PartialConvUNet(BaseModel):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
-            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
-            total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
+            reconstruction_non_occlusion_weight = weights.get(LossEnum.MSE_REC_NOCC.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
+            total_variation_weight = weights.get(LossEnum.TV.value, 0)
 
             total_variation_loss = masked_total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                                    mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
-            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + total_variation_weight * total_variation_loss
 
             loss_dict.update({LossEnum.LOSS: loss})

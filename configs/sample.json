@@ -27,10 +27,10 @@
             "defaults": {
                 "loss": {
                     "report_frequency": 100,
-                    "normalization": ["reconstruction", "reconstruction_occlusion"],
+                    "normalization": ["mse_rec_all", "mse_rec_occ"],
                     "train_weights": {
-                        "reconstruction": 1,
-                        "reconstruction_occlusion": 2
+                        "mse_rec_all": 1,
+                        "mse_rec_occ": 2
                     }
                 },
                 "domain_defaults": {

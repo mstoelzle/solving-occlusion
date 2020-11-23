@@ -123,11 +123,11 @@ class UNetVAE(BaseVAE):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_non_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_NON_OCCLUSION.value, 1)
-            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            reconstruction_non_occlusion_weight = weights.get(LossEnum.MSE_REC_NOCC.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
             style_weight = weights.get(LossEnum.STYLE.value, 0)
-            total_variation_weight = weights.get(LossEnum.TOTAL_VARIATION.value, 0)
+            total_variation_weight = weights.get(LossEnum.TV.value, 0)
 
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
@@ -142,8 +142,8 @@ class UNetVAE(BaseVAE):
 
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
-            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_NON_OCCLUSION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
                    + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
                    + total_variation_weight * total_variation_loss \

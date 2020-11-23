@@ -8,12 +8,12 @@
                     "report_frequency": 100,
                     "normalization": [],
                     "train_weights": {
-                        "reconstruction_occlusion": 6,
-                        "reconstruction_non_occlusion": 1
+                        "mse_rec_occ": 6,
+                        "mse_rec_nocc": 1
                     },
                     "eval_weights": {
-                        "reconstruction": 0,
-                        "reconstruction_occlusion": 1
+                        "mse_rec_all": 0,
+                        "mse_rec_occ": 1
                     }
                 },
                 "domain_defaults": {

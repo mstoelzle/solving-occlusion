@@ -1,12 +1,10 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
+from typing import *
 
 from src.learning.models import BaseVAE
 from src.enums import *
-from src.learning.loss.loss import mse_loss_fct, reconstruction_occlusion_loss_fct
-from src.learning.normalization.input_normalization import InputNormalization
 
 
 class VQVAE(BaseVAE):
@@ -161,12 +159,12 @@ class VQVAE(BaseVAE):
 
             weights = loss_config.get("train_weights", {})
 
-            reconstruction_weight = weights.get(LossEnum.RECONSTRUCTION.value, 1)
-            reconstruction_occlusion_weight = weights.get(LossEnum.RECONSTRUCTION_OCCLUSION.value, 1)
+            reconstruction_weight = weights.get(LossEnum.MSE_REC_ALL.value, 1)
+            reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             vq_weight = weights.get(LossEnum.VQ.value, 1)
 
-            loss = reconstruction_weight * loss_dict[LossEnum.RECONSTRUCTION] \
-                   + reconstruction_occlusion_weight * loss_dict[LossEnum.RECONSTRUCTION_OCCLUSION] \
+            loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
+                   + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + vq_weight * vq_loss
 
             loss_dict.update({LossEnum.LOSS: loss,

@@ -8,18 +8,18 @@
                     "report_frequency": 100,
                     "normalization": [],
                     "train_weights": {
-                        "reconstruction": 0,
-                        "reconstruction_non_occlusion": 1,
-                        "reconstruction_occlusion": 6,
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6,
                         "perceptual": 0,
                         "style": 0,
                         "total_variation": 0,
                         "kld": 1
                     },
                     "eval_weights": {
-                        "reconstruction": 0,
-                        "reconstruction_non_occlusion": 0,
-                        "reconstruction_occlusion": 1
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 0,
+                        "mse_rec_occ": 1
                     }
                 },
                 "domain_defaults": {

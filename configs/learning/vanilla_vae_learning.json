@@ -6,7 +6,7 @@
             "defaults": {
                 "loss": {
                     "report_frequency": 100,
-                    "normalization": ["reconstruction", "reconstruction_occlusion"]
+                    "normalization": ["mse_rec_all", "mse_rec_occ"]
                 },
                 "domain_defaults": {
                     "batch_size": 32,
