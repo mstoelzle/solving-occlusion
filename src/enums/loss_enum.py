@@ -15,6 +15,8 @@ class LossEnum(Enum):
     PSNR_REC_OCC = "psnr_rec_occ"
     PSNR_REC_NOCC = "psnr_rec_nocc"
     PSNR_COMP_ALL = "psnr_comp_all"
+    SSIM_REC = "ssim_rec"
+    SSIM_COMP = "ssim_comp"
     KLD = "kld"
     VQ = "vq"
     STYLE = "style"

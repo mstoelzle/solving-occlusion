@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 import csv
 import logging
 import pathlib
-from abc import ABC, abstractmethod
+from pytorch_msssim import ssim
 from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
@@ -200,7 +201,7 @@ def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> 
 
     # normalize for minimum being at 0
     input_off = input - data_min
-    target_off = target - data_max
+    target_off = target - data_min
 
     mse = mse_loss_fct(input_off, target_off, **kwargs)
 
@@ -211,6 +212,21 @@ def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> 
     psnr[selector] = 20 * torch.log10(delta / torch.sqrt(mse[selector]))
 
     return psnr
+
+
+# structural similarity index (SSIM)
+# https://github.com/VainF/pytorch-msssim
+# https://en.wikipedia.org/wiki/Structural_similarity
+def ssim_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> torch.Tensor:
+    delta = data_max - data_min
+
+    # normalize for minimum being at 0
+    input_off = input - data_min
+    target_off = target - data_min
+
+    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1), data_range=delta)
+
+    return ssim_loss
 
 
 def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
