@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch.nn import functional as F
+import torchvision
 
 from .domain_distance_metrics.cmmd import conditional_maximum_mean_discrepancy
 from .domain_distance_metrics.coral import coral
@@ -142,8 +143,11 @@ def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tenso
                 recons_loss[i] = 0
                 continue
 
+            loss_fct_kwargs = kwargs.copy()
+            loss_fct_kwargs["reduction"] = "mean"
+
             recons_loss[i] = loss_fct(input[i, ...][mask[i, ...] == 1], target[i, ...][mask[i, ...] == 1],
-                                      reduction="mean")
+                                      **loss_fct_kwargs)
     else:
         # we need to check if there is any occlusion
         if (mask == 1).sum().item() == 0:
@@ -188,6 +192,25 @@ def mse_mask_loss_fct(input: torch.Tensor, target: torch.Tensor, mask: torch.Ten
             recons_loss = mse_loss_fct(input[mask == 1],
                                        target[mask == 1], **kwargs)
     return recons_loss
+
+
+# peak signal-to-noise ratio
+def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> torch.Tensor:
+    delta = data_max - data_min
+
+    # normalize for minimum being at 0
+    input_off = input - data_min
+    target_off = target - data_max
+
+    mse = mse_loss_fct(input_off, target_off, **kwargs)
+
+    # handle divisions by zero
+    psnr = mse.new_zeros(size=mse.size())
+    selector = (mse != 0)
+
+    psnr[selector] = 20 * torch.log10(delta / torch.sqrt(mse[selector]))
+
+    return psnr
 
 
 def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):

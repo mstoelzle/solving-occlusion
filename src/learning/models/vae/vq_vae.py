@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from typing import *
 
+from src.datasets.base_dataset import BaseDataset
 from src.learning.models import BaseVAE
 from src.enums import *
 
@@ -150,9 +151,10 @@ class VQVAE(BaseVAE):
                       loss_config: dict,
                       output: Dict[Union[ChannelEnum, LossEnum, str], torch.Tensor],
                       data: Dict[ChannelEnum, torch.Tensor],
+                      dataset: BaseDataset,
                       **kwargs) -> dict:
 
-        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, dataset=dataset,**kwargs)
 
         if self.training:
             vq_loss = output[LossEnum.VQ]

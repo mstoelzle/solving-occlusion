@@ -26,6 +26,9 @@ class BaseDataset(ABC):
 
         self.img_loader = torchvision_default_loader
 
+        self.min: float = 0
+        self.max: float = 0
+
     @staticmethod
     def prepare_keys(data: dict) -> np.array:
         for key, value in data.items():

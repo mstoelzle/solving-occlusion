@@ -5,8 +5,9 @@ from torch.nn import functional as F
 from typing import *
 
 from src.enums import *
+from src.datasets.base_dataset import BaseDataset
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
-    l1_loss_fct, perceptual_loss_fct, style_loss_fct
+    l1_loss_fct, psnr_loss_fct, perceptual_loss_fct, style_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -149,6 +150,7 @@ class BaseModel(ABC, nn.Module):
                            loss_config: dict,
                            output: Dict[Union[ChannelEnum, str], torch.Tensor],
                            data: Dict[ChannelEnum, torch.Tensor],
+                           dataset: BaseDataset = None,
                            **kwargs) -> dict:
         sample_tensor = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
 
@@ -238,7 +240,7 @@ class BaseModel(ABC, nn.Module):
                 **kwargs)
 
         if LossEnum.MSE_REC_NOCC in norm_data:
-            loss_dict[LossEnum.MSE_REC_NOC] = masked_loss_fct(
+            loss_dict[LossEnum.MSE_REC_NOCC] = masked_loss_fct(
                 mse_loss_fct,
                 norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                 norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
@@ -258,6 +260,62 @@ class BaseModel(ABC, nn.Module):
         else:
             loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                             data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+
+        if LossEnum.PSNR_REC_ALL in norm_data:
+            loss_dict[LossEnum.PSNR_REC_ALL] = psnr_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                             norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                                                             data_min=dataset.min, data_max=dataset.max,
+                                                             **kwargs)
+        else:
+            loss_dict[LossEnum.PSNR_REC_ALL] = psnr_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                                             data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                                                             data_min=dataset.min, data_max=dataset.max,
+                                                             **kwargs)
+
+        if LossEnum.PSNR_REC_OCC in norm_data:
+            loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
+                psnr_loss_fct,
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                data_min=dataset.min, data_max=dataset.max,
+                **kwargs)
+        else:
+            loss_dict[LossEnum.PSNR_REC_OCC] = masked_loss_fct(
+                psnr_loss_fct,
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                data_min=dataset.min, data_max=dataset.max,
+                **kwargs)
+
+        if LossEnum.PSNR_REC_NOCC in norm_data:
+            loss_dict[LossEnum.PSNR_REC_NOCC] = masked_loss_fct(
+                psnr_loss_fct,
+                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                data_min=dataset.min, data_max=dataset.max,
+                **kwargs)
+        else:
+            loss_dict[LossEnum.PSNR_REC_NOCC] = masked_loss_fct(
+                psnr_loss_fct,
+                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                data_min=dataset.min, data_max=dataset.max,
+                **kwargs)
+
+        if LossEnum.PSNR_COMP_ALL in norm_data:
+            loss_dict[LossEnum.PSNR_COMP_ALL] = psnr_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                              norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                                                              data_min=dataset.min, data_max=dataset.max,
+                                                              **kwargs)
+        else:
+            loss_dict[LossEnum.PSNR_COMP_ALL] = psnr_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+                                                              data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+                                                              data_min=dataset.min, data_max=dataset.max,
+                                                              **kwargs)
 
         weights = loss_config.get("eval_weights", {})
         recons_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
