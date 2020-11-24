@@ -55,7 +55,9 @@ class BaseDataset(ABC):
                 value = torch.tensor(value)
 
             if key == ChannelEnum.BINARY_OCCLUSION_MAP:
-                value = value[0, ...]  # we are only using the first channel
+                if value.dim() == 3:
+                    value = value[0, ...]  # we are only using the first channel if we get a channel-wise input
+
                 value = value.to(dtype=torch.bool)
 
             output[key] = value
