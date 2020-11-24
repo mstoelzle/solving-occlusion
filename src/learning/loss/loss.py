@@ -230,14 +230,14 @@ def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> 
 
 
 def psnr_from_mse_loss_fct(mse: torch.Tensor, data_min: float, data_max: float, **kwargs):
-    delta = data_max - data_min
+    dynamic_range = data_max - data_min
 
     # handle divisions by zero
     # the PSNR is infinity for MSE equal to zero
     psnr = mse.new_ones(size=mse.size()) * np.Inf
     selector = (mse != 0)
 
-    psnr[selector] = 20 * torch.log10(delta / torch.sqrt(mse[selector]))
+    psnr[selector] = 20 * torch.log10(dynamic_range / torch.sqrt(mse[selector]))
 
     return psnr
 
@@ -246,7 +246,7 @@ def psnr_from_mse_loss_fct(mse: torch.Tensor, data_min: float, data_max: float, 
 # https://github.com/VainF/pytorch-msssim
 # https://en.wikipedia.org/wiki/Structural_similarity
 def ssim_loss_fct(input, target, data_min: float, data_max: float, reduction='mean', **kwargs) -> torch.Tensor:
-    delta = data_max - data_min
+    dynamic_range = data_max - data_min
 
     # normalize for minimum being at 0
     input_off = input - data_min
@@ -259,7 +259,8 @@ def ssim_loss_fct(input, target, data_min: float, data_max: float, reduction='me
     else:
         raise NotImplementedError
 
-    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1), data_range=delta, size_average=size_average)
+    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1),
+                     data_range=dynamic_range, size_average=size_average)
 
     return ssim_loss
 
