@@ -155,12 +155,13 @@ class BaseLearning(ABC):
         test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/loss")
 
         self.model.eval()
-        with self.task.loss.new_epoch(0, "test"), torch.no_grad():
-            if self.task.type == TaskTypeEnum.SUPERVISED_LEARNING:
-                dataloader = self.task.labeled_dataloader.dataloaders['test']
-            else:
-                raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
+        if self.task.type == TaskTypeEnum.SUPERVISED_LEARNING:
+            dataloader = self.task.labeled_dataloader.dataloaders['test']
+        else:
+            raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
+
+        with self.task.loss.new_epoch(0, "test", dataset=dataloader.dataset), torch.no_grad():
             start_idx = 0
             progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):

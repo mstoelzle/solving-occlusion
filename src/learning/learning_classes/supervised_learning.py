@@ -21,9 +21,9 @@ class SupervisedLearning(BaseLearning):
 
     def train_epoch(self, epoch) -> None:
         self.model.train()
-        with self.task.loss.new_epoch(epoch, "train"):
-            dataloader = self.task.labeled_dataloader.dataloaders['train']
 
+        dataloader = self.task.labeled_dataloader.dataloaders['train']
+        with self.task.loss.new_epoch(epoch, "train", dataset=dataloader.dataset):
             progress_bar = Bar(f"Train epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 self.optimizer.zero_grad()
@@ -47,8 +47,9 @@ class SupervisedLearning(BaseLearning):
 
     def validate_epoch(self, epoch: int):
         self.model.eval()
-        with self.task.loss.new_epoch(epoch, "val"), torch.no_grad():
-            dataloader = self.task.labeled_dataloader.dataloaders['val']
+
+        dataloader = self.task.labeled_dataloader.dataloaders['val']
+        with self.task.loss.new_epoch(epoch, "val", dataset=dataloader.dataset), torch.no_grad():
             progress_bar = Bar(f"Validate epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)

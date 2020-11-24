@@ -166,10 +166,6 @@ class BaseModel(ABC, nn.Module):
                     LossEnum.MSE_REC_OCC: sample_tensor.new_tensor(0),
                     LossEnum.MSE_REC_NOCC: sample_tensor.new_tensor(0),
                     LossEnum.MSE_COMP_ALL: sample_tensor.new_tensor(0),
-                    LossEnum.PSNR_REC_ALL: sample_tensor.new_tensor(0),
-                    LossEnum.PSNR_REC_OCC: sample_tensor.new_tensor(0),
-                    LossEnum.PSNR_REC_NOCC: sample_tensor.new_tensor(0),
-                    LossEnum.PSNR_COMP_ALL: sample_tensor.new_tensor(0),
                     LossEnum.SSIM_REC: sample_tensor.new_tensor(0),
                     LossEnum.SSIM_COMP: sample_tensor.new_tensor(0)}
 
@@ -262,62 +258,6 @@ class BaseModel(ABC, nn.Module):
         else:
             loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                             data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
-
-        if LossEnum.PSNR_REC_ALL in norm_data:
-            loss_dict[LossEnum.PSNR_REC_ALL] = psnr_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                             norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                             data_min=dataset.min, data_max=dataset.max,
-                                                             **kwargs)
-        else:
-            loss_dict[LossEnum.PSNR_REC_ALL] = psnr_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                             data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                             data_min=dataset.min, data_max=dataset.max,
-                                                             **kwargs)
-
-        if LossEnum.PSNR_REC_OCC in norm_data:
-            loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
-                psnr_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                data_min=dataset.min, data_max=dataset.max,
-                **kwargs)
-        else:
-            loss_dict[LossEnum.PSNR_REC_OCC] = masked_loss_fct(
-                psnr_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                data_min=dataset.min, data_max=dataset.max,
-                **kwargs)
-
-        if LossEnum.PSNR_REC_NOCC in norm_data:
-            loss_dict[LossEnum.PSNR_REC_NOCC] = masked_loss_fct(
-                psnr_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                data_min=dataset.min, data_max=dataset.max,
-                **kwargs)
-        else:
-            loss_dict[LossEnum.PSNR_REC_NOCC] = masked_loss_fct(
-                psnr_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
-                data_min=dataset.min, data_max=dataset.max,
-                **kwargs)
-
-        if LossEnum.PSNR_COMP_ALL in norm_data:
-            loss_dict[LossEnum.PSNR_COMP_ALL] = psnr_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                              norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                              data_min=dataset.min, data_max=dataset.max,
-                                                              **kwargs)
-        else:
-            loss_dict[LossEnum.PSNR_COMP_ALL] = psnr_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                              data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                              data_min=dataset.min, data_max=dataset.max,
-                                                              **kwargs)
 
         if LossEnum.SSIM_REC in norm_data:
             loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],

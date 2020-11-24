@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 import csv
 import logging
+import numpy as np
 import pathlib
 from pytorch_msssim import ssim
 from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
 from torch.nn import functional as F
+from torch.utils.data import Dataset
 import torchvision
 
 from .domain_distance_metrics.cmmd import conditional_maximum_mean_discrepancy
@@ -33,10 +35,13 @@ class Loss(ABC):
 
         self.purpose: Optional[str] = None
         self.epoch: Optional[int] = None
+        self.dataset: Optional[Dataset] = None
 
-    def new_epoch(self, epoch: int, purpose: str):
+    def new_epoch(self, epoch: int, purpose: str, dataset: Dataset = None):
         self.purpose = purpose
         self.epoch = epoch
+        self.dataset = dataset
+
         return self
 
     def __enter__(self):
@@ -71,6 +76,8 @@ class Loss(ABC):
             logger.info(f"Testing Loss: {epoch_result[LossEnum.LOSS]:.4f}")
 
         self.write_logfile(self.epoch, epoch_result)
+
+        self.dataset = None
 
     def write_logfile(self, epoch, epoch_result: Dict):
         logfile_path = self.logdir / f"{self.purpose}_losses.csv"
@@ -122,6 +129,22 @@ class Loss(ABC):
         epoch_loss_dict = {}
         for key, loss in total_loss_dict.items():
             epoch_loss_dict[key] = total_loss_dict[key] / float(num_samples)
+
+        if self.dataset is not None:
+            mse_psnr_enum_mapping = {
+                LossEnum.MSE_REC_ALL: LossEnum.PSNR_REC_ALL,
+                LossEnum.MSE_REC_OCC: LossEnum.PSNR_REC_OCC,
+                LossEnum.MSE_REC_NOCC: LossEnum.PSNR_REC_NOCC,
+                LossEnum.MSE_COMP_ALL: LossEnum.PSNR_COMP_ALL
+            }
+
+            for mse_loss_enum in mse_psnr_enum_mapping.keys():
+                psnr_loss_enum = mse_psnr_enum_mapping[mse_loss_enum]
+
+                mse_loss = epoch_loss_dict[mse_loss_enum]
+                psnr_loss = psnr_from_mse_loss_fct(mse_loss, self.dataset.min, self.dataset.max)
+
+                epoch_loss_dict[psnr_loss_enum] = psnr_loss.mean()
 
         return epoch_loss_dict
 
@@ -197,16 +220,21 @@ def mse_mask_loss_fct(input: torch.Tensor, target: torch.Tensor, mask: torch.Ten
 
 # peak signal-to-noise ratio
 def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> torch.Tensor:
-    delta = data_max - data_min
-
     # normalize for minimum being at 0
     input_off = input - data_min
     target_off = target - data_min
 
     mse = mse_loss_fct(input_off, target_off, **kwargs)
 
+    return psnr_from_mse_loss_fct(mse, data_min, data_max, **kwargs)
+
+
+def psnr_from_mse_loss_fct(mse: torch.Tensor, data_min: float, data_max: float, **kwargs):
+    delta = data_max - data_min
+
     # handle divisions by zero
-    psnr = mse.new_zeros(size=mse.size())
+    # the PSNR is infinity for MSE equal to zero
+    psnr = mse.new_ones(size=mse.size()) * np.Inf
     selector = (mse != 0)
 
     psnr[selector] = 20 * torch.log10(delta / torch.sqrt(mse[selector]))
