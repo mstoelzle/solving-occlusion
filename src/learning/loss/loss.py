@@ -217,14 +217,21 @@ def psnr_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> 
 # structural similarity index (SSIM)
 # https://github.com/VainF/pytorch-msssim
 # https://en.wikipedia.org/wiki/Structural_similarity
-def ssim_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> torch.Tensor:
+def ssim_loss_fct(input, target, data_min: float, data_max: float, reduction='mean', **kwargs) -> torch.Tensor:
     delta = data_max - data_min
 
     # normalize for minimum being at 0
     input_off = input - data_min
     target_off = target - data_min
 
-    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1), data_range=delta)
+    if reduction in ["mean_per_sample", "none"]:
+        size_average = False
+    elif reduction == "mean":
+        size_average = True
+    else:
+        raise NotImplementedError
+
+    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1), data_range=delta, size_average=size_average)
 
     return ssim_loss
 
