@@ -6,14 +6,16 @@
             "defaults": {
                 "loss": {
                     "report_frequency": 100,
-                    "normalization": ["mse_rec_all", "mse_rec_occ"],
+                    "normalization": [],
                     "train_weights": {
                         "mse_rec_all": 1,
-                        "mse_rec_occ": 0
+                        "mse_rec_occ": 0,
+                        "mse_rec_nocc": 0
                     },
                     "eval_weights": {
                         "mse_rec_all": 0,
-                        "mse_rec_occ": 1
+                        "mse_rec_occ": 1,
+                        "mse_rec_nocc": 0
                     }
                 },
                 "domain_defaults": {
@@ -27,7 +29,6 @@
                     "shuffle": true
                 },
                 "model": {
-                    "name": "Telea",
                     "input_dim": [64, 64],
                     "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
                     "out_channels": ["reconstructed_elevation_map"],
@@ -44,7 +45,15 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "Telea"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "Navier-Stokes"}
                 }
             ]
         },
