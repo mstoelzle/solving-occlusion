@@ -20,13 +20,10 @@ class Hdf5Dataset(BaseDataset):
 
         with h5py.File(self.dataset_path, 'r') as hdf5_file:
             if f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}" in hdf5_file:
-                print("sample dataset ground truth")
                 sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}"]
             elif f"/{self.purpose}/elevation_map" in hdf5_file:
-                print("sample dataset elevation map")
                 sample_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
             elif f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}" in hdf5_file:
-                print("sample dataset occluded elevation map ")
                 sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}"]
             else:
                 raise ValueError
@@ -34,12 +31,6 @@ class Hdf5Dataset(BaseDataset):
             self.dataset_length = len(sample_dataset)
             self.min = sample_dataset.attrs.get("min")
             self.max = sample_dataset.attrs.get("max")
-
-            if self.min is None or self.max is None:
-                # Attention: this is very memory-demanding
-                sample_notnan = sample_dataset[~np.isnan(sample_dataset)]
-                self.min = np.min(sample_notnan)
-                self.max = np.max(sample_notnan)
 
     def __getitem__(self, idx) -> Dict[Union[str, ChannelEnum], torch.Tensor]:
         self.set_hdf5_dataset()

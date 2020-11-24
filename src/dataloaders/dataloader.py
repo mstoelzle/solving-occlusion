@@ -82,5 +82,34 @@ class Dataloader:
                                                         shuffle=shuffle,
                                                         num_workers=self.config["num_workers"])
 
+            self.init_meta_data(purpose, self.dataloaders[purpose])
+
     def __str__(self):
         return str(self.config)
+
+    def init_meta_data(self, purpose: str, dataloader: TorchDataLoader):
+        dataset = dataloader.dataset
+
+        if dataset.min is None or dataset.max is None:
+            logger.info(f"We need to infer the min and max values of the dataset manually for purpose {purpose}")
+
+            min = np.Inf
+            max = -np.Inf
+
+            for batch_data in dataloader:
+                if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in batch_data:
+                    sample_data = batch_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
+                elif ChannelEnum.OCCLUDED_ELEVATION_MAP in batch_data:
+                    sample_data = batch_data[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+                else:
+                    raise ValueError
+
+                sample_notnan = sample_data[~torch.isnan(sample_data)]
+                sample_min = torch.min(sample_notnan).item()
+                sample_max = torch.max(sample_notnan).item()
+
+                min = np.min([min, sample_min])
+                max = np.max([max, sample_max])
+
+            dataset.min = min
+            dataset.max = max

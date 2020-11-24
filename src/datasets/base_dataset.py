@@ -24,8 +24,10 @@ class BaseDataset(ABC):
 
         self.transform = transform
 
-        self.min: float = 0
-        self.max: float = 0
+        self.min: float = None
+        self.max: float = None
+
+        logger.info(f"Initialise dataset with purpose {purpose}")
 
     @staticmethod
     def prepare_keys(data: dict) -> np.array:
