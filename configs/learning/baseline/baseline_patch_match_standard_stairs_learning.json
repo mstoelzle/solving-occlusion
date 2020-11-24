@@ -1,5 +1,5 @@
 {
-    "name": "baseline_standard_stairs_learning",
+    "name": "baseline_patch_match_standard_stairs_learning",
     "cuda": false,
     "experiment": {
         "task_path": {
