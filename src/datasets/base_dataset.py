@@ -6,7 +6,7 @@ import tifffile
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset as TorchDataset, Subset
-from torchvision.datasets.folder import default_loader as torchvision_default_loader
+import torchvision
 from typing import *
 
 from src.enums.channel_enum import ChannelEnum
@@ -24,8 +24,6 @@ class BaseDataset(ABC):
 
         self.transform = transform
 
-        self.img_loader = torchvision_default_loader
-
         self.min: float = 0
         self.max: float = 0
 
@@ -38,14 +36,14 @@ class BaseDataset(ABC):
                 del data[key]
         return data
 
-    def prepare_item(self, data: dict) -> Dict[ChannelEnum, torch.Tensor]:
+    def prepare_item(self, data: dict, invert_mask: bool = False) -> Dict[ChannelEnum, torch.Tensor]:
         output = {}
         for key, value in data.items():
             if issubclass(type(value), pathlib.Path):
                 if value.suffix in [".tif", ".tiff", ".TIF", ".TIFF"]:
                     value = tifffile.imread(str(value))
                 else:
-                    value = self.img_loader(str(value))
+                    value = torchvision.io.read_image(str(value))
 
             if issubclass(type(value), Image.Image):
                 value = torch.tensor(np.array(value))
@@ -55,6 +53,7 @@ class BaseDataset(ABC):
                 value = torch.tensor(value)
 
             if key == ChannelEnum.BINARY_OCCLUSION_MAP:
+                value = value[0, ...]  # we are only using the first channel
                 value = value.to(dtype=torch.bool)
 
             output[key] = value
@@ -62,6 +61,9 @@ class BaseDataset(ABC):
         if ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
             output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
                 occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        else:
+            if invert_mask:
+                output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
 
         # we require square dimension for now
         if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
