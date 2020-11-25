@@ -41,7 +41,8 @@ class ExperimentSet:
                 self.logger.info(f"Seed {seed} used to run experiment")
                 self.set_random_seeds(seed)
                 exp_logdir: pathlib.Path = self.create_experiment_logdir(seed)
-                experiment: Experiment = Experiment(exp_logdir, self.datadir, self.name, self.device,
+                experiment: Experiment = Experiment(seed=seed, logdir=exp_logdir, datadir=self.datadir,
+                                                    set_name=self.name, device=self.device,
                                                     remote=self.remote, **self.experiment_config)
                 experiment.run()
                 experiment.plot()

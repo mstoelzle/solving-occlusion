@@ -12,10 +12,11 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 
 class BaseModel(ABC, nn.Module):
-    def __init__(self, in_channels: List[str], out_channels: List[str],
+    def __init__(self, seed: int, in_channels: List[str], out_channels: List[str],
                  input_normalization: Dict = None, **kwargs):
         super().__init__()
         self.config = kwargs
+        self.seed = seed
 
         self.input_dim: List = self.config["input_dim"]
 

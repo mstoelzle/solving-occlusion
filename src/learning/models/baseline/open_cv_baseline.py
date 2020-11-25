@@ -28,8 +28,18 @@ class OpenCVBaseline(BaseBaselineModel):
 
         self.inpaint_radius = self.config["inpaint_radius"]
 
+        self.patch_match = None
+
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        # init PatchMatch if necessary
+        if self.inpainting_method == "PatchMatch" and self.patch_match is None:
+            from .py_patch_match import patch_match
+            patch_match.set_random_seed(self.seed)
+            self.patch_match = patch_match
+        else:
+            patch_match = self.patch_match
+
         # we need to call this to generate the binary occlusion map into the data dict
         _ = self.assemble_input(data)
 
@@ -54,7 +64,6 @@ class OpenCVBaseline(BaseBaselineModel):
                 for channel_idx in range(3):
                     np_three_channel_map[:, :, channel_idx] = np_map
 
-                from .py_patch_match import patch_match
                 np_three_channel_reconstructed_map = patch_match.inpaint(np_three_channel_map, np_mask,
                                                                          patch_size=self.inpaint_radius)
 

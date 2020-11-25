@@ -23,12 +23,13 @@ logger = get_logger("base_learning")
 
 
 class BaseLearning(ABC):
-    def __init__(self, logdir: pathlib.Path, device: torch.device, logger: logging.Logger,
+    def __init__(self, seed: int, logdir: pathlib.Path, device: torch.device, logger: logging.Logger,
                  results_hdf5_path: pathlib.Path, **kwargs):
         super().__init__()
 
-        self.logger = logger
+        self.seed = seed
         self.logdir = logdir
+        self.logger = logger
 
         self.task: Optional[Task] = None
 
@@ -71,7 +72,7 @@ class BaseLearning(ABC):
                 # we need to manually set the use_pretrained parameter to true just for this model config
                 model_config["pretrained"] = True
 
-            model = pick_model(**self.task.config["model"])
+            model = pick_model(seed=self.seed, **self.task.config["model"])
 
             if issubclass(type(model_spec), pathlib.Path):
                 self.logger.info(f"Loading a model for task {self.task.uid} from {str(model_spec)}")

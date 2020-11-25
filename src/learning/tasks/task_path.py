@@ -17,8 +17,9 @@ class TaskPath:
     Task paths are iterables that return a task and increasing uid at each iteration. The TaskPath also measures
     the runtime of each of its path by logging the time between calls itself (the task iterator).
     """
-    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, **kwargs):
+    def __init__(self, seed: int, logdir: pathlib.Path, datadir: pathlib.Path, **kwargs):
         self.config = kwargs
+        self.seed = seed
 
         self.task_configs = kwargs["tasks"]
         self.default_values = kwargs["defaults"]

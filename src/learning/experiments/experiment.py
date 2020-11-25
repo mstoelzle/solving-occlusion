@@ -15,10 +15,11 @@ from src.utils.sheet_uploader import SheetUploader
 
 
 class Experiment:
-    def __init__(self, logdir: pathlib.Path, datadir: pathlib.Path, set_name: str, device: torch.device,
+    def __init__(self, seed: int, logdir: pathlib.Path, datadir: pathlib.Path, set_name: str, device: torch.device,
                  remote: bool = False, **kwargs):
         self.config = kwargs
 
+        self.seed = seed
         self.logdir: pathlib.Path = logdir
         self.datadir: pathlib.Path = datadir
         self.results_hdf5_path: pathlib.Path = self.logdir / "learning_results.hdf5"
@@ -30,12 +31,13 @@ class Experiment:
 
         self.device = device
 
-        self.task_path: TaskPath = TaskPath(self.logdir, self.datadir, **kwargs["task_path"])
+        self.task_path: TaskPath = TaskPath(self.seed, self.logdir, self.datadir, **kwargs["task_path"])
 
-        self.supervised_learning = SupervisedLearning(logdir=self.logdir, device=self.device,
+        self.supervised_learning = SupervisedLearning(seed=self.seed, logdir=self.logdir, device=self.device,
                                                       results_hdf5_path=self.results_hdf5_path)
 
-        self.inference = Inference(logdir=self.logdir, device=self.device, results_hdf5_path=self.results_hdf5_path)
+        self.inference = Inference(seed=self.seed, logdir=self.logdir, device=self.device,
+                                   results_hdf5_path=self.results_hdf5_path)
 
         self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path,
                                               logdir=self.logdir, remote=remote,

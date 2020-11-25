@@ -37,6 +37,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         # create a generator object
         from height_map_generator import HeightMapGenerator
         self.elevation_map_generator = HeightMapGenerator()
+        self.elevation_map_generator.setSeed(self.seed)
+
         # get the terrain parameter size
         self.terrain_param_sizes = self.elevation_map_generator.get_param_sizes()
 
