@@ -68,5 +68,5 @@
         "upload": false
     },
     "remote": true,
-    "seeds": [101]
+    "seeds": [101, 102, 103]
 }
