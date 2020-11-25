@@ -20,16 +20,10 @@ class Transformer:
         transformed_data = data
 
         for transform_config in self.transforms:
-            if transform_config["type"] == "random_noise":
-                transformed_data = self.random_noise(transform_config, transformed_data)
-            elif transform_config["type"] == "random_vertical_scale":
-                transformed_data = self.random_vertical_scale(transform_config, transformed_data)
-            elif transform_config["type"] == "random_vertical_offset":
-                transformed_data = self.random_vertical_offset(transform_config, transformed_data)
-            elif transform_config["type"] == "random_occlusion":
-                transformed_data = self.random_occlusion(transform_config, transformed_data)
-            else:
-                raise NotImplementedError
+            transform_type = TransformEnum(transform_config["type"])
+
+            transform_fct = getattr(self, transform_type.value)
+            transformed_data = transform_fct(transform_config, transformed_data)
 
         return transformed_data
 
