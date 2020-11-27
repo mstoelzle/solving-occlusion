@@ -1,8 +1,8 @@
 {
-    "name": "anybotics_rosbag_stairs",
+    "name": "anymal_rosbag_stairs",
     "cuda": false,
     "dataset_generation": {
-        "type": "anybotics_rosbag",
+        "type": "anymal_rosbag",
         "rosbag_path": "data/elevation_map_stairs.bag",
         "size": 75,
         "save_frequency": 10,

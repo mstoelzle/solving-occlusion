@@ -1,5 +1,5 @@
 {
-    "name": "baseline_anybotics_rosbag_stairs_inference",
+    "name": "baseline_anymal_rosbag_stairs_inference",
     "cuda": true,
     "experiment": {
         "task_path": {

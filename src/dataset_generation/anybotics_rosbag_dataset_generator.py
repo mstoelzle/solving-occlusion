@@ -96,7 +96,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 if self.max_num_samples is None:
                     self.max_num_samples = self.bag.get_message_count(topic_filters=self.rosbag_topics)
                     self.max_num_samples *= num_subgrids_x * num_subgrids_y
-                    progress_bar = Bar(f"Reading anybotics bag", max=self.max_num_samples)
+                    progress_bar = Bar(f"Reading anymal bag", max=self.max_num_samples)
 
                 start_x = 0
                 start_y = 0

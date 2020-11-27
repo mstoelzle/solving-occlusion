@@ -4,7 +4,7 @@ from .synthetic_dataset_generator import SyntheticDatasetGenerator
 from src.enums import *
 
 dataset_generators = {DatasetGenerationTypeEnum.SYNTHETIC: SyntheticDatasetGenerator,
-                      DatasetGenerationTypeEnum.ANYBOTICS_ROSBAG: AnyboticsRosbagDatasetGenerator}
+                      DatasetGenerationTypeEnum.ANYMAL_ROSBAG: AnyboticsRosbagDatasetGenerator}
 
 
 def pick_dataset_generator(**kwargs):
