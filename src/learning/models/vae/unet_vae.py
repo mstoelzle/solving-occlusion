@@ -138,7 +138,7 @@ class UNetVAE(BaseVAE):
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = masked_total_variation_loss_fct(image=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
+            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                                    mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])

@@ -5,6 +5,7 @@ import numpy as np
 import pathlib
 from pytorch_msssim import ssim
 from typing import Callable, Dict, List, Optional, Tuple
+import warnings
 
 import torch
 from torch.nn import functional as F
@@ -247,6 +248,10 @@ def ssim_loss_fct(input, target, data_min: float, data_max: float, reduction='me
     else:
         raise NotImplementedError
 
+    if torch.isnan(input).sum() > 0 or torch.isnan(target).sum() > 0:
+        warnings.warn("The SSIM is not reliable when called upon tensors with nan values")
+        return reduction_fct(input.new_zeros(size=(input.size(0))))
+
     ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1),
                      data_range=dynamic_range, size_average=size_average)
 
@@ -276,7 +281,7 @@ def total_variation_loss_fct(image: torch.Tensor):
     return loss
 
 
-def masked_total_variation_loss_fct(image: torch.Tensor, mask: torch.Tensor):
+def masked_total_variation_loss_fct(input: torch.Tensor, mask: torch.Tensor):
     """
     Total variation loss of a masked image
     Source:
@@ -286,12 +291,16 @@ def masked_total_variation_loss_fct(image: torch.Tensor, mask: torch.Tensor):
     Adapted from:
     https://github.com/ryanwongsa/Image-Inpainting/blob/master/src/loss/loss_compute.py
     :param mask:
-    :param image:
+    :param input:
     :return:
     """
-    if image.dim() == 3:
+
+    # we need to ensure that we also include NaN values in the input into the mask
+    mask = mask | torch.isnan(input)
+
+    if input.dim() == 3:
         # we need a channel composition foe 2d convolutions
-        image = image.unsqueeze(dim=1)
+        input = input.unsqueeze(dim=1)
 
     if mask.dim() == 3:
         # we need a channel composition foe 2d convolutions
@@ -300,12 +309,12 @@ def masked_total_variation_loss_fct(image: torch.Tensor, mask: torch.Tensor):
     if mask.dtype == torch.bool:
         mask = mask.to(dtype=torch.float)
 
-    kernel = torch.ones((image.size(1), image.size(1), mask.shape[1], mask.shape[1]), requires_grad=False)
-    kernel = kernel.to(device=image.device)
+    kernel = torch.ones((input.size(1), input.size(1), mask.shape[1], mask.shape[1]), requires_grad=False)
+    kernel = kernel.to(device=input.device)
     dilated_mask = F.conv2d(mask, weight=kernel, padding=1) > 0
     dilated_mask = dilated_mask.clone().detach().float()
 
-    P = dilated_mask[..., 1:-1, 1:-1] * image
+    P = dilated_mask[..., 1:-1, 1:-1] * input
 
     a = torch.mean(torch.abs(P[:, :, :, 1:] - P[:, :, :, :-1]))
     b = torch.mean(torch.abs(P[:, :, 1:, :] - P[:, :, :-1, :]))
