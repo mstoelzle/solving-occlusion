@@ -60,7 +60,7 @@ class ResultsPlotter:
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
             reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
-            inpainted_elevation_map = data_hdf5_group[ChannelEnum.COMPOSED_ELEVATION_MAP.value][idx, ...]
+            composed_elevation_map = data_hdf5_group[ChannelEnum.COMPOSED_ELEVATION_MAP.value][idx, ...]
 
             ground_truth_elevation_map = None
             if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value in data_hdf5_group:
@@ -70,12 +70,12 @@ class ResultsPlotter:
 
             # 2D
             vmin = np.min([np.min(non_occluded_elevation_map), np.min(reconstructed_elevation_map),
-                           np.min(inpainted_elevation_map)])
+                           np.min(composed_elevation_map)])
             vmax = np.max([np.max(non_occluded_elevation_map), np.max(reconstructed_elevation_map),
-                           np.max(inpainted_elevation_map)])
+                           np.max(composed_elevation_map)])
             if ground_truth_elevation_map is not None:
-                vmin = np.min([vmin, np.min(ground_truth_elevation_map)])
-                vmax = np.max([vmax, np.max(ground_truth_elevation_map)])
+                vmin = np.min([vmin, np.min(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])])
+                vmax = np.max([vmax, np.max(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])])
 
             cmap = plt.get_cmap("viridis")
 
@@ -91,7 +91,7 @@ class ResultsPlotter:
             mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
-            mat = axes[1, 0].matshow(np.swapaxes(inpainted_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            mat = axes[1, 0].matshow(np.swapaxes(composed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
             mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
