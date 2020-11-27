@@ -158,8 +158,6 @@ class Loss(ABC):
 
 
 def reduction_fct(loss: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
-    print("reduction in reduction_fct", reduction)
-
     if reduction == 'mean_per_sample':
         loss = loss.mean(dim=tuple(range(1, loss.dim())))
     elif reduction == "mean":
