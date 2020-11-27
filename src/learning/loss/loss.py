@@ -183,7 +183,7 @@ def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tenso
 
 def l1_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
     if reduction == 'mean_per_sample':
-        l1_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
+        l1_loss = F.l1_loss(input, target, size_average, reduce, reduction="none")
         return torch.mean(l1_loss, dim=tuple(range(1, input.dim())))
     else:
         return F.l1_loss(input, target, size_average, reduce, reduction)
