@@ -157,70 +157,53 @@ class Loss(ABC):
         return aggregated_loss_dict
 
 
-def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tensor,
-                    mask: torch.Tensor, **kwargs):
-    if kwargs.get("reduction", 'mean') == 'mean_per_sample':
-        batch_size = target.size(0)
-        recons_loss = target.new_zeros(size=(batch_size,))
-        for i in range(batch_size):
-            selector = (mask[i, ...] == 1) & (~torch.isnan(target[i, ...]))
-
-            if selector.sum().item() == 0:
-                recons_loss[i] = 0
-                continue
-
-            loss_fct_kwargs = kwargs.copy()
-            loss_fct_kwargs["reduction"] = "mean"
-
-            recons_loss[i] = loss_fct(input[i, ...][selector], target[i, ...][selector],
-                                      **loss_fct_kwargs)
-    else:
-        selector = (mask == 1) & (~torch.isnan(target))
-
-        # we need to check if there is any occlusion
-        if selector.sum().item() == 0:
-            recons_loss = target.new_zeros(size=(1,)).mean()
-        else:
-            recons_loss = loss_fct(input[mask == 1], target[mask == 1], **kwargs)
-    return recons_loss
-
-
-def l1_loss_fct(input: torch.Tensor, target: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
-    selector = torch.isnan(target)
-
-    l1_loss = F.l1_loss(input, target, reduction="none")
-    l1_loss[~selector] = 0
+def reduction_fct(loss: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
+    print("reduction in reduction_fct", reduction)
 
     if reduction == 'mean_per_sample':
-        l1_loss = l1_loss.mean(dim=tuple(range(1, input.dim())))
+        loss = loss.mean(dim=tuple(range(1, loss.dim())))
     elif reduction == "mean":
-        l1_loss = l1_loss.mean()
+        loss = loss.mean()
     elif reduction == "sum":
-        l1_loss = l1_loss.sum()
+        loss = loss.sum()
     elif reduction == "none":
         pass
     else:
         raise ValueError
+
+    return loss
+
+
+def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tensor,
+                    mask: torch.Tensor, **kwargs):
+    loss = loss_fct(input, target, reduction="none")
+
+    selector = (~torch.isnan(input)) & (~torch.isnan(target)) & (mask == 1)
+    loss[~selector] = 0
+
+    loss = reduction_fct(loss, **kwargs)
+
+    return loss
+
+
+def l1_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs) -> torch.Tensor:
+    l1_loss = F.l1_loss(input, target, reduction="none")
+
+    selector = (~torch.isnan(input)) & (~torch.isnan(target))
+    l1_loss[~selector] = 0
+
+    l1_loss = reduction_fct(l1_loss, **kwargs)
 
     return l1_loss
 
 
-def mse_loss_fct(input: torch.Tensor, target: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
-    selector = torch.isnan(target)
-
+def mse_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs) -> torch.Tensor:
     mse_loss = F.mse_loss(input, target, reduction="none")
+
+    selector = (~torch.isnan(input)) & (~torch.isnan(target))
     mse_loss[~selector] = 0
 
-    if reduction == 'mean_per_sample':
-        mse_loss = mse_loss.mean(dim=tuple(range(1, input.dim())))
-    elif reduction == "mean":
-        mse_loss = mse_loss.mean()
-    elif reduction == "sum":
-        mse_loss = mse_loss.sum()
-    elif reduction == "none":
-        pass
-    else:
-        raise ValueError
+    mse_loss = reduction_fct(mse_loss, **kwargs)
 
     return mse_loss
 
