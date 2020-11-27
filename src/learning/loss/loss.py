@@ -163,59 +163,66 @@ def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tenso
         batch_size = target.size(0)
         recons_loss = target.new_zeros(size=(batch_size,))
         for i in range(batch_size):
-            if (mask[i, ...] == 1).sum().item() == 0:
+            selector = (mask[i, ...] == 1) & (~torch.isnan(target[i, ...]))
+
+            if selector.sum().item() == 0:
                 recons_loss[i] = 0
                 continue
 
             loss_fct_kwargs = kwargs.copy()
             loss_fct_kwargs["reduction"] = "mean"
 
-            recons_loss[i] = loss_fct(input[i, ...][mask[i, ...] == 1], target[i, ...][mask[i, ...] == 1],
+            recons_loss[i] = loss_fct(input[i, ...][selector], target[i, ...][selector],
                                       **loss_fct_kwargs)
     else:
+        selector = (mask == 1) & (~torch.isnan(target))
+
         # we need to check if there is any occlusion
-        if (mask == 1).sum().item() == 0:
+        if selector.sum().item() == 0:
             recons_loss = target.new_zeros(size=(1,)).mean()
         else:
             recons_loss = loss_fct(input[mask == 1], target[mask == 1], **kwargs)
     return recons_loss
 
 
-def l1_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
+def l1_loss_fct(input: torch.Tensor, target: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
+    selector = torch.isnan(target)
+
+    l1_loss = F.l1_loss(input, target, reduction="none")
+    l1_loss[~selector] = 0
+
     if reduction == 'mean_per_sample':
-        l1_loss = F.l1_loss(input, target, size_average, reduce, reduction="none")
-        return torch.mean(l1_loss, dim=tuple(range(1, input.dim())))
+        l1_loss = l1_loss.mean(dim=tuple(range(1, input.dim())))
+    elif reduction == "mean":
+        l1_loss = l1_loss.mean()
+    elif reduction == "sum":
+        l1_loss = l1_loss.sum()
+    elif reduction == "none":
+        pass
     else:
-        return F.l1_loss(input, target, size_average, reduce, reduction)
+        raise ValueError
+
+    return l1_loss
 
 
-def mse_loss_fct(input, target, size_average=None, reduce=None, reduction='mean', **kwargs):
+def mse_loss_fct(input: torch.Tensor, target: torch.Tensor, reduction='mean', **kwargs) -> torch.Tensor:
+    selector = torch.isnan(target)
+
+    mse_loss = F.mse_loss(input, target, reduction="none")
+    mse_loss[~selector] = 0
+
     if reduction == 'mean_per_sample':
-        mse_loss = F.mse_loss(input, target, size_average, reduce, reduction="none")
-        return torch.mean(mse_loss, dim=tuple(range(1, input.dim())))
+        mse_loss = mse_loss.mean(dim=tuple(range(1, input.dim())))
+    elif reduction == "mean":
+        mse_loss = mse_loss.mean()
+    elif reduction == "sum":
+        mse_loss = mse_loss.sum()
+    elif reduction == "none":
+        pass
     else:
-        return F.mse_loss(input, target, size_average, reduce, reduction)
+        raise ValueError
 
-
-def mse_mask_loss_fct(input: torch.Tensor, target: torch.Tensor, mask: torch.Tensor, **kwargs):
-    if kwargs.get("reduction", 'mean') == 'mean_per_sample':
-        batch_size = target.size(0)
-        recons_loss = target.new_zeros(size=(batch_size,))
-        for i in range(batch_size):
-            if (mask[i, ...] == 1).sum().item() == 0:
-                recons_loss[i] = 0
-                continue
-
-            recons_loss[i] = mse_loss_fct(input[i, ...][mask[i, ...] == 1],
-                                          target[i, ...][mask[i, ...] == 1], reduction="mean")
-    else:
-        # we need to check if there is any occlusion
-        if (mask == 1).sum().item() == 0:
-            recons_loss = target.new_zeros(size=(1,)).mean()
-        else:
-            recons_loss = mse_loss_fct(input[mask == 1],
-                                       target[mask == 1], **kwargs)
-    return recons_loss
+    return mse_loss
 
 
 # peak signal-to-noise ratio
@@ -329,7 +336,7 @@ def perceptual_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
 
 
 def style_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
-    return l1_loss_fct(gram_matrix(input),  gram_matrix(target), **kwargs)
+    return l1_loss_fct(gram_matrix(input), gram_matrix(target), **kwargs)
 
 
 def gram_matrix(feat: torch.Tensor):
