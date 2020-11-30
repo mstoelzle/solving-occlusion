@@ -65,7 +65,7 @@ class UNet(BaseModel):
             else:
                 x = decoder_layer(x)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze()}
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(dim=1)}
 
         output = self.denormalize_output(data, output, norm_consts)
 

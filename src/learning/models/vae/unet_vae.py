@@ -82,7 +82,7 @@ class UNetVAE(BaseVAE):
 
         x = self.decode(x, encodings)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(),
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(dim=1),
                   "mu": mu,
                   "log_var": log_var}
 

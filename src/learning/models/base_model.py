@@ -82,12 +82,12 @@ class BaseModel(ABC, nn.Module):
 
     def create_composed_elevation_map(self, occluded_elevation_map: torch.Tensor,
                                       reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
-        inpainted_elevation_map = occluded_elevation_map.clone()
+        composed_elevation_map = occluded_elevation_map.clone()
 
         selector = torch.isnan(occluded_elevation_map)
-        inpainted_elevation_map[selector] = reconstructed_elevation_map[selector]
+        composed_elevation_map[selector] = reconstructed_elevation_map[selector]
 
-        return inpainted_elevation_map
+        return composed_elevation_map
 
     def denormalize_output(self,
                            data: Dict[ChannelEnum, torch.Tensor],

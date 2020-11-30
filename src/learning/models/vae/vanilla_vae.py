@@ -123,7 +123,7 @@ class VanillaVAE(BaseVAE):
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
 
-        reconstructed_elevation_map = self.decode(z).squeeze()
+        reconstructed_elevation_map = self.decode(z).squeeze(dim=1)
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
                   "mu": mu,
@@ -186,7 +186,7 @@ class VanillaVAE(BaseVAE):
 
         z = z.to(device)
 
-        samples = self.decode(z).squeeze()
+        samples = self.decode(z).squeeze(dim=1)
 
         return samples
 
