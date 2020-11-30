@@ -115,10 +115,14 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                     self.hdf5_group = self.hdf5_file.create_group(self.purpose)
                 elif self.purpose == "train" and msg_idx >= self.split_msg_indices["val"]:
                     self.save_cache()
+                    self.write_metadata(self.hdf5_group)
+                    self.reset_metadata()
                     self.purpose = "val"
                     self.hdf5_group = self.hdf5_file.create_group(self.purpose)
                 elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
                     self.save_cache()
+                    self.write_metadata(self.hdf5_group)
+                    self.reset_metadata()
                     self.purpose = "test"
                     self.hdf5_group = self.hdf5_file.create_group(self.purpose)
                 else:
@@ -153,16 +157,15 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
                     start_x = stop_x
 
-        self.extend_dataset(self.params_dataset, self.params)
-        self.extend_dataset(self.occluded_elevation_map_dataset, self.occluded_elevation_maps)
+        self.save_cache()
         self.write_metadata(self.hdf5_group)
-        self.reset()
 
         progress_bar.finish()
 
     def process_item(self, params: np.array, subgrid: np.array, force_save: bool = False):
         self.params.append(params)
         self.occluded_elevation_maps.append(subgrid)
+        self.update_dataset_range(subgrid)
 
         if ChannelEnum.PARAMS.value not in self.hdf5_group or \
                 ChannelEnum.OCCLUDED_ELEVATION_MAP.value not in self.hdf5_group:

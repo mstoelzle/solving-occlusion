@@ -46,8 +46,7 @@ class BaseDatasetGenerator(ABC):
         self.hdf5_file.__exit__()
 
     def reset(self):
-        self.min = None
-        self.max = None
+        self.reset_metadata()
 
     @abstractmethod
     def run(self):
@@ -66,8 +65,8 @@ class BaseDatasetGenerator(ABC):
 
     def update_dataset_range(self, elevation_map: np.array):
         # update min and max
-        sample_min = np.min(elevation_map).item()
-        sample_max = np.max(elevation_map).item()
+        sample_min = np.min(elevation_map[~np.isnan(elevation_map)]).item()
+        sample_max = np.max(elevation_map[~np.isnan(elevation_map)]).item()
         if self.min is None:
             self.min = sample_min
         else:
@@ -83,3 +82,7 @@ class BaseDatasetGenerator(ABC):
             if isinstance(dataset, h5py.Dataset):
                 dataset.attrs["min"] = self.min
                 dataset.attrs["max"] = self.max
+
+    def reset_metadata(self):
+        self.min = None
+        self.max = None
