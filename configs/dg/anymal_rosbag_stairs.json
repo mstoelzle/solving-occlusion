@@ -6,6 +6,7 @@
         "rosbag_path": "data/elevation_map_stairs.bag",
         "size": 75,
         "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
         "visualization": {
             "frequency": 1000
         }
