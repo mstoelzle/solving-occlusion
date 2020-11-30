@@ -74,7 +74,7 @@ class OpenCVBaseline(BaseBaselineModel):
 
             reconstructed_map = map.new_tensor(data=np_reconstructed_map)
 
-            reconstructed_map = torch.mul(reconstructed_map,  (max - min) / 255) + min
+            reconstructed_map = torch.mul(reconstructed_map, (max - min) / 255) + min
 
             # import matplotlib.pyplot as plt
             # plt.matshow(np_map)
@@ -86,11 +86,11 @@ class OpenCVBaseline(BaseBaselineModel):
 
             reconstructed_elevation_map[idx, ...] = reconstructed_map
 
-        inpainted_elevation_map = self.create_inpainted_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
-                                                                      reconstructed_elevation_map)
+        composed_elevation_map = self.create_composed_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
+                                                                    reconstructed_elevation_map)
 
         output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
-                  ChannelEnum.COMPOSED_ELEVATION_MAP: inpainted_elevation_map}
+                  ChannelEnum.COMPOSED_ELEVATION_MAP: composed_elevation_map}
 
         return output
 

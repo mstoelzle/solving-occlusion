@@ -80,8 +80,8 @@ class BaseModel(ABC, nn.Module):
 
         return poem
 
-    def create_inpainted_elevation_map(self, occluded_elevation_map: torch.Tensor,
-                                       reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
+    def create_composed_elevation_map(self, occluded_elevation_map: torch.Tensor,
+                                      reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
         inpainted_elevation_map = occluded_elevation_map.clone()
 
         selector = torch.isnan(occluded_elevation_map)
@@ -115,9 +115,9 @@ class BaseModel(ABC, nn.Module):
             denormalized_output = output
 
         reconstructed_elevation_map = denormalized_output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-        inpainted_elevation_map = self.create_inpainted_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
-                                                                      reconstructed_elevation_map)
-        denormalized_output[ChannelEnum.COMPOSED_ELEVATION_MAP] = inpainted_elevation_map
+        composed_elevation_map = self.create_composed_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
+                                                                    reconstructed_elevation_map)
+        denormalized_output[ChannelEnum.COMPOSED_ELEVATION_MAP] = composed_elevation_map
 
         return denormalized_output
 
