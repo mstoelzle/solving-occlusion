@@ -45,7 +45,7 @@ class DataloaderMetaInfo:
             raise ValueError
 
     def infer_meta_info(self, dataloader: DataLoader):
-        logger.info(f"We need to infer the min and max values of the dataset manually for purpose {purpose}")
+        logger.info(f"We need to infer the min and max values of the dataset manually")
 
         length = 0
         min = np.Inf
