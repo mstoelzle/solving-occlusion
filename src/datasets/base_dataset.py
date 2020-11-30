@@ -121,6 +121,9 @@ class BaseDataset(ABC):
         else:
             raise ValueError
 
+        if self.config.get("self_supervision", False) is True and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP not in output:
+            output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = output[ChannelEnum.OCCLUDED_ELEVATION_MAP].clone()
+
         if self.transform is not None:
             output = self.transform(output)
 
