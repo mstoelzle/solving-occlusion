@@ -1,8 +1,9 @@
 from progress.bar import Bar
 import torch
 
-from src.learning.learning_classes.base_learning import BaseLearning
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
+from src.learning.learning_classes.base_learning import BaseLearning
 from src.learning.tasks import Task
 from src.utils.log import get_logger
 
@@ -23,7 +24,8 @@ class SupervisedLearning(BaseLearning):
         self.model.train()
 
         dataloader = self.task.labeled_dataloader.dataloaders['train']
-        with self.task.loss.new_epoch(epoch, "train", dataset=dataloader.dataset):
+        dataloader_meta_info = DataloaderMetaInfo(dataloader)
+        with self.task.loss.new_epoch(epoch, "train", dataloader_meta_info=dataloader_meta_info):
             progress_bar = Bar(f"Train epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 self.optimizer.zero_grad()
@@ -36,7 +38,7 @@ class SupervisedLearning(BaseLearning):
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
-                                                     dataset=dataloader.dataset)
+                                                     dataloader_meta_info=dataloader_meta_info)
                 loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 
@@ -49,7 +51,8 @@ class SupervisedLearning(BaseLearning):
         self.model.eval()
 
         dataloader = self.task.labeled_dataloader.dataloaders['val']
-        with self.task.loss.new_epoch(epoch, "val", dataset=dataloader.dataset), torch.no_grad():
+        dataloader_meta_info = DataloaderMetaInfo(dataloader)
+        with self.task.loss.new_epoch(epoch, "val", dataloader_meta_info=dataloader_meta_info), torch.no_grad():
             progress_bar = Bar(f"Validate epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
@@ -60,7 +63,7 @@ class SupervisedLearning(BaseLearning):
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
-                                                     dataset=dataloader.dataset)
+                                                     dataloader_meta_info=dataloader_meta_info)
                 loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
                 progress_bar.next()

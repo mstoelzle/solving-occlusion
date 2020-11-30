@@ -17,6 +17,7 @@ from .domain_distance_metrics.coral import coral
 from .domain_distance_metrics.fid import frechet_inception_distance
 from .domain_distance_metrics.lmmd import local_maximum_mean_discrepancy
 from .domain_distance_metrics.mmd import maximum_mean_discrepancy
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.utils.log import get_logger
 
@@ -36,12 +37,12 @@ class Loss(ABC):
 
         self.purpose: Optional[str] = None
         self.epoch: Optional[int] = None
-        self.dataset: Optional[Dataset] = None
+        self.dataloader_meta_info: Optional[DataloaderMetaInfo] = None
 
-    def new_epoch(self, epoch: int, purpose: str, dataset: Dataset = None):
+    def new_epoch(self, epoch: int, purpose: str, dataloader_meta_info: DataloaderMetaInfo = None):
         self.purpose = purpose
         self.epoch = epoch
-        self.dataset = dataset
+        self.dataloader_meta_info = dataloader_meta_info
 
         return self
 
@@ -78,7 +79,7 @@ class Loss(ABC):
 
         self.write_logfile(self.epoch, epoch_result)
 
-        self.dataset = None
+        self.dataloader_meta_info = None
 
     def write_logfile(self, epoch, epoch_result: Dict):
         logfile_path = self.logdir / f"{self.purpose}_losses.csv"
@@ -131,7 +132,7 @@ class Loss(ABC):
         for key, loss in total_loss_dict.items():
             epoch_loss_dict[key] = total_loss_dict[key] / float(num_samples)
 
-        if self.dataset is not None:
+        if self.dataloader_meta_info is not None:
             mse_psnr_enum_mapping = {
                 LossEnum.MSE_REC_ALL: LossEnum.PSNR_REC_ALL,
                 LossEnum.MSE_REC_OCC: LossEnum.PSNR_REC_OCC,
@@ -143,7 +144,8 @@ class Loss(ABC):
                 psnr_loss_enum = mse_psnr_enum_mapping[mse_loss_enum]
 
                 mse_loss = epoch_loss_dict[mse_loss_enum]
-                psnr_loss = psnr_from_mse_loss_fct(mse_loss, self.dataset.min, self.dataset.max)
+                psnr_loss = psnr_from_mse_loss_fct(mse_loss, self.dataloader_meta_info.min,
+                                                   self.dataloader_meta_info.max)
 
                 epoch_loss_dict[psnr_loss_enum] = psnr_loss.mean()
 

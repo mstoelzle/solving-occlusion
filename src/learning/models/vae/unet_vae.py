@@ -6,6 +6,7 @@ from typing import *
 
 from .base_vae import BaseVAE
 from ..unet.unet_parts import *
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
 from src.learning.loss.loss import kld_loss_fct, total_variation_loss_fct, masked_total_variation_loss_fct
@@ -116,10 +117,11 @@ class UNetVAE(BaseVAE):
                       loss_config: dict,
                       output: Dict[Union[ChannelEnum, LossEnum, str], torch.Tensor],
                       data: Dict[ChannelEnum, torch.Tensor],
-                      dataset: BaseDataset,
+                      dataloader_meta_info: DataloaderMetaInfo = None,
                       **kwargs) -> dict:
 
-        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, dataset=dataset,**kwargs)
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data,
+                                            dataloader_meta_info=dataloader_meta_info,**kwargs)
 
         if self.training:
             weights = loss_config.get("train_weights", {})
@@ -133,7 +135,7 @@ class UNetVAE(BaseVAE):
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
-                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / len(dataset)
+                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataloader_meta_info.length
 
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)

@@ -7,6 +7,7 @@ from torchvision import models
 from typing import *
 
 from ..base_model import BaseModel
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
 from src.learning.loss.loss import total_variation_loss_fct, masked_total_variation_loss_fct
@@ -281,10 +282,11 @@ class PartialConvUNet(BaseModel):
                       loss_config: dict,
                       output: Dict[Union[ChannelEnum, LossEnum, str], torch.Tensor],
                       data: Dict[ChannelEnum, torch.Tensor],
-                      dataset: BaseDataset = None,
+                      dataloader_meta_info: DataloaderMetaInfo = None,
                       **kwargs) -> dict:
 
-        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, dataset=dataset,**kwargs)
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data,
+                                            dataloader_meta_info=dataloader_meta_info, **kwargs)
 
         if self.training:
             weights = loss_config.get("train_weights", {})

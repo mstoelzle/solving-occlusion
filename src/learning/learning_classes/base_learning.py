@@ -10,6 +10,7 @@ from typing import *
 import torch
 from torch import optim
 
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.learning.controller.controller import Controller
 from src.learning.loss.loss import Loss
@@ -162,7 +163,8 @@ class BaseLearning(ABC):
         else:
             raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
-        with self.task.loss.new_epoch(0, "test", dataset=dataloader.dataset), torch.no_grad():
+        dataloader_meta_info = DataloaderMetaInfo(dataloader)
+        with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad():
             start_idx = 0
             progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
@@ -170,18 +172,21 @@ class BaseLearning(ABC):
                 batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
 
                 output = self.model(data)
-                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx, len(dataloader.dataset))
-                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, start_idx, len(dataloader.dataset))
+                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx,
+                                                    dataloader_meta_info.length)
+                self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, start_idx,
+                                                    dataloader_meta_info.length)
 
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
-                                                     dataset=dataloader.dataset,
+                                                     dataloader_meta_info=dataloader_meta_info,
                                                      reduction="mean_per_sample")
                 aggregated_loss_dict = self.task.loss.aggregate_mean_loss_dict(loss_dict)
                 loss = aggregated_loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=aggregated_loss_dict)
-                self.add_batch_data_to_hdf5_results(test_loss_hdf5_group, loss_dict, start_idx, len(dataloader.dataset))
+                self.add_batch_data_to_hdf5_results(test_loss_hdf5_group, loss_dict, start_idx,
+                                                    dataloader_meta_info.length)
 
                 start_idx += batch_size
                 progress_bar.next()
@@ -197,6 +202,8 @@ class BaseLearning(ABC):
         else:
             raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
+        dataloader_meta_info = DataloaderMetaInfo(dataloader)
+
         start_idx = 0
         progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
         for batch_idx, data in enumerate(dataloader):
@@ -204,8 +211,8 @@ class BaseLearning(ABC):
             batch_size = data[ChannelEnum.OCCLUDED_ELEVATION_MAP].size(0)
 
             output = self.model(data)
-            self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, len(dataloader.dataset))
-            self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, len(dataloader.dataset))
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
 
             start_idx += batch_size
             progress_bar.next()

@@ -4,8 +4,8 @@ from torch import nn
 from torch.nn import functional as F
 from typing import *
 
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
-from src.datasets.base_dataset import BaseDataset
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
     l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct
 from src.learning.normalization.input_normalization import InputNormalization
@@ -151,7 +151,7 @@ class BaseModel(ABC, nn.Module):
                            loss_config: dict,
                            output: Dict[Union[ChannelEnum, str], torch.Tensor],
                            data: Dict[ChannelEnum, torch.Tensor],
-                           dataset: BaseDataset = None,
+                           dataloader_meta_info: DataloaderMetaInfo = None,
                            **kwargs) -> dict:
         sample_tensor = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
 
@@ -263,22 +263,26 @@ class BaseModel(ABC, nn.Module):
         if LossEnum.SSIM_REC in norm_data:
             loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                          norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                         data_min=dataset.min, data_max=dataset.max,
+                                                         data_min=dataloader_meta_info.min,
+                                                         data_max=dataloader_meta_info.max,
                                                          **kwargs)
         else:
             loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
                                                          data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                         data_min=dataset.min, data_max=dataset.max,
+                                                         data_min=dataloader_meta_info.min,
+                                                         data_max=dataloader_meta_info.max,
                                                          **kwargs)
         if LossEnum.SSIM_COMP in norm_data:
             loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                           norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                          data_min=dataset.min, data_max=dataset.max,
+                                                          data_min=dataloader_meta_info.min,
+                                                          data_max=dataloader_meta_info.max,
                                                           **kwargs)
         else:
             loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                           data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                          data_min=dataset.min, data_max=dataset.max,
+                                                          data_min=dataloader_meta_info.min,
+                                                          data_max=dataloader_meta_info.max,
                                                           **kwargs)
 
         weights = loss_config.get("eval_weights", {})

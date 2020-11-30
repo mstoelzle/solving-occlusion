@@ -5,6 +5,7 @@ from torch.nn import functional as F
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
 from .base_vae import BaseVAE
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
 from src.learning.loss.loss import *
@@ -136,14 +137,15 @@ class VanillaVAE(BaseVAE):
                       loss_config: dict,
                       output: Dict[Union[ChannelEnum, str], torch.Tensor],
                       data: Dict[ChannelEnum, torch.Tensor],
-                      dataset: BaseDataset,
+                      dataloader_meta_info: DataloaderMetaInfo = None,
                       **kwargs) -> dict:
         """
         Computes the VAE loss function.
         KL(N(\mu, \sigma), N(0, 1)) = \log \frac{1}{\sigma} + \frac{\sigma^2 + \mu^2}{2} - \frac{1}{2}
         """
 
-        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data, dataset=dataset,**kwargs)
+        loss_dict = self.eval_loss_function(loss_config=loss_config, output=output, data=data,
+                                            dataloader_meta_info=dataloader_meta_info, **kwargs)
 
         if self.training:
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])
@@ -156,7 +158,7 @@ class VanillaVAE(BaseVAE):
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
-                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / len(dataset)
+                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataloader_meta_info.length
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \

@@ -6,6 +6,7 @@ from torch.nn import functional as F
 from typing import *
 
 from .base_baseline_model import BaseBaselineModel
+from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.learning.normalization.input_normalization import InputNormalization
 
