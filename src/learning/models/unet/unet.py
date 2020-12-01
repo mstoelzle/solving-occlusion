@@ -84,6 +84,7 @@ class UNet(BaseModel):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
+            reconstruction_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
             reconstruction_non_occlusion_weight = weights.get(LossEnum.MSE_REC_NOCC.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
@@ -96,7 +97,8 @@ class UNet(BaseModel):
             total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
                                                                    mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
 
-            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
+            loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
+                   + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
                    + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \

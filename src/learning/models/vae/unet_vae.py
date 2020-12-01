@@ -126,6 +126,7 @@ class UNetVAE(BaseVAE):
         if self.training:
             weights = loss_config.get("train_weights", {})
 
+            reconstruction_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
             reconstruction_non_occlusion_weight = weights.get(LossEnum.MSE_REC_NOCC.value, 1)
             reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
@@ -145,7 +146,8 @@ class UNetVAE(BaseVAE):
 
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 
-            loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
+            loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
+                   + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
                    + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
