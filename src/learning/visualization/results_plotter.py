@@ -180,8 +180,11 @@ class ResultsPlotter:
 
                 axes.append(fig.add_subplot(122, projection="3d"))
                 axes[1].set_title("Reconstruction error")
+                # the np.NaNs in the ground-truth elevation maps give us these warnings:
+                warnings.filterwarnings("ignore", category=UserWarning)
                 axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - ground_truth_elevation_map),
                                      cmap=plt.get_cmap("RdYlGn_r"))
+                warnings.filterwarnings("default", category=UserWarning)
                 axes[1].set_xlabel("x [m]")
                 axes[1].set_ylabel("y [m]")
                 axes[1].set_zlabel("z [m]")
