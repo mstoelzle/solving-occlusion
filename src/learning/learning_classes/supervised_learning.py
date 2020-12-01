@@ -35,6 +35,10 @@ class SupervisedLearning(BaseLearning):
 
                 output = self.model(data)
 
+                if torch.isnan(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]).sum() > 0:
+                    raise RuntimeError("We detected NaNs in the model outputs which means "
+                                       "that the training is diverging")
+
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
