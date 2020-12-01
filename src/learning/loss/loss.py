@@ -237,26 +237,21 @@ def psnr_from_mse_loss_fct(mse: torch.Tensor, data_min: float, data_max: float, 
 # structural similarity index (SSIM)
 # https://github.com/VainF/pytorch-msssim
 # https://en.wikipedia.org/wiki/Structural_similarity
-def ssim_loss_fct(input, target, data_min: float, data_max: float, reduction='mean', **kwargs) -> torch.Tensor:
+def ssim_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> torch.Tensor:
     dynamic_range = data_max - data_min
 
     # normalize for minimum being at 0
     input_off = input - data_min
     target_off = target - data_min
 
-    if reduction in ["mean_per_sample", "none"]:
-        size_average = False
-    elif reduction == "mean":
-        size_average = True
-    else:
-        raise NotImplementedError
-
     if torch.isnan(input).sum() > 0 or torch.isnan(target).sum() > 0:
         warnings.warn("The SSIM is not reliable when called upon tensors with nan values")
-        return reduction_fct(input.new_zeros(size=(input.size(0), )), reduction=reduction, **kwargs)
+        ssim_loss = input.new_zeros(size=(input.size(0), ))
+    else:
+        ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1),
+                         data_range=dynamic_range, size_average=False)
 
-    ssim_loss = ssim(input_off.unsqueeze(1), target_off.unsqueeze(1),
-                     data_range=dynamic_range, size_average=size_average)
+    ssim_loss = reduction_fct(ssim_loss, **kwargs)
 
     return ssim_loss
 
