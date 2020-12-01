@@ -60,6 +60,66 @@
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {
+                            "dataset": {
+                                "transforms": {
+                                    "train": [
+                                        {
+                                            "type": "random_occlusion",
+                                            "probability": 0.0025,
+                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {
+                            "dataset": {
+                                "transforms": {
+                                    "train": [
+                                        {
+                                            "type": "random_occlusion",
+                                            "probability": 0.005,
+                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {
+                            "dataset": {
+                                "transforms": {
+                                    "train": [
+                                        {
+                                            "type": "random_occlusion",
+                                            "probability": 0.01,
+                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"}
                 }
             ]
         },
