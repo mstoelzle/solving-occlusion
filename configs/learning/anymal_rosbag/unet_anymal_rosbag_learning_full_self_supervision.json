@@ -120,6 +120,34 @@
                         }
                     },
                     "dataloaders": {"labeled_dataloader":  "target"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {
+                            "dataset": {
+                                "transforms": {
+                                    "train": [
+                                        {
+                                            "type": "random_occlusion",
+                                            "probability": 0.01,
+                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "mse_rec_all": 0,
+                            "mse_rec_nocc": 1,
+                            "mse_rec_occ": 1,
+                            "total_variation": 0.1
+                        }
+                    }
                 }
             ]
         },
