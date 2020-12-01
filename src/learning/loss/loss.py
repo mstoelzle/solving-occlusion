@@ -176,35 +176,40 @@ def reduction_fct(loss: torch.Tensor, reduction='mean', **kwargs) -> torch.Tenso
     return loss
 
 
+def prep_target_nans_for_loss(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    # we manually set the losses to zero for NaNs in the target
+    selector = ~torch.isnan(target)
+    target = target.clone()
+    target[~selector] = input[~selector]
+    return target
+
+
 def masked_loss_fct(loss_fct: Callable, input: torch.Tensor, target: torch.Tensor,
                     mask: torch.Tensor, **kwargs):
+    # we manually set the losses to zero for NaNs or masked areas in the target
+    selector = ~torch.isnan(target) & (mask == 1)
+    target = target.clone()
+    target[~selector] = input[~selector]
+
     loss = loss_fct(input, target, reduction="none")
-
-    selector = (~torch.isnan(input)) & (~torch.isnan(target)) & (mask == 1)
-    loss[~selector] = 0
-
     loss = reduction_fct(loss, **kwargs)
 
     return loss
 
 
 def l1_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs) -> torch.Tensor:
+    target = prep_target_nans_for_loss(input=input, target=target)
+
     l1_loss = F.l1_loss(input, target, reduction="none")
-
-    selector = (~torch.isnan(input)) & (~torch.isnan(target))
-    l1_loss[~selector] = 0
-
     l1_loss = reduction_fct(l1_loss, **kwargs)
 
     return l1_loss
 
 
 def mse_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs) -> torch.Tensor:
+    target = prep_target_nans_for_loss(input=input, target=target)
+
     mse_loss = F.mse_loss(input, target, reduction="none")
-
-    selector = (~torch.isnan(input)) & (~torch.isnan(target))
-    mse_loss[~selector] = 0
-
     mse_loss = reduction_fct(mse_loss, **kwargs)
 
     return mse_loss
