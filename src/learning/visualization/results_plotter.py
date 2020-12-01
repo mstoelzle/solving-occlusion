@@ -133,6 +133,8 @@ class ResultsPlotter:
             x_3d, y_3d = np.meshgrid(x_3d, y_3d)
 
             axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
+            # the np.NaNs in the occluded elevation maps give us these warnings:
+            warnings.filterwarnings("ignore", category=UserWarning)
             if ground_truth_elevation_map is not None:
                 axes[0].set_title("Ground-truth")
                 axes[0].plot_surface(x_3d, y_3d, ground_truth_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
@@ -141,8 +143,6 @@ class ResultsPlotter:
             axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
-            # the np.NaNs in the occluded elevation maps give us these warnings:
-            warnings.filterwarnings("ignore", category=UserWarning)
             axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
             warnings.filterwarnings("default", category=UserWarning)
             fig.colorbar(mat, ax=axes, fraction=0.015)
