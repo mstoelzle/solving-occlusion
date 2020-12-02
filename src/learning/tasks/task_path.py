@@ -39,12 +39,16 @@ class TaskPath:
         domain_defaults = task_config["domain_defaults"]
 
         set_transforms_default(domain_defaults.get("dataset", {}).get("transforms", {}))
+        for dataset_config in domain_defaults.get("datasets", []):
+            set_transforms_default(dataset_config.get("transforms", {}))
 
         # update domain with defaults from task level domain defaults
         for domain, domain_config in task_config['domains'].items():
             recursive_default_setting(domain_defaults, domain_config)
 
             set_transforms_default(domain_config.get("dataset", {}).get("transforms", {}))
+            for dataset_config in domain_defaults.get("datasets", []):
+                set_transforms_default(dataset_config.get("transforms", {}))
 
         logger.info(f"Loaded defaults for task {self.idx}")
         return task_config
