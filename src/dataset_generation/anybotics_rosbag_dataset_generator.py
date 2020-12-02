@@ -5,6 +5,7 @@ import pathlib
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
 from typing import *
+import warnings
 
 from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
@@ -64,6 +65,10 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 length_x = info.length_x
                 length_y = info.length_y
                 resolution = info.resolution
+                if resolution == 0.0:
+                    warnings.warn("We skip DEMs with resolutions = 0.0")
+                    continue
+
                 pose = info.pose
                 position = np.array([pose.position.x, pose.position.y, pose.position.z])
                 orientation = np.array([pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w])
