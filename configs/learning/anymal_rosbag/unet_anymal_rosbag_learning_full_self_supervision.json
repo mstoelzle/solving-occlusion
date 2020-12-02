@@ -27,7 +27,16 @@
                             "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                             "size": [64, 64],
                             "sampling_weights": {"train":  1, "val":  1, "test":  1},
-                            "self_supervision": true
+                            "self_supervision": true,
+                            "transforms": {
+                                "train": [
+                                    {
+                                        "type": "random_occlusion",
+                                        "probability": 0.01,
+                                        "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                    }
+                                ]
+                            }
                         }
                     ],
                     "num_workers": 4,
@@ -58,26 +67,8 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
                     "domains": {
-                        "target": {
-                            "dataset": {
-                                "transforms": {
-                                    "train": [
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.0025,
-                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
+                        "target": {}
                     },
                     "dataloaders": {"labeled_dataloader":  "target"}
                 },
@@ -85,59 +76,7 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {
-                        "target": {
-                            "dataset": {
-                                "transforms": {
-                                    "train": [
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.005,
-                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {
-                        "target": {
-                            "dataset": {
-                                "transforms": {
-                                    "train": [
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.01,
-                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {
-                        "target": {
-                            "dataset": {
-                                "transforms": {
-                                    "train": [
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.01,
-                                            "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
+                        "target": {}
                     },
                     "dataloaders": {"labeled_dataloader":  "target"},
                     "loss": {
@@ -145,6 +84,22 @@
                             "mse_rec_all": 0,
                             "mse_rec_nocc": 1,
                             "mse_rec_occ": 1,
+                            "total_variation": 0.1
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {}
+                    },
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "loss": {
+                        "train_weights": {
+                            "mse_rec_all": 0,
+                            "mse_rec_nocc": 1,
+                            "mse_rec_occ": 6,
                             "total_variation": 0.1
                         }
                     }
