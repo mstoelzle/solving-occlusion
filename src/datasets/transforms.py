@@ -27,8 +27,25 @@ class Transformer:
 
         return transformed_data
 
-    def random_noise(self, transform_config: dict,
-                     data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+    def white_noise(self, transform_config: dict,
+                    data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        stdev = transform_config["stdev"]
+
+        noise = None
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if noise is None:
+                    if self.deterministic:
+                        noise_value = self.rng.normal(loc=0, scale=stdev, size=tuple(value.size()))
+                    else:
+                        noise_value = np.random.normal(loc=0, scale=stdev, size=tuple(value.size()))
+                    noise = value.new_tensor(noise_value, dtype=value.dtype)
+
+                transformed_value = value + noise
+
+                data[channel] = transformed_value
+
+        return data
         stdev = transform_config["stdev"]
 
         noise = None
@@ -98,9 +115,9 @@ class Transformer:
             if channel.value in transform_config["apply_to"]:
                 if occlusion is None:
                     if self.deterministic:
-                        occlusion = self.rng.choice([0, 1], p=[1-probability, probability], size=tuple(value.size()))
+                        occlusion = self.rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
                     else:
-                        occlusion = np.random.choice([0, 1], p=[1-probability, probability], size=tuple(value.size()))
+                        occlusion = np.random.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
                     occlusion = torch.tensor(occlusion)
 
                 if channel == ChannelEnum.BINARY_OCCLUSION_MAP:

@@ -58,9 +58,9 @@
                         "target": {
                             "dataset": {
                                 "transforms": {
-                                    "train": [{"type": "random_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
-                                    "val": [{"type": "random_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
-                                    "test": [{"type": "random_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}]
+                                    "train": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
+                                    "val": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
+                                    "test": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}]
                                 }
                             }
                         }
