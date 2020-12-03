@@ -14,10 +14,10 @@ class Transformer:
 
         if self.purpose == "test":
             self.deterministic = True
-            self.rng = np.random.RandomState(seed=1)
         else:
             self.deterministic = False
-            self.rng = np.random
+
+        self.rng = np.random.RandomState(seed=1)
 
     def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
@@ -49,6 +49,8 @@ class Transformer:
 
     def range_adjusted_white_noise(self, transform_config: dict,
                                    data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
         params = data[ChannelEnum.PARAMS]
         terrain_resolution = params[0].item()
         robot_position_x = params[1].item()
@@ -74,7 +76,7 @@ class Transformer:
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
                 if noise is None:
-                    noise_value = self.rng.normal(loc=0, scale=scale, size=tuple(value.size()))
+                    noise_value = rng.normal(loc=0, scale=scale, size=tuple(value.size()))
                     noise = value.new_tensor(noise_value, dtype=value.dtype)
 
                 transformed_value = value + noise
@@ -85,12 +87,11 @@ class Transformer:
 
     def random_vertical_scale(self, transform_config: dict,
                               data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
         min, max = transform_config["min"], transform_config["max"]
 
-        if self.deterministic:
-            scale = self.rng.uniform(low=min, high=max)
-        else:
-            scale = np.random.uniform(low=min, high=max)
+        scale = rng.uniform(low=min, high=max)
 
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
@@ -106,12 +107,11 @@ class Transformer:
 
     def random_vertical_offset(self, transform_config: dict,
                                data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
         min, max = transform_config["min"], transform_config["max"]
 
-        if self.deterministic:
-            offset = self.rng.uniform(low=min, high=max)
-        else:
-            offset = np.random.uniform(low=min, high=max)
+        offset = rng.uniform(low=min, high=max)
 
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
@@ -127,13 +127,15 @@ class Transformer:
 
     def random_occlusion(self, transform_config: dict,
                          data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
         probability = transform_config["probability"]
 
         occlusion = None
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
                 if occlusion is None:
-                    occlusion = self.rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
+                    occlusion = rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
                     occlusion = torch.tensor(occlusion)
 
                 if channel == ChannelEnum.BINARY_OCCLUSION_MAP:
@@ -157,6 +159,8 @@ class Transformer:
 
     def random_occlusion_dilation(self, transform_config: dict,
                                   data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
         mask = data[ChannelEnum.BINARY_OCCLUSION_MAP]
 
         if mask.dtype == torch.bool:
@@ -171,7 +175,7 @@ class Transformer:
         kernel_size = int(transform_config["kernel_size"])
         # probability to set kernel cell to one
         probability = transform_config["probability"]
-        kernel_choice = self.rng.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
+        kernel_choice = rng.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
         # we always set the center of the kernel to 1
         kernel_choice[int(kernel_size // 2), int(kernel_size // 2)] = 1
         kernel = torch.tensor(kernel_choice, dtype=torch.float).unsqueeze(dim=0).unsqueeze(dim=0)
