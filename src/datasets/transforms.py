@@ -11,11 +11,13 @@ class Transformer:
         self.purpose = purpose
 
         self.transforms = transforms
-        self.rng = np.random.RandomState(seed=1)
 
-        self.deterministic = False
         if self.purpose == "test":
             self.deterministic = True
+            self.rng = np.random.RandomState(seed=1)
+        else:
+            self.deterministic = False
+            self.rng = np.random
 
     def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
@@ -36,10 +38,7 @@ class Transformer:
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
                 if noise is None:
-                    if self.deterministic:
-                        noise_value = self.rng.normal(loc=0, scale=stdev, size=tuple(value.size()))
-                    else:
-                        noise_value = np.random.normal(loc=0, scale=stdev, size=tuple(value.size()))
+                    noise_value = self.rng.normal(loc=0, scale=stdev, size=tuple(value.size()))
                     noise = value.new_tensor(noise_value, dtype=value.dtype)
 
                 transformed_value = value + noise
@@ -137,10 +136,7 @@ class Transformer:
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
                 if occlusion is None:
-                    if self.deterministic:
-                        occlusion = self.rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
-                    else:
-                        occlusion = np.random.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
+                    occlusion = self.rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
                     occlusion = torch.tensor(occlusion)
 
                 if channel == ChannelEnum.BINARY_OCCLUSION_MAP:
@@ -178,10 +174,7 @@ class Transformer:
         kernel_size = int(transform_config["kernel_size"])
         # probability to set kernel cell to one
         probability = transform_config["probability"]
-        if self.deterministic:
-            kernel_choice = self.rng.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
-        else:
-            kernel_choice = np.random.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
+        kernel_choice = self.rng.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
         # we always set the center of the kernel to 1
         kernel_choice[int(kernel_size // 2), int(kernel_size // 2)] = 1
         kernel = torch.tensor(kernel_choice, dtype=torch.float).unsqueeze(dim=0).unsqueeze(dim=0)
