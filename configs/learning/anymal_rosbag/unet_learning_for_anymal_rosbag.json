@@ -42,8 +42,14 @@
                                     "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
                                 },
                                 {
-                                    "type": "random_noise",
+                                    "type": "white_noise",
+                                    "stdev": 0.001,
+                                    "apply_to": ["occluded_elevation_map"]
+                                },
+                                {
+                                    "type": "range_adjusted_white_noise",
                                     "stdev": 0.01,
+                                    "range": 10,
                                     "apply_to": ["occluded_elevation_map"]
                                 },
                                 {
