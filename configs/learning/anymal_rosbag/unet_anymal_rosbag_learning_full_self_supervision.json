@@ -31,8 +31,13 @@
                             "transforms": {
                                 "defaults": [
                                     {
+                                        "type": "random_occlusion_dilation",
+                                        "kernel_size": 3,
+                                        "probability": 0.5
+                                    },
+                                    {
                                         "type": "random_occlusion",
-                                        "probability": 0.01,
+                                        "probability": 0.03,
                                         "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
                                     }
                                 ]
