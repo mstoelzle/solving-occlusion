@@ -1,5 +1,5 @@
 {
-    "name": "unet_learning_for_anybotics_rosbag",
+    "name": "unet_anymal_rosbag_learning_synthetic_supervision",
     "cuda": true,
     "experiment": {
         "task_path": {
