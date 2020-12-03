@@ -61,7 +61,7 @@
                                 },
                                 {
                                     "type": "random_occlusion",
-                                    "probability": 0.0025,
+                                    "probability": 0.02,
                                     "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
                                 }
                             ]
