@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torch.nn import functional as F
 from typing import *
 
 from src.enums import *
@@ -158,5 +159,39 @@ class Transformer:
                     raise NotImplementedError
 
                 data[channel] = value
+
+        return data
+
+    def random_occlusion_dilation(self, transform_config: dict,
+                                  data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        mask = data[ChannelEnum.BINARY_OCCLUSION_MAP]
+
+        if mask.dtype == torch.bool:
+            mask = mask.to(dtype=torch.float)
+
+        if mask.dim() == 2:
+            # we need a channel composition with minibatches for 2d convolutions
+            mask = mask.unsqueeze(dim=0).unsqueeze(dim=0)
+        else:
+            raise NotImplementedError
+
+        kernel_size = int(transform_config["kernel_size"])
+        # probability to set kernel cell to one
+        probability = transform_config["probability"]
+        if self.deterministic:
+            kernel_choice = self.rng.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
+        else:
+            kernel_choice = np.random.choice([0, 1], p=[1 - probability, probability], size=(kernel_size, kernel_size))
+        # we always set the center of the kernel to 1
+        kernel_choice[int(kernel_size // 2), int(kernel_size // 2)] = 1
+        kernel = torch.tensor(kernel_choice, dtype=torch.float).unsqueeze(dim=0).unsqueeze(dim=0)
+
+        with torch.no_grad():
+            dilated_mask = F.conv2d(mask, weight=kernel, padding=1) > 0
+
+        dilated_occlusion = dilated_mask.squeeze(dim=0).squeeze(dim=0)
+
+        data[ChannelEnum.BINARY_OCCLUSION_MAP] = dilated_occlusion
+        data[ChannelEnum.OCCLUDED_ELEVATION_MAP][dilated_occlusion == 1] = np.nan
 
         return data

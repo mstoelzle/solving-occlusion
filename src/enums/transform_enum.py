@@ -7,3 +7,4 @@ class TransformEnum(Enum):
     RANDOM_VERTICAL_SCALE = "random_vertical_scale"
     RANDOM_VERTICAL_OFFSET = "random_vertical_offset"
     RANDOM_OCCLUSION = "random_occlusion"
+    RANDOM_OCCLUSION_DILATION = "random_occlusion_dilation"
