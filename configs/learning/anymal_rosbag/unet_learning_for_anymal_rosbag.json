@@ -23,51 +23,61 @@
                 },
                 "domain_defaults": {
                     "batch_size": 6,
-                    "dataset": {
-                        "type": "hdf5",
-                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [64, 64],
-                        "transforms": {
-                            "defaults": [
-                                {
-                                    "type": "random_vertical_scale",
-                                    "min": 0.8,
-                                    "max": 3,
-                                    "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
-                                },
-                                {
-                                    "type": "random_vertical_offset",
-                                    "min": -1,
-                                    "max": 1,
-                                    "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
-                                },
-                                {
-                                    "type": "white_noise",
-                                    "stdev": 0.001,
-                                    "apply_to": ["occluded_elevation_map"]
-                                },
-                                {
-                                    "type": "range_adjusted_white_noise",
-                                    "stdev": 0.01,
-                                    "range": 10,
-                                    "apply_to": ["occluded_elevation_map"]
-                                },
-                                {
-                                    "type": "gaussian_filtered_white_noise",
-                                    "probability": 0.05,
-                                    "horizontal_stdev": 1,
-                                    "vertical_stdev": 0.03,
-                                    "apply_to": ["occluded_elevation_map"]
-                                },
-                                {
-                                    "type": "random_occlusion",
-                                    "probability": 0.02,
-                                    "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
-                                }
-                            ]
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_vertical_scale",
+                                        "min": 0.8,
+                                        "max": 3,
+                                        "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
+                                    },
+                                    {
+                                        "type": "random_vertical_offset",
+                                        "min": -1,
+                                        "max": 1,
+                                        "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
+                                    },
+                                    {
+                                        "type": "white_noise",
+                                        "stdev": 0.001,
+                                        "apply_to": ["occluded_elevation_map"]
+                                    },
+                                    {
+                                        "type": "range_adjusted_white_noise",
+                                        "stdev": 0.01,
+                                        "range": 10,
+                                        "apply_to": ["occluded_elevation_map"]
+                                    },
+                                    {
+                                        "type": "gaussian_filtered_white_noise",
+                                        "probability": 0.05,
+                                        "horizontal_stdev": 1,
+                                        "vertical_stdev": 0.03,
+                                        "apply_to": ["occluded_elevation_map"]
+                                    },
+                                    {
+                                        "type": "random_occlusion",
+                                        "probability": 0.02,
+                                        "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "hdf5",
+                            "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  0, "val":  0, "test":  1},
+                            "self_supervision": true
                         }
-                    },
                     "num_workers": 4,
+                    ],
                     "shuffle": true
                 },
                 "model": {
@@ -102,7 +112,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  10}
+        "visualization": {"sample_frequency":  50}
     },
     "logging": {"upload": false},
     "remote": true,
