@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 import torch
 from torch.nn import functional as F
 from typing import *
@@ -80,6 +81,31 @@ class Transformer:
                     noise = value.new_tensor(noise_value, dtype=value.dtype)
 
                 transformed_value = value + noise
+
+                data[channel] = transformed_value
+
+        return data
+
+    def gaussian_filtered_white_noise(self, transform_config: dict,
+                                      data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
+        probability = transform_config["probability"]
+        horizontal_stdev = transform_config["horizontal_stdev"]
+        vertical_stdev = transform_config["vertical_stdev"]
+
+        filtered_noise = None
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                if filtered_noise is None:
+                    peaks = rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
+                    white_noise = rng.normal(loc=0, scale=vertical_stdev, size=tuple(value.size()))
+                    noise = peaks * white_noise
+                    filtered_noise = scipy.ndimage.gaussian_filter(input=noise, sigma=horizontal_stdev)
+
+                    filtered_noise = value.new_tensor(filtered_noise, dtype=value.dtype)
+
+                transformed_value = value + filtered_noise
 
                 data[channel] = transformed_value
 

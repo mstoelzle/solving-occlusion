@@ -53,6 +53,13 @@
                                     "apply_to": ["occluded_elevation_map"]
                                 },
                                 {
+                                    "type": "gaussian_filtered_white_noise",
+                                    "probability": 0.05,
+                                    "horizontal_stdev": 1,
+                                    "vertical_stdev": 0.03,
+                                    "apply_to": ["occluded_elevation_map"]
+                                },
+                                {
                                     "type": "random_occlusion",
                                     "probability": 0.0025,
                                     "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
