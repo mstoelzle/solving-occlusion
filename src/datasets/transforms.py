@@ -74,10 +74,7 @@ class Transformer:
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
                 if noise is None:
-                    if self.deterministic:
-                        noise_value = self.rng.normal(loc=0, scale=scale, size=tuple(value.size()))
-                    else:
-                        noise_value = np.random.normal(loc=0, scale=scale, size=tuple(value.size()))
+                    noise_value = self.rng.normal(loc=0, scale=scale, size=tuple(value.size()))
                     noise = value.new_tensor(noise_value, dtype=value.dtype)
 
                 transformed_value = value + noise
