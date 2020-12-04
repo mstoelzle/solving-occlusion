@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_sweep_train_occlusion",
+    "name": "unet_anymal_rosbag_learning_full_self_supervision_sweep_train_occlusion",
     "cuda": true,
     "experiment": {
         "task_path": {
