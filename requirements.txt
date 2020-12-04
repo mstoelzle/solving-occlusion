@@ -5,20 +5,20 @@ h5py>=3.1.0, <4.0
 imagecodecs==2020.5.30
 jsonschema>=3.2, <4.0
 gnupg==2.3.1
-matplotlib>=3.3.2, <4.0
+matplotlib>=3.3.3, <4.0
 numpy>=1.19.4, <2.0
 oauth2client>=4.1.3, <5.0
-opencv-python>=4.4.0.42, <5.0
+opencv-python>=4.4.0.46, <5.0
 Pillow>=8.0.1, <9.0
 progress==1.5
 psutil==5.7.3
 pycryptodomex==3.9.9
 pytorch-msssim==0.2.1
 pyyaml==5.3.1
-rospkg==1.2.8
+rospkg==1.2.9
 seaborn>=0.11.0
 scipy==1.5.4
-tensorboard>=2.3.0, <3.0
-tifffile==2020.10.1
+tensorboard>=2.4.0, <3.0
+tifffile==2020.11.26
 torch>=1.7, <2.0
 torchvision>=0.8.1, <1.0
