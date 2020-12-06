@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset as TorchDataset, Subset
 import torchvision
 from typing import *
+import warnings
 
 from src.enums.channel_enum import ChannelEnum
 from src.utils.log import get_logger
@@ -121,7 +122,10 @@ class BaseDataset(ABC):
         else:
             raise ValueError
 
-        if self.config.get("self_supervision", False) is True and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP not in output:
+        if self.config.get("self_supervision", False) is True:
+            if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
+                warnings.warn("Overwriting the ground-truth in the dataset as self-supervision is activated.")
+
             output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = output[ChannelEnum.OCCLUDED_ELEVATION_MAP].clone()
 
         if self.transform is not None:
