@@ -28,6 +28,13 @@ class BaseModel(ABC, nn.Module):
         else:
             self.input_normalization = input_normalization
 
+        self.data_uncertainty_estimation = self.config.get("data_uncertainty_estimation", None)
+        self.adf = False
+        if self.data_uncertainty_estimation is not None:
+            self.data_uncertainty_estimation = DataUncertaintyEstimationEnum(self.data_uncertainty_estimation)
+        if self.data_uncertainty_estimation == DataUncertaintyEstimationEnum.ADF:
+            self.adf = True
+
     @abstractmethod
     def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
         pass

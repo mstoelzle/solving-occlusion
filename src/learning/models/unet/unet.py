@@ -8,12 +8,15 @@ from ..base_model import BaseModel
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
+from src.learning.models.adf import adf
 from src.learning.loss.loss import total_variation_loss_fct, masked_total_variation_loss_fct
 
 
 class UNet(BaseModel):
     def __init__(self, hidden_dims: List = None, bilinear=True, **kwargs):
         super(UNet, self).__init__(**kwargs)
+
+        nn_module = adf if self.adf else nn
 
         self.bilinear = bilinear
         self.hidden_dims = hidden_dims
@@ -22,14 +25,14 @@ class UNet(BaseModel):
 
         factor = 2 if bilinear else 1
 
-        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0])]
+        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0], nn_module=nn_module)]
         for in_idx, num_out_channels in enumerate(self.hidden_dims[1:]):
             if (in_idx + 1) >= len(self.hidden_dims[1:]):
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels // factor))
+                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels // factor, nn_module=nn_module))
             else:
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels))
+                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels, nn_module=nn_module))
 
-        self.encoder = nn.Sequential(*encoder_layers)
+        self.encoder = nn_module.Sequential(*encoder_layers)
 
         decoder_layers = []
         reversed_hidden_dims = self.hidden_dims.copy()
@@ -41,7 +44,7 @@ class UNet(BaseModel):
                 decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels // factor, self.bilinear))
         decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels)))
 
-        self.decoder = nn.Sequential(*decoder_layers)
+        self.decoder = nn_module.Sequential(*decoder_layers)
 
         self.feature_extractor = None
 
