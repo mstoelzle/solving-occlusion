@@ -62,8 +62,7 @@
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
                     "NaN_replacement": 0,
-                    "bilinear": true,
-                    "feature_extractor": true
+                    "bilinear": true
                 },
                 "optimizer": {
                     "name": "Adam",
@@ -86,9 +85,7 @@
         },
         "visualization": {"sample_frequency":  10}
     },
-    "logging": {
-        "upload": false
-    },
+    "logging": {"upload": false},
     "remote": true,
     "seeds": [101, 102, 103]
 }
