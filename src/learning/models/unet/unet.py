@@ -52,23 +52,46 @@ class UNet(BaseModel):
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
-        encodings = []
-        for encoding_idx, encoder_layer in enumerate(self.encoder):
-            if len(encodings) == 0:
-                encodings.append(encoder_layer(input))
-            else:
-                encodings.append(encoder_layer(encodings[-1]))
+        if self.adf:
+            encodings = []
+            for encoding_idx, encoder_layer in enumerate(self.encoder):
+                if len(encodings) == 0:
+                    encodings.append(encoder_layer(*input))
+                else:
+                    encodings.append(encoder_layer(*encodings[-1]))
 
-        encodings.reverse()
+            encodings.reverse()
 
-        x = encodings[0]
-        for decoding_idx, decoder_layer in enumerate(self.decoder):
-            if decoding_idx + 1 < len(self.decoder):
-                x = decoder_layer(x, encodings[decoding_idx+1])
-            else:
-                x = decoder_layer(x)
+            x = encodings[0]
+            for decoding_idx, decoder_layer in enumerate(self.decoder):
+                if isinstance(decoder_layer, Up):
+                    x = decoder_layer(x, encodings[decoding_idx + 1])
+                else:
+                    x = decoder_layer(*x)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(dim=1)}
+            # TODO: implement the propagation of the uncertainty
+            reconstruced_dem = x[0].squeeze(dim=1)
+
+        else:
+            encodings = []
+            for encoding_idx, encoder_layer in enumerate(self.encoder):
+                if len(encodings) == 0:
+                    encodings.append(encoder_layer(input))
+                else:
+                    encodings.append(encoder_layer(encodings[-1]))
+
+            encodings.reverse()
+
+            x = encodings[0]
+            for decoding_idx, decoder_layer in enumerate(self.decoder):
+                if decoding_idx + 1 < len(self.decoder):
+                    x = decoder_layer(x, encodings[decoding_idx+1])
+                else:
+                    x = decoder_layer(x)
+
+            reconstruced_dem = x.squeeze(dim=1)
+
+        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstruced_dem}
 
         output = self.denormalize_output(data, output, norm_consts)
 
