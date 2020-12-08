@@ -29,8 +29,8 @@ class DoubleConv(nn.Module):
             nn_module.ReLU(inplace=True)
         )
 
-    def forward(self, x):
-        return self.double_conv(x)
+    def forward(self, *x):
+        return self.double_conv(*x)
 
 
 class Down(nn.Module):
@@ -47,8 +47,8 @@ class Down(nn.Module):
             DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
         )
 
-    def forward(self, x):
-        return self.maxpool_conv(x)
+    def forward(self, *x):
+        return self.maxpool_conv(*x)
 
 
 class Up(nn.Module):
@@ -119,8 +119,8 @@ class OutConv(nn.Module):
 
         self.conv = nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1)
 
-    def forward(self, x):
-        return self.conv(x)
+    def forward(self, *x):
+        return self.conv(*x)
 
 
 class VGG16FeatureExtractor(nn.Module):
