@@ -202,7 +202,7 @@ class BatchNorm2d(nn.BatchNorm2d):
         self._keep_variance_fn = keep_variance_fn
 
     def forward(self, inputs_mean, inputs_variance):
-        self._check_input_dim(input)
+        self._check_input_dim(inputs_mean)
 
         # exponential_average_factor is set to self.momentum
         # (when it is available) only so that it gets updated
@@ -277,7 +277,12 @@ class Upsample(nn.Upsample):
         self._keep_variance_fn = keep_variance_fn
 
     def forward(self, inputs_mean, inputs_variance):
-        raise NotImplementedError
+        outputs_mean = super().forward(inputs_mean)
+        outputs_variance = super().forward(inputs_variance)
+
+        if self._keep_variance_fn is not None:
+            outputs_variance = self._keep_variance_fn(outputs_variance)
+        return outputs_mean, outputs_variance
 
 
 class Sequential(nn.Sequential):
