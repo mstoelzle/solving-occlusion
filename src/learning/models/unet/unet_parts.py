@@ -21,11 +21,11 @@ class DoubleConv(nn.Module):
             nn_module = nn
 
         self.double_conv = nn_module.Sequential(
-            nn_module.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
-            nn_module.BatchNorm2d(mid_channels),
+            nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
+            nn_module.BatchNorm2d(num_features=mid_channels),
             nn_module.ReLU(inplace=True),
-            nn_module.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
-            nn_module.BatchNorm2d(out_channels),
+            nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
+            nn_module.BatchNorm2d(num_features=out_channels),
             nn_module.ReLU(inplace=True)
         )
 
@@ -43,8 +43,8 @@ class Down(nn.Module):
             nn_module = nn
 
         self.maxpool_conv = nn_module.Sequential(
-            nn_module.MaxPool2d(2),
-            DoubleConv(in_channels, out_channels, nn_module=nn_module)
+            nn_module.MaxPool2d(kernel_size=2),
+            DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
         )
 
     def forward(self, x):
@@ -63,10 +63,11 @@ class Up(nn.Module):
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
             self.up = nn_module.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-            self.conv = DoubleConv(in_channels, out_channels, in_channels // 2, nn_module=nn_module)
+            self.conv = DoubleConv(in_channels=in_channels, out_channels=out_channels,
+                                   mid_channels=in_channels // 2, nn_module=nn_module)
         else:
             self.up = nn_module.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
-            self.conv = DoubleConv(in_channels, out_channels, nn_module=nn_module)
+            self.conv = DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
 
     def forward(self, x1, x2):
         # upsampling
@@ -116,7 +117,7 @@ class OutConv(nn.Module):
         if nn_module is None:
             nn_module = nn
 
-        self.conv = nn_module.Conv2d(in_channels, out_channels, kernel_size=1)
+        self.conv = nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1)
 
     def forward(self, x):
         return self.conv(x)

@@ -271,6 +271,15 @@ class Conv2d(nn.Conv2d):
         return outputs_mean, outputs_variance
 
 
+class Upsample(nn.Upsample):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
+        self._keep_variance_fn = keep_variance_fn
+
+    def forward(self, inputs_mean, inputs_variance):
+        raise NotImplementedError
+
+
 class Sequential(nn.Sequential):
     # def forward(self, inputs, inputs_variance):
     #     for module in self._modules.values():
