@@ -71,6 +71,11 @@ class BaseModel(ABC, nn.Module):
 
             input[:, channel_idx, ...] = channel_data.unsqueeze(dim=1)[:, 0, :, :]
 
+        if self.adf:
+            # TODO: implement actual data uncertainty estimation
+            var = torch.ones_like(input) * 0.0001
+            input = (input, var)
+
         return input, norm_consts
 
     def preprocess_occluded_elevation_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
