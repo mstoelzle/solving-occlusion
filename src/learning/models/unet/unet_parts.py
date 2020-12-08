@@ -77,8 +77,7 @@ class Up(nn.Module):
             diffY = x2.size()[2] - x1.size()[2]
             diffX = x2.size()[3] - x1.size()[3]
 
-            x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                            diffY // 2, diffY - diffY // 2])
+            x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
             # if you have padding issues, see
             # https://github.com/HaiyongJiang/U-Net-Pytorch-Unstructured-Buggy/commit/0e854509c2cea854e247a9c615f175f76fbb2e3a
             # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
@@ -94,14 +93,20 @@ class Up(nn.Module):
             mu2, var2 = x2
 
             # input is CHW
-            diffY = mu2.size()[2] - mu1.size()[2]
-            diffX = mu2.size()[3] - mu1.size()[3]
+            diffY = mu2.size(2) - mu1.size(2)
+            diffX = mu2.size(3) - mu1.size(3)
 
-            x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                            diffY // 2, diffY - diffY // 2])
+            padding_config = [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2]
+
+            mu1 = F.pad(mu1, padding_config)
+            var1 = F.pad(var1, padding_config)
+
+            mu = torch.cat([mu2, mu1], dim=1)
+            var = torch.cat([var2, var1], dim=1)
+
+            return self.conv(mu, var)
         else:
             raise NotImplementedError
-
 
 
 class OutConv(nn.Module):
