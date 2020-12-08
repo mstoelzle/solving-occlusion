@@ -70,10 +70,10 @@ class Up(nn.Module):
             self.conv = DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
 
     def forward(self, x1, x2):
-        # upsampling
-        x1 = self.up(x1)
-
         if type(x1) == torch.Tensor and type(x2) == torch.Tensor:
+            # upsampling
+            x1 = self.up(x1)
+
             # input is CHW
             diffY = x2.size()[2] - x1.size()[2]
             diffX = x2.size()[3] - x1.size()[3]
@@ -85,13 +85,13 @@ class Up(nn.Module):
             x = torch.cat([x2, x1], dim=1)
             return self.conv(x)
         elif type(x1) == tuple and type(x2) == tuple:
-            # TODO: implement Upsampling for ADF
-            raise NotImplementedError
-
             # adjustments for AFD: we get a mean and a variance as an input
             assert len(x1) == len(x2) == 2
             mu1, var1 = x1
             mu2, var2 = x2
+
+            # upsampling
+            mu1, var1 = self.up(mu1), self.up(var1)
 
             # input is CHW
             diffY = mu2.size(2) - mu1.size(2)
