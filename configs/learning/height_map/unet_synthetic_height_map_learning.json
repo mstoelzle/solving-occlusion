@@ -51,14 +51,14 @@
                 "controller": {
                     "max_num_epochs": 50,
                     "max_num_better_results": 20
-                }
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
             },
             "tasks": [
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
+                    "domains": {"target": {}}
                 }
             ]
         },
