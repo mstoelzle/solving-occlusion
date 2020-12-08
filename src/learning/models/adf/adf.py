@@ -18,14 +18,16 @@ def keep_variance(x, min_variance):
     return x + min_variance
 
 
-class AvgPool2d(nn.Module):
-    def __init__(self, keep_variance_fn=None):
-        super(AvgPool2d, self).__init__()
+class AvgPool2d(nn.AvgPool2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance, kernel_size):
-        outputs_mean = F.avg_pool2d(inputs_mean, kernel_size)
-        outputs_variance = F.avg_pool2d(inputs_variance, kernel_size)
+    def forward(self, inputs_mean, inputs_variance):
+        outputs_mean = F.avg_pool2d(inputs_mean, self.kernel_size, self.stride,
+                                    self.padding, self.ceil_mode, self.count_include_pad, self.divisor_override)
+        outputs_variance = F.avg_pool2d(inputs_variance, self.kernel_size, self.stride,
+                                        self.padding, self.ceil_mode, self.count_include_pad, self.divisor_override)
         outputs_variance = outputs_variance / (inputs_mean.size(2) * inputs_mean.size(3))
 
         if self._keep_variance_fn is not None:
@@ -38,10 +40,9 @@ class AvgPool2d(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class Softmax(nn.Module):
-    def __init__(self, dim=1, keep_variance_fn=None):
-        super(Softmax, self).__init__()
-        self.dim = dim
+class Softmax(nn.Softmax):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
     def forward(self, features_mean, features_variance, eps=1e-5):
@@ -69,9 +70,9 @@ class Softmax(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class ReLU(nn.Module):
-    def __init__(self, keep_variance_fn=None):
-        super(ReLU, self).__init__()
+class ReLU(nn.ReLU):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
     def forward(self, features_mean, features_variance):
@@ -87,11 +88,10 @@ class ReLU(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class LeakyReLU(nn.Module):
-    def __init__(self, negative_slope=0.01, keep_variance_fn=None):
-        super(LeakyReLU, self).__init__()
+class LeakyReLU(nn.LeakyReLU):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
-        self._negative_slope = negative_slope
 
     def forward(self, features_mean, features_variance):
         features_stddev = torch.sqrt(features_variance)
@@ -117,16 +117,10 @@ class LeakyReLU(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class Dropout(nn.Module):
-    """ADF implementation of nn.Dropout2d"""
-
-    def __init__(self, p: float = 0.5, keep_variance_fn=None, inplace=False):
-        super(Dropout, self).__init__()
+class Dropout2d(nn.Dropout2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
-        self.inplace = inplace
-        if p < 0 or p > 1:
-            raise ValueError("dropout probability has to be between 0 and 1, " "but got {}".format(p))
-        self.p = p
 
     def forward(self, inputs_mean, inputs_variance):
         if self.training:
@@ -146,9 +140,9 @@ class Dropout(nn.Module):
         return inputs_mean, outputs_variance
 
 
-class MaxPool2d(nn.Module):
-    def __init__(self, keep_variance_fn=None):
-        super(MaxPool2d, self).__init__()
+class MaxPool2d(nn.MaxPool2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
     def _max_pool_internal(self, mu_a, mu_b, var_a, var_b):
@@ -189,17 +183,10 @@ class MaxPool2d(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class Linear(nn.Module):
-    def __init__(self, in_features, out_features, bias=True, keep_variance_fn=None):
-        super(Linear, self).__init__()
+class Linear(nn.Linear):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
-        self.in_features = in_features
-        self.out_features = out_features
-        self.weight = Parameter(torch.Tensor(out_features, in_features))
-        if bias:
-            self.bias = Parameter(torch.Tensor(out_features))
-        else:
-            self.register_parameter('bias', None)
 
     def forward(self, inputs_mean, inputs_variance):
         outputs_mean = F.linear(inputs_mean, self.weight, self.bias)
@@ -209,55 +196,16 @@ class Linear(nn.Module):
         return outputs_mean, outputs_variance
 
 
-class BatchNorm2d(nn.Module):
-    _version = 2
-    __constants__ = ['track_running_stats', 'momentum', 'eps', 'weight', 'bias',
-                     'running_mean', 'running_var', 'num_batches_tracked']
-
-    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True,
-                 track_running_stats=True, keep_variance_fn=None):
-        super(BatchNorm2d, self).__init__()
+class BatchNorm2d(nn.BatchNorm2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
-        self.num_features = num_features
-        self.eps = eps
-        self.momentum = momentum
-        self.affine = affine
-        self.track_running_stats = track_running_stats
-        if self.affine:
-            self.weight = Parameter(torch.Tensor(num_features))
-            self.bias = Parameter(torch.Tensor(num_features))
-        else:
-            self.register_parameter('weight', None)
-            self.register_parameter('bias', None)
-        if self.track_running_stats:
-            self.register_buffer('running_mean', torch.zeros(num_features))
-            self.register_buffer('running_var', torch.ones(num_features))
-            self.register_buffer('num_batches_tracked', torch.tensor(0, dtype=torch.long))
-        else:
-            self.register_parameter('running_mean', None)
-            self.register_parameter('running_var', None)
-            self.register_parameter('num_batches_tracked', None)
-        self.reset_parameters()
-
-    def reset_running_stats(self):
-        if self.track_running_stats:
-            self.running_mean.zero_()
-            self.running_var.fill_(1)
-            self.num_batches_tracked.zero_()
-
-    def reset_parameters(self):
-        self.reset_running_stats()
-        if self.affine:
-            nn.init.uniform_(self.weight)
-            nn.init.zeros_(self.bias)
-
-    def _check_input_dim(self, input):
-        raise NotImplementedError
 
     def forward(self, inputs_mean, inputs_variance):
+        self._check_input_dim(input)
 
-        # exponential_average_factor is self.momentum set to
-        # (when it is available) only so that if gets updated
+        # exponential_average_factor is set to self.momentum
+        # (when it is available) only so that it gets updated
         # in ONNX graph when this node is exported to ONNX.
         if self.momentum is None:
             exponential_average_factor = 0.0
@@ -265,134 +213,71 @@ class BatchNorm2d(nn.Module):
             exponential_average_factor = self.momentum
 
         if self.training and self.track_running_stats:
+            # TODO: if statement only here to tell the jit to skip emitting this when it is None
             if self.num_batches_tracked is not None:
-                self.num_batches_tracked += 1
+                self.num_batches_tracked = self.num_batches_tracked + 1
                 if self.momentum is None:  # use cumulative moving average
                     exponential_average_factor = 1.0 / float(self.num_batches_tracked)
                 else:  # use exponential moving average
                     exponential_average_factor = self.momentum
 
+        r"""
+        Decide whether the mini-batch stats should be used for normalization rather than the buffers.
+        Mini-batch stats are used in training mode, and in eval mode when buffers are None.
+        """
+        if self.training:
+            bn_training = True
+        else:
+            bn_training = (self.running_mean is None) and (self.running_var is None)
+
+        r"""
+        Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
+        passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
+        used for normalization (i.e. in eval mode when buffers are not None).
+        """
+
         outputs_mean = F.batch_norm(
-            inputs_mean, self.running_mean, self.running_var, self.weight, self.bias,
-            self.training or not self.track_running_stats,
-            exponential_average_factor, self.eps)
+            inputs_mean,
+            self.running_mean if not self.training or self.track_running_stats else None,
+            self.running_var if not self.training or self.track_running_stats else None,
+            self.weight, self.bias, bn_training, exponential_average_factor, self.eps)
+
         outputs_variance = inputs_variance
         weight = ((self.weight.unsqueeze(0)).unsqueeze(2)).unsqueeze(3)
         outputs_variance = outputs_variance * weight ** 2
-        """
-        for i in range(outputs_variance.size(1)):
-            outputs_variance[:,i,:,:]=outputs_variance[:,i,:,:].clone()*self.weight[i]**2
-        """
+
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
         return outputs_mean, outputs_variance
 
 
-class Conv2d(_ConvNd):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
-                 padding=0, dilation=1, groups=1, bias=True,
-                 keep_variance_fn=None, padding_mode='zeros'):
+class Conv2d(nn.Conv2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
-        kernel_size = _pair(kernel_size)
-        stride = _pair(stride)
-        padding = _pair(padding)
-        dilation = _pair(dilation)
-        super(Conv2d, self).__init__(
-            in_channels, out_channels, kernel_size, stride, padding, dilation,
-            False, _pair(0), groups, bias, padding_mode)
 
     def forward(self, inputs_mean, inputs_variance):
-        outputs_mean = F.conv2d(
-            inputs_mean, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
-        outputs_variance = F.conv2d(
-            inputs_variance, self.weight ** 2, None, self.stride, self.padding, self.dilation, self.groups)
+        if self.padding_mode == 'zeros':
+            outputs_mean = F.conv2d(
+                inputs_mean, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
+            outputs_variance = F.conv2d(
+                inputs_variance, self.weight ** 2, None, self.stride, self.padding, self.dilation, self.groups)
+        else:
+            outputs_mean = F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
+                                    self.weight, self.bias, self.stride, _pair(0), self.dilation, self.groups)
+
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
         return outputs_mean, outputs_variance
 
 
-class ConvTranspose2d(_ConvTransposeMixin, _ConvNd):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
-                 padding=0, output_padding=0, groups=1, bias=True, dilation=1,
-                 keep_variance_fn=None, padding_mode='zeros'):
-        self._keep_variance_fn = keep_variance_fn
-        kernel_size = _pair(kernel_size)
-        stride = _pair(stride)
-        padding = _pair(padding)
-        dilation = _pair(dilation)
-        output_padding = _pair(output_padding)
-        super(ConvTranspose2d, self).__init__(
-            in_channels, out_channels, kernel_size, stride, padding, dilation,
-            True, output_padding, groups, bias, padding_mode)
-
-    def forward(self, inputs_mean, inputs_variance, output_size=None):
-        output_padding = self._output_padding(inputs_mean, output_size, self.stride, self.padding, self.kernel_size)
-        outputs_mean = F.conv_transpose2d(
-            inputs_mean, self.weight, self.bias, self.stride, self.padding,
-            output_padding, self.groups, self.dilation)
-        outputs_variance = F.conv_transpose2d(
-            inputs_variance, self.weight ** 2, None, self.stride, self.padding,
-            output_padding, self.groups, self.dilation)
-        if self._keep_variance_fn is not None:
-            outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
-
-
-def concatenate_as(tensor_list, tensor_as, dim, mode="bilinear"):
-    means = [resize2D_as(x[0], tensor_as[0], mode=mode) for x in tensor_list]
-    variances = [resize2D_as(x[1], tensor_as[0], mode=mode) for x in tensor_list]
-    means = torch.cat(means, dim=dim)
-    variances = torch.cat(variances, dim=dim)
-    return means, variances
-
-
-class Sequential(nn.Module):
-    def __init__(self, *args):
-        super(Sequential, self).__init__()
-        if len(args) == 1 and isinstance(args[0], OrderedDict):
-            for key, module in args[0].items():
-                self.add_module(key, module)
-        else:
-            for idx, module in enumerate(args):
-                self.add_module(str(idx), module)
-
-    def _get_item_by_idx(self, iterator, idx):
-        """Get the idx-th item of the iterator"""
-        size = len(self)
-        idx = operator.index(idx)
-        if not -size <= idx < size:
-            raise IndexError('index {} is out of range'.format(idx))
-        idx %= size
-        return next(islice(iterator, idx, None))
-
-    def __getitem__(self, idx):
-        if isinstance(idx, slice):
-            return Sequential(OrderedDict(list(self._modules.items())[idx]))
-        else:
-            return self._get_item_by_idx(self._modules.values(), idx)
-
-    def __setitem__(self, idx, module):
-        key = self._get_item_by_idx(self._modules.keys(), idx)
-        return setattr(self, key, module)
-
-    def __delitem__(self, idx):
-        if isinstance(idx, slice):
-            for key in list(self._modules.keys())[idx]:
-                delattr(self, key)
-        else:
-            key = self._get_item_by_idx(self._modules.keys(), idx)
-            delattr(self, key)
-
-    def __len__(self):
-        return len(self._modules)
-
-    def __dir__(self):
-        keys = super(Sequential, self).__dir__()
-        keys = [key for key in keys if not key.isdigit()]
-        return keys
-
-    def forward(self, inputs, inputs_variance):
-        for module in self._modules.values():
-            inputs, inputs_variance = module(inputs, inputs_variance)
-
-        return inputs, inputs_variance
+class Sequential(nn.Sequential):
+    # def forward(self, inputs, inputs_variance):
+    #     for module in self._modules.values():
+    #         inputs, inputs_variance = module(inputs, inputs_variance)
+    #
+    #     return inputs, inputs_variance
+    def forward(self, *input):
+        for module in self:
+            input = module(*input)
+        return input
