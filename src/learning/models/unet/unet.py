@@ -42,7 +42,7 @@ class UNet(BaseModel):
                 decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels, self.bilinear))
             else:
                 decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels // factor, self.bilinear))
-        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels)))
+        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels), nn_module=nn_module))
 
         self.decoder = nn_module.Sequential(*decoder_layers)
 
