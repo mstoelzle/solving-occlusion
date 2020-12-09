@@ -25,15 +25,18 @@ class Dataloader:
         else:
             raise ValueError
 
-        purposes = ["train", "val", "test"]
-        subsets = {"train": [], "val": [], "test": []}
-        sampling_weights = {"train": [], "val": [], "test": []}
+        subsets = {}
+        sampling_weights = {}
+        for purpose in purposes:
+            subsets[purpose] = []
+            sampling_weights[purpose] = []
 
         for dataset_config in datasets_config:
             dataset_type = DatasetEnum(dataset_config["type"])
 
             dataset_sampling_weights = dataset_config.get("sampling_weights", {"train": 1, "val": 1, "test": 1})
-            assert list(dataset_sampling_weights.keys()) == purposes
+
+            assert all(purpose in dataset_sampling_weights.keys() for purpose in purposes)
 
             transforms = {}
             transforms_config = dataset_config.get("transforms", {})
