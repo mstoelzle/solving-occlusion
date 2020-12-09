@@ -49,10 +49,7 @@ class UNet(BaseModel):
 
         self.feature_extractor = None
 
-    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
-                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
-        input, norm_consts = self.assemble_input(data)
-
+    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs) -> dict:
         encodings = []
         for encoding_idx, encoder_layer in enumerate(self.encoder):
             if len(encodings) == 0:
@@ -69,11 +66,7 @@ class UNet(BaseModel):
             else:
                 x = decoder_layer(x)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(dim=1)}
-
-        output = self.denormalize_output(data, output, norm_consts)
-
-        return output
+        return x.squeeze(dim=1)
 
     def loss_function(self,
                       loss_config: dict,

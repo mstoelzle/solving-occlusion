@@ -29,14 +29,36 @@ class BaseModel(ABC, nn.Module):
             self.input_normalization = input_normalization
 
         self.dropout_p = 0.0
+        self.num_samples = 1
         if self.config.get("model_uncertainty_estimation") is not None:
             model_uncertainty_est_config = self.config["model_uncertainty_estimation"]
             if model_uncertainty_est_config["method"] == "monte_carlo_dropout":
                 self.dropout_p = model_uncertainty_est_config["probability"]
+                self.num_samples = model_uncertainty_est_config["num_samples"]
 
-    @abstractmethod
-    def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
-        pass
+    def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
+                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        input, norm_consts = self.assemble_input(data)
+
+        if self.num_samples > 1:
+            samples = []
+            for i in range(self.num_samples):
+                samples.append(self.forward_pass(input=input, data=data))
+
+            mean = torch.mean(torch.stack(samples), dim=0)
+            var = torch.var(torch.stack(samples), dim=0)
+
+            output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: mean,
+                      ChannelEnum.MODEL_UNCERTAINTY_MAP: var}
+
+        else:
+            x = self.forward_pass(input=input, data=data)
+
+            output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x}
+
+        output = self.denormalize_output(data, output, norm_consts)
+
+        return output
 
     @abstractmethod
     def loss_function(self, *inputs: Any, **kwargs) -> torch.Tensor:
