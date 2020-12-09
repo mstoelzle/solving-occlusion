@@ -22,12 +22,13 @@ class UNet(BaseModel):
 
         factor = 2 if bilinear else 1
 
-        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0])]
+        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0], dropout_p=self.dropout_p)]
         for in_idx, num_out_channels in enumerate(self.hidden_dims[1:]):
             if (in_idx + 1) >= len(self.hidden_dims[1:]):
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels // factor))
+                num_down_out_channels = num_out_channels // factor
             else:
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels))
+                num_down_out_channels = num_out_channels
+            encoder_layers.append(Down(self.hidden_dims[in_idx], num_down_out_channels, dropout_p=self.dropout_p))
 
         self.encoder = nn.Sequential(*encoder_layers)
 
@@ -36,9 +37,12 @@ class UNet(BaseModel):
         reversed_hidden_dims.reverse()
         for in_idx, num_out_channels in enumerate(reversed_hidden_dims[1:]):
             if (in_idx + 1) >= len(reversed_hidden_dims[1:]):
-                decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels, self.bilinear))
+                num_up_out_channels = num_out_channels
             else:
-                decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels // factor, self.bilinear))
+                num_up_out_channels = num_out_channels // factor
+            decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_up_out_channels,
+                                     self.bilinear, dropout_p=self.dropout_p))
+
         decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels)))
 
         self.decoder = nn.Sequential(*decoder_layers)

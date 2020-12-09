@@ -28,6 +28,12 @@ class BaseModel(ABC, nn.Module):
         else:
             self.input_normalization = input_normalization
 
+        self.dropout_p = 0.0
+        if self.config.get("model_uncertainty_estimation") is not None:
+            model_uncertainty_est_config = self.config["model_uncertainty_estimation"]
+            if model_uncertainty_est_config["method"] == "monte_carlo_dropout":
+                self.dropout_p = model_uncertainty_est_config["probability"]
+
     @abstractmethod
     def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
         pass
