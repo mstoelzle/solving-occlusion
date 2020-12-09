@@ -1,0 +1,57 @@
+{
+    "name": "semi_self_supervision_sweep1_trained_anymal_rosbag_stairs_inference",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "domain_defaults": {
+                    "batch_size": 32,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
+                    },
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "input_dim": [64, 64],
+                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "out_channels": ["reconstructed_elevation_map"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
+            },
+            "tasks": [
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "logs/2020-12-06-22-36-18_learning_unet_anymal_rosbag_learning_semi_self_supervision_sweep1_heimdal/seed_101/task_0/model.pt",
+                    "domains": {"target": {}}
+                },
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "logs/2020-12-06-22-36-18_learning_unet_anymal_rosbag_learning_semi_self_supervision_sweep1_heimdal/seed_101/task_1/model.pt",
+                    "domains": {"target": {}}
+                },
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "logs/2020-12-06-22-36-18_learning_unet_anymal_rosbag_learning_semi_self_supervision_sweep1_heimdal/seed_101/task_2/model.pt",
+                    "domains": {"target": {}}
+                },
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "logs/2020-12-06-22-36-18_learning_unet_anymal_rosbag_learning_semi_self_supervision_sweep1_heimdal/seed_101/task_3/model.pt",
+                    "domains": {"target": {}}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  100, "correlation_occluded_area": true}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101]
+}

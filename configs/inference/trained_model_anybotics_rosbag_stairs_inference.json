@@ -5,7 +5,7 @@
         "task_path": {
             "defaults": {
                 "domain_defaults": {
-                    "batch_size": 144,
+                    "batch_size": 32,
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-10-25-16-47-00_dataset_generation_anybotics_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
