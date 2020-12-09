@@ -49,7 +49,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  100, "correlation_occluded_area": true}
+        "visualization": {"sample_frequency":  25, "correlation_occluded_area": true}
     },
     "logging": {"upload": false},
     "remote": true,
