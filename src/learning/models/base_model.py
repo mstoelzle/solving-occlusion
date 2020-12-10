@@ -169,7 +169,7 @@ class BaseModel(ABC, nn.Module):
 
         rec_dem = denormalized_output[ChannelEnum.REC_DEM]
         comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM],
-                                                                    rec_dem)
+                                                      rec_dem)
         denormalized_output[ChannelEnum.COMP_DEM] = comp_dem
 
         return denormalized_output
@@ -184,17 +184,17 @@ class BaseModel(ABC, nn.Module):
         if LossEnum.MSE_REC_ALL.value in normalization_config or \
                 LossEnum.MSE_REC_OCC.value in normalization_config or \
                 LossEnum.MSE_REC_NOCC.value in normalization_config:
-            elevation_map = data[ChannelEnum.GT_DEM]
+            gt_dem = data[ChannelEnum.GT_DEM]
             rec_dem = output[ChannelEnum.REC_DEM]
             norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(
                 ChannelEnum.GT_DEM,
-                input=elevation_map,
+                input=gt_dem,
                 batch=True,
                 mean=True, stdev=True)
             norm_rec_dem, _ = InputNormalization.normalize(ChannelEnum.REC_DEM,
-                                                                               input=rec_dem,
-                                                                               batch=True, mean=True, stdev=True,
-                                                                               norm_consts=ground_truth_norm_consts)
+                                                           input=rec_dem,
+                                                           batch=True, mean=True, stdev=True,
+                                                           norm_consts=ground_truth_norm_consts)
             norm_data[ChannelEnum.GT_DEM] = norm_elevation_map
             norm_data[ChannelEnum.REC_DEM] = norm_rec_dem
 

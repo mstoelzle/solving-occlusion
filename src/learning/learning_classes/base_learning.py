@@ -183,7 +183,6 @@ class BaseLearning(ABC):
                                                      dataloader_meta_info=dataloader_meta_info,
                                                      reduction="mean_per_sample")
                 aggregated_loss_dict = self.task.loss.aggregate_mean_loss_dict(loss_dict)
-                loss = aggregated_loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=aggregated_loss_dict)
                 self.add_batch_data_to_hdf5_results(test_loss_hdf5_group, loss_dict, start_idx,
                                                     dataloader_meta_info.length)
