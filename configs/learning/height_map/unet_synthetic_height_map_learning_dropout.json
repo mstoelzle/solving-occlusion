@@ -41,12 +41,7 @@
                     "input_normalization": false,
                     "NaN_replacement": 0,
                     "bilinear": true,
-                    "feature_extractor": true,
-                    "model_uncertainty_estimation": {
-                        "method": "monte_carlo_dropout",
-                        "probability": 0.2,
-                        "num_solutions": 10
-                    }
+                    "feature_extractor": true
                 },
                 "optimizer": {
                     "name": "Adam",
@@ -63,7 +58,50 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}}
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.2,
+                            "num_solutions": 10
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.2,
+                            "num_solutions": 20
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.1,
+                            "num_solutions": 10
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.3,
+                            "num_solutions": 10
+                        }
+                    }
                 }
             ]
         },
@@ -73,5 +111,5 @@
         "upload": false
     },
     "remote": true,
-    "seeds": [101, 102, 103]
+    "seeds": [101]
 }
