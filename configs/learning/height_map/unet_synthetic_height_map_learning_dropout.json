@@ -45,7 +45,7 @@
                     "model_uncertainty_estimation": {
                         "method": "monte_carlo_dropout",
                         "probability": 0.2,
-                        "num_samples": 10
+                        "num_solutions": 10
                     }
                 },
                 "optimizer": {

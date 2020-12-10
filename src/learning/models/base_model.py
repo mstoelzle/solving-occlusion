@@ -28,25 +28,34 @@ class BaseModel(ABC, nn.Module):
         else:
             self.input_normalization = input_normalization
 
+        self.model_uncertainty_method = None
         self.dropout_p = 0.0
-        self.num_samples = 1
+        self.num_solutions = 1
         if self.config.get("model_uncertainty_estimation") is not None:
-            model_uncertainty_est_config = self.config["model_uncertainty_estimation"]
-            if model_uncertainty_est_config["method"] == "monte_carlo_dropout":
-                self.dropout_p = model_uncertainty_est_config["probability"]
-                self.num_samples = model_uncertainty_est_config["num_samples"]
+            model_uncertainty_config = self.config["model_uncertainty_estimation"]
+            self.model_uncertainty_method = ModelUncertaintyMethod(model_uncertainty_config["method"])
+            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+                self.dropout_p = model_uncertainty_config["probability"]
+                self.num_solutions = model_uncertainty_config["num_solutions"]
+            elif self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_VAE:
+                self.num_solutions = model_uncertainty_config["num_solutions"]
+            else:
+                raise NotImplementedError
 
     def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
-        if self.num_samples > 1:
-            samples = []
-            for i in range(self.num_samples):
-                samples.append(self.forward_pass(input=input, data=data))
+        if self.num_solutions > 1:
+            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+                solutions = []
+                for i in range(self.num_solutions):
+                    solutions.append(self.forward_pass(input=input, data=data))
 
-            mean = torch.mean(torch.stack(samples), dim=0)
-            var = torch.var(torch.stack(samples), dim=0)
+                mean = torch.mean(torch.stack(solutions), dim=0)
+                var = torch.var(torch.stack(solutions), dim=0)
+            else:
+                raise NotImplementedError
 
             output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: mean,
                       ChannelEnum.MODEL_UNCERTAINTY_MAP: var}
