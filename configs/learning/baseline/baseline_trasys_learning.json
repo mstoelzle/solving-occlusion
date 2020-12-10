@@ -34,7 +34,7 @@
                     "save_frequency": 10,
                     "input_dim": [128, 128],
                     "in_channels": ["gt_dem"],
-                    "out_channels": ["reconstructed_elevation_map"],
+                    "out_channels": ["rec_dem"],
                     "input_normalization": false,
                     "inpaint_radius": 3
                 },

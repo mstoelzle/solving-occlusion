@@ -32,7 +32,7 @@
                     "name": "PatchMatch",
                     "input_dim": [64, 64],
                     "in_channels": ["occ_dem", "occ_mask"],
-                    "out_channels": ["reconstructed_elevation_map"],
+                    "out_channels": ["rec_dem"],
                     "input_normalization": false,
                     "inpaint_radius": 3
                 },
