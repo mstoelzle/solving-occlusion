@@ -22,22 +22,22 @@ class DoubleConv(nn.Module):
 
         if dropout_p > 0.0:
             self.double_conv = nn_module.Sequential(
-                nn_module.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(mid_channels),
+                nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(num_features=mid_channels),
                 nn_module.ReLU(inplace=True),
                 nn_module.Dropout(p=dropout_p),
-                nn_module.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(out_channels),
+                nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(num_features=out_channels),
                 nn_module.ReLU(inplace=True),
                 nn_module.Dropout(p=dropout_p)
             )
         else:
             self.double_conv = nn_module.Sequential(
-                nn_module.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(mid_channels),
+                nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(num_features=mid_channels),
                 nn_module.ReLU(inplace=True),
-                nn_module.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(out_channels),
+                nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(num_features=out_channels),
                 nn_module.ReLU(inplace=True)
             )
 
