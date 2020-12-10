@@ -24,7 +24,7 @@ class Hdf5Dataset(BaseDataset):
             elif f"/{self.purpose}/elevation_map" in hdf5_file:
                 sample_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
             elif f"/{self.purpose}/ground_truth_elevation_map" in hdf5_file:
-                sample_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
+                sample_dataset = hdf5_file[f"/{self.purpose}/ground_truth_elevation_map"]
             elif f"/{self.purpose}/{ChannelEnum.OCC_DEM.value}" in hdf5_file:
                 sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.OCC_DEM.value}"]
             elif f"/{self.purpose}/occluded_elevation_map" in hdf5_file:
