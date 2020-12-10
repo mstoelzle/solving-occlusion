@@ -32,10 +32,10 @@ class DataloaderMetaInfo:
 
         progress_bar = Bar(f"We need to infer the min and max values of the dataset manually", max=len(dataloader))
         for batch_data in dataloader:
-            if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in batch_data:
-                sample_data = batch_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
-            elif ChannelEnum.OCCLUDED_ELEVATION_MAP in batch_data:
-                sample_data = batch_data[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+            if ChannelEnum.GT_DEM in batch_data:
+                sample_data = batch_data[ChannelEnum.GT_DEM]
+            elif ChannelEnum.OCC_DEM in batch_data:
+                sample_data = batch_data[ChannelEnum.OCC_DEM]
             else:
                 raise ValueError
 

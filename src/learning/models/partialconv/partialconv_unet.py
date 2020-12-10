@@ -172,7 +172,7 @@ class PartialConvUNet(BaseModel):
         input_channels = len(self.in_channels) - 1
 
         # this only works for input channels occluded elevation map and binary occlusion map
-        assert self.in_channels == [ChannelEnum.OCCLUDED_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP]
+        assert self.in_channels == [ChannelEnum.OCC_DEM, ChannelEnum.OCC_MASK]
 
         # either we use the standard Nvidia architecture or our own hidden_dims specification
         assert hidden_dims is None or num_layers is None
@@ -275,7 +275,7 @@ class PartialConvUNet(BaseModel):
             h_mask = torch.cat([h_mask, h_mask_dict[enc_h_key]], dim=1)
             h, h_mask = getattr(self, dec_l_key)(h, h_mask)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: h[:, 0, ...]}
+        output = {ChannelEnum.REC_DEM: h[:, 0, ...]}
 
         output = self.denormalize_output(data, output, norm_consts)
 
@@ -308,8 +308,8 @@ class PartialConvUNet(BaseModel):
             reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             total_variation_weight = weights.get(LossEnum.TV.value, 0)
 
-            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
+                                                                   mask=data[ChannelEnum.OCC_MASK])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \

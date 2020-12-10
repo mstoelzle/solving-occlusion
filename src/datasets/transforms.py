@@ -57,7 +57,7 @@ class Transformer:
         robot_position_x = params[1].item()
         robot_position_y = params[2].item()
 
-        sample_grid = data[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+        sample_grid = data[ChannelEnum.OCC_DEM]
 
         # distance of every pixel from the robot
         lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * terrain_resolution
@@ -164,7 +164,7 @@ class Transformer:
                     occlusion = rng.choice([0, 1], p=[1 - probability, probability], size=tuple(value.size()))
                     occlusion = torch.tensor(occlusion)
 
-                if channel == ChannelEnum.BINARY_OCCLUSION_MAP:
+                if channel == ChannelEnum.OCC_MASK:
                     # assert value.dtype == torch.bool
                     #
                     # transformed_value = value.to(dtype=torch.int) + occlusion
@@ -174,7 +174,7 @@ class Transformer:
                     # data[channel] = transformed_value.to(dtype=torch.bool)
 
                     value[occlusion == 1] = True
-                elif channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
+                elif channel == ChannelEnum.OCC_DEM:
                     value[occlusion == 1] = np.nan
                 else:
                     raise NotImplementedError
@@ -187,7 +187,7 @@ class Transformer:
                                   data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         rng = self.rng if self.deterministic else np.random
 
-        mask = data[ChannelEnum.BINARY_OCCLUSION_MAP]
+        mask = data[ChannelEnum.OCC_MASK]
 
         if mask.dtype == torch.bool:
             mask = mask.to(dtype=torch.float)
@@ -211,7 +211,7 @@ class Transformer:
 
         dilated_occlusion = dilated_mask.squeeze(dim=0).squeeze(dim=0)
 
-        data[ChannelEnum.BINARY_OCCLUSION_MAP] = dilated_occlusion
-        data[ChannelEnum.OCCLUDED_ELEVATION_MAP][dilated_occlusion == 1] = np.nan
+        data[ChannelEnum.OCC_MASK] = dilated_occlusion
+        data[ChannelEnum.OCC_DEM][dilated_occlusion == 1] = np.nan
 
         return data

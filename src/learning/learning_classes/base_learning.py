@@ -169,7 +169,7 @@ class BaseLearning(ABC):
             progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
+                batch_size = data[ChannelEnum.GT_DEM].size(0)
 
                 output = self.model(data)
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx,
@@ -208,7 +208,7 @@ class BaseLearning(ABC):
         progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
         for batch_idx, data in enumerate(dataloader):
             data = self.dict_to_device(data)
-            batch_size = data[ChannelEnum.OCCLUDED_ELEVATION_MAP].size(0)
+            batch_size = data[ChannelEnum.OCC_DEM].size(0)
 
             output = self.model(data)
             self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)

@@ -12,19 +12,23 @@ class Hdf5Dataset(BaseDataset):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.channels = [ChannelEnum.PARAMS, ChannelEnum.GROUND_TRUTH_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP,
-                         ChannelEnum.OCCLUDED_ELEVATION_MAP]
+        self.channels = [ChannelEnum.PARAMS, ChannelEnum.GT_DEM, ChannelEnum.OCC_MASK,
+                         ChannelEnum.OCC_DEM]
 
         self.hdf5_dataset_set: bool = False
         self.hdf5_datasets = {}
 
         with h5py.File(self.dataset_path, 'r') as hdf5_file:
-            if f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}" in hdf5_file:
-                sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value}"]
+            if f"/{self.purpose}/{ChannelEnum.GT_DEM.value}" in hdf5_file:
+                sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.GT_DEM.value}"]
             elif f"/{self.purpose}/elevation_map" in hdf5_file:
                 sample_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
-            elif f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}" in hdf5_file:
-                sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.OCCLUDED_ELEVATION_MAP.value}"]
+            elif f"/{self.purpose}/ground_truth_elevation_map" in hdf5_file:
+                sample_dataset = hdf5_file[f"/{self.purpose}/elevation_map"]
+            elif f"/{self.purpose}/{ChannelEnum.OCC_DEM.value}" in hdf5_file:
+                sample_dataset = hdf5_file[f"/{self.purpose}/{ChannelEnum.OCC_DEM.value}"]
+            elif f"/{self.purpose}/occluded_elevation_map" in hdf5_file:
+                sample_dataset = hdf5_file[f"/{self.purpose}/occluded_elevation_map"]
             else:
                 raise ValueError
 
@@ -55,7 +59,14 @@ class Hdf5Dataset(BaseDataset):
                 if dataset_url in hdf5_file:
                     self.hdf5_datasets[channel] = hdf5_file[dataset_url]
 
+            # some code to make legacy datasets work
             if f"/{self.purpose}/elevation_map" in hdf5_file:
-                self.hdf5_datasets[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = hdf5_file[f"/{self.purpose}/elevation_map"]
+                self.hdf5_datasets[ChannelEnum.GT_DEM] = hdf5_file[f"/{self.purpose}/elevation_map"]
+            if f"/{self.purpose}/ground_truth_elevation_map" in hdf5_file:
+                self.hdf5_datasets[ChannelEnum.GT_DEM] = hdf5_file[f"/{self.purpose}/ground_truth_elevation_map"]
+            if f"/{self.purpose}/occluded_elevation_map" in hdf5_file:
+                self.hdf5_datasets[ChannelEnum.OCC_DEM] = hdf5_file[f"/{self.purpose}/occluded_elevation_map"]
+            if f"/{self.purpose}/binary_occlusion_map" in hdf5_file:
+                self.hdf5_datasets[ChannelEnum.OCC_MASK] = hdf5_file[f"/{self.purpose}/binary_occlusion_map"]
 
             self.hdf5_dataset_set = True

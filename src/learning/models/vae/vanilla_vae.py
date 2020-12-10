@@ -123,9 +123,9 @@ class VanillaVAE(BaseVAE):
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
 
-        reconstructed_elevation_map = self.decode(z).squeeze(dim=1)
+        rec_dem = self.decode(z).squeeze(dim=1)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
+        output = {ChannelEnum.REC_DEM: rec_dem,
                   "mu": mu,
                   "log_var": log_var}
 
@@ -158,7 +158,7 @@ class VanillaVAE(BaseVAE):
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
-                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataloader_meta_info.length
+                kld_weight = data[ChannelEnum.GT_DEM].size(0) / dataloader_meta_info.length
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \

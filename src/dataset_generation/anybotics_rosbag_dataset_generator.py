@@ -173,7 +173,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         self.update_dataset_range(subgrid)
 
         if ChannelEnum.PARAMS.value not in self.hdf5_group or \
-                ChannelEnum.OCCLUDED_ELEVATION_MAP.value not in self.hdf5_group:
+                ChannelEnum.OCC_DEM.value not in self.hdf5_group:
             dataset_shape = (0, subgrid.shape[0], subgrid.shape[1])
             dataset_maxshape = (self.purpose_max_num_samples[self.purpose], subgrid.shape[0], subgrid.shape[1])
             self.params_dataset = self.hdf5_group.create_dataset(name=ChannelEnum.PARAMS.value,
@@ -181,7 +181,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                                                                  maxshape=(self.purpose_max_num_samples[self.purpose],
                                                                            params.shape[0]))
             self.occluded_elevation_map_dataset = \
-                self.hdf5_group.create_dataset(name=ChannelEnum.OCCLUDED_ELEVATION_MAP.value,
+                self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
                                                shape=dataset_shape, maxshape=dataset_maxshape)
 
         if self.sample_idx % self.config.get("save_frequency", 50) == 0 or \

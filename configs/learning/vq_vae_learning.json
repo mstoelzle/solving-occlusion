@@ -22,7 +22,7 @@
                     "name": "VQVAE",
                     "save_frequency": 10,
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "embedding_dim": 64,
                     "num_embeddings": 512,

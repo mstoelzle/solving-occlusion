@@ -53,18 +53,18 @@ class ResultsPlotter:
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
         data_hdf5_group = purpose_hdf5_group[f"data"]
-        dataset_length = len(data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value])
+        dataset_length = len(data_hdf5_group[ChannelEnum.REC_DEM.value])
         num_samples = int(dataset_length / self.config["sample_frequency"])
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
-            reconstructed_elevation_map = data_hdf5_group[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP.value][idx, ...]
-            occluded_elevation_map = data_hdf5_group[ChannelEnum.OCCLUDED_ELEVATION_MAP.value][idx, ...]
-            composed_elevation_map = data_hdf5_group[ChannelEnum.COMPOSED_ELEVATION_MAP.value][idx, ...]
+            rec_dem = data_hdf5_group[ChannelEnum.REC_DEM.value][idx, ...]
+            occluded_elevation_map = data_hdf5_group[ChannelEnum.OCC_DEM.value][idx, ...]
+            comp_dem = data_hdf5_group[ChannelEnum.COMP_DEM.value][idx, ...]
 
-            ground_truth_elevation_map = None
-            if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value in data_hdf5_group:
-                ground_truth_elevation_map = data_hdf5_group[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value][idx, ...]
+            gt_dem = None
+            if ChannelEnum.GT_DEM.value in data_hdf5_group:
+                gt_dem = data_hdf5_group[ChannelEnum.GT_DEM.value][idx, ...]
 
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
@@ -76,13 +76,13 @@ class ResultsPlotter:
                 model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UNCERTAINTY_MAP.value][idx, ...]
 
             # 2D
-            elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(reconstructed_elevation_map),
-                                     np.min(composed_elevation_map)])
-            elevation_vmax = np.max([np.max(non_occluded_elevation_map), np.max(reconstructed_elevation_map),
-                                     np.max(composed_elevation_map)])
-            if ground_truth_elevation_map is not None:
-                ground_truth_dem_vmin = np.min(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])
-                ground_truth_dem_vmax = np.max(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])
+            elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(rec_dem),
+                                     np.min(comp_dem)])
+            elevation_vmax = np.max([np.max(non_occluded_elevation_map), np.max(rec_dem),
+                                     np.max(comp_dem)])
+            if gt_dem is not None:
+                ground_truth_dem_vmin = np.min(gt_dem[~np.isnan(gt_dem)])
+                ground_truth_dem_vmax = np.max(gt_dem[~np.isnan(gt_dem)])
                 elevation_vmin = np.min([elevation_vmin, ground_truth_dem_vmin])
                 elevation_vmax = np.max([elevation_vmax, ground_truth_dem_vmax])
 
@@ -91,18 +91,18 @@ class ResultsPlotter:
             fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
             # axes = np.expand_dims(axes, axis=0)
 
-            if ground_truth_elevation_map is not None:
+            if gt_dem is not None:
                 axes[0, 0].set_title("Ground-truth")
                 # matshow plots x and y swapped
-                mat = axes[0, 0].matshow(np.swapaxes(ground_truth_elevation_map, 0, 1), vmin=elevation_vmin,
+                mat = axes[0, 0].matshow(np.swapaxes(gt_dem, 0, 1), vmin=elevation_vmin,
                                          vmax=elevation_vmax, cmap=elevation_cmap)
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
-            mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=elevation_vmin,
+            mat = axes[0, 1].matshow(np.swapaxes(rec_dem, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
-            mat = axes[1, 0].matshow(np.swapaxes(composed_elevation_map, 0, 1), vmin=elevation_vmin,
+            mat = axes[1, 0].matshow(np.swapaxes(comp_dem, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
@@ -148,13 +148,13 @@ class ResultsPlotter:
             axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
             # the np.NaNs in the occluded elevation maps give us these warnings:
             warnings.filterwarnings("ignore", category=UserWarning)
-            if ground_truth_elevation_map is not None:
+            if gt_dem is not None:
                 axes[0].set_title("Ground-truth")
-                axes[0].plot_surface(x_3d, y_3d, ground_truth_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+                axes[0].plot_surface(x_3d, y_3d, gt_dem, vmin=elevation_vmin, vmax=elevation_vmax,
                                      cmap=elevation_cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 2, projection="3d"))
             axes[1].set_title("Reconstruction")
-            axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+            axes[1].plot_surface(x_3d, y_3d, rec_dem, vmin=elevation_vmin, vmax=elevation_vmax,
                                  cmap=elevation_cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
@@ -180,7 +180,7 @@ class ResultsPlotter:
                 plt.show()
             plt.close()
 
-            if ground_truth_elevation_map is not None \
+            if gt_dem is not None \
                     or data_uncertainty_map is not None or model_uncertainty_map is not None:
                 fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
 
@@ -199,9 +199,9 @@ class ResultsPlotter:
 
                 error_uncertainty_cmap = plt.get_cmap("RdYlGn_r")
 
-                if ground_truth_elevation_map is not None:
-                    rec_abs_error = np.abs(reconstructed_elevation_map - ground_truth_elevation_map)
-                    comp_abs_error = np.abs(composed_elevation_map - ground_truth_elevation_map)
+                if gt_dem is not None:
+                    rec_abs_error = np.abs(rec_dem - gt_dem)
+                    comp_abs_error = np.abs(comp_dem - gt_dem)
 
                     error_uncertainty_vmin = np.min([error_uncertainty_vmin,
                                                      np.min(rec_abs_error), np.min(comp_abs_error)])
@@ -228,7 +228,7 @@ class ResultsPlotter:
                     # axes[1].set_title("Reconstruction error")
                     # # the np.NaNs in the ground-truth elevation maps give us these warnings:
                     # warnings.filterwarnings("ignore", category=UserWarning)
-                    # axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - ground_truth_elevation_map),
+                    # axes[1].plot_surface(x_3d, y_3d, np.abs(rec_dem - gt_dem),
                     #                      cmap=plt.get_cmap("RdYlGn_r"))
                     # warnings.filterwarnings("default", category=UserWarning)
                     # axes[1].set_xlabel("x [m]")
@@ -266,9 +266,9 @@ class ResultsPlotter:
         loss_hdf5_group = purpose_hdf5_group["loss"]
 
         # percentage of entire area which is occluded
-        binary_occlusion_map = purpose_hdf5_group["data"][ChannelEnum.BINARY_OCCLUSION_MAP.value]
-        shape_map = binary_occlusion_map.shape
-        occluded_area = np.sum(binary_occlusion_map, axis=(1, 2)) / (shape_map[1] * shape_map[2])
+        occ_mask = purpose_hdf5_group["data"][ChannelEnum.OCC_MASK.value]
+        shape_map = occ_mask.shape
+        occluded_area = np.sum(occ_mask, axis=(1, 2)) / (shape_map[1] * shape_map[2])
 
         bins = [0.01, 0.05, 0.10, 0.2, 1]
         box_plot_y = np.zeros(shape=occluded_area.shape)

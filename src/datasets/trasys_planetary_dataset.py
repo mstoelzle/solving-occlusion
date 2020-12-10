@@ -23,9 +23,9 @@ class TrasysPlanetaryDataset(BaseDataset):
                     if filepath.is_file() and is_image_file(str(filepath)):
                         filename = filepath.stem
                         if filename == "height":
-                            sample_dict[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = filepath
+                            sample_dict[ChannelEnum.GT_DEM] = filepath
                         elif filename == "occlusion":
-                            sample_dict[ChannelEnum.BINARY_OCCLUSION_MAP] = filepath
+                            sample_dict[ChannelEnum.OCC_MASK] = filepath
                         else:
                             continue
 
@@ -40,8 +40,8 @@ class TrasysPlanetaryDataset(BaseDataset):
 
         # TODO: add actual params from dataset metadata
         terrain_resolution = 200. / 128  # 200m terrain length divided by 128 pixels
-        # x_grid = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) // 2
-        # y_grid = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(1) // 2
+        # x_grid = data[ChannelEnum.GT_DEM].size(0) // 2
+        # y_grid = data[ChannelEnum.GT_DEM].size(1) // 2
         # robot_position_z = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP][x_grid, y_grid] + camera_elevation
         robot_position_z = camera_elevation
 

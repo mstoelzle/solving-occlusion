@@ -33,7 +33,7 @@
                     "name": "UNet",
                     "save_frequency": 1,
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
@@ -58,9 +58,9 @@
                         "target": {
                             "dataset": {
                                 "transforms": {
-                                    "train": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
-                                    "val": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}],
-                                    "test": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occluded_elevation_map"]}]
+                                    "train": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occ_dem"]}],
+                                    "val": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occ_dem"]}],
+                                    "test": [{"type": "white_noise", "stdev": 0.1, "apply_to": ["occ_dem"]}]
                                 }
                             }
                         }
