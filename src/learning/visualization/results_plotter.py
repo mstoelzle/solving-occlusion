@@ -68,16 +68,25 @@ class ResultsPlotter:
 
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
-            # 2D
-            vmin = np.min([np.min(non_occluded_elevation_map), np.min(reconstructed_elevation_map),
-                           np.min(composed_elevation_map)])
-            vmax = np.max([np.max(non_occluded_elevation_map), np.max(reconstructed_elevation_map),
-                           np.max(composed_elevation_map)])
-            if ground_truth_elevation_map is not None:
-                vmin = np.min([vmin, np.min(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])])
-                vmax = np.max([vmax, np.max(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])])
+            data_uncertainty_map = None
+            if ChannelEnum.DATA_UNCERTAINTY_MAP.value in data_hdf5_group:
+                data_uncertainty_map = data_hdf5_group[ChannelEnum.DATA_UNCERTAINTY_MAP.value][idx, ...]
+            model_uncertainty_map = None
+            if ChannelEnum.MODEL_UNCERTAINTY_MAP.value in data_hdf5_group:
+                model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UNCERTAINTY_MAP.value][idx, ...]
 
-            cmap = plt.get_cmap("viridis")
+            # 2D
+            elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(reconstructed_elevation_map),
+                                     np.min(composed_elevation_map)])
+            elevation_vmax = np.max([np.max(non_occluded_elevation_map), np.max(reconstructed_elevation_map),
+                                     np.max(composed_elevation_map)])
+            if ground_truth_elevation_map is not None:
+                ground_truth_dem_vmin = np.min(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])
+                ground_truth_dem_vmax = np.max(ground_truth_elevation_map[~np.isnan(ground_truth_elevation_map)])
+                elevation_vmin = np.min([elevation_vmin, ground_truth_dem_vmin])
+                elevation_vmax = np.max([elevation_vmax, ground_truth_dem_vmax])
+
+            elevation_cmap = plt.get_cmap("viridis")
 
             fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
             # axes = np.expand_dims(axes, axis=0)
@@ -85,16 +94,20 @@ class ResultsPlotter:
             if ground_truth_elevation_map is not None:
                 axes[0, 0].set_title("Ground-truth")
                 # matshow plots x and y swapped
-                mat = axes[0, 0].matshow(np.swapaxes(ground_truth_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+                mat = axes[0, 0].matshow(np.swapaxes(ground_truth_elevation_map, 0, 1), vmin=elevation_vmin,
+                                         vmax=elevation_vmax, cmap=elevation_cmap)
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
-            mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            mat = axes[0, 1].matshow(np.swapaxes(reconstructed_elevation_map, 0, 1), vmin=elevation_vmin,
+                                     vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
-            mat = axes[1, 0].matshow(np.swapaxes(composed_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            mat = axes[1, 0].matshow(np.swapaxes(composed_elevation_map, 0, 1), vmin=elevation_vmin,
+                                     vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
-            mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax, cmap=cmap)
+            mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=elevation_vmin,
+                                     vmax=elevation_vmax, cmap=elevation_cmap)
             fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
             terrain_resolution = params[0]
@@ -105,7 +118,7 @@ class ResultsPlotter:
             robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
             # we only visualize the robot position if its inside the elevation map
             plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
-                                    and 0 < robot_plot_y < occluded_elevation_map.shape[1]
+                                  and 0 < robot_plot_y < occluded_elevation_map.shape[1]
 
             for i, ax in enumerate(axes.reshape(-1)):
                 if plot_robot_position:
@@ -137,13 +150,16 @@ class ResultsPlotter:
             warnings.filterwarnings("ignore", category=UserWarning)
             if ground_truth_elevation_map is not None:
                 axes[0].set_title("Ground-truth")
-                axes[0].plot_surface(x_3d, y_3d, ground_truth_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
+                axes[0].plot_surface(x_3d, y_3d, ground_truth_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+                                     cmap=elevation_cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 2, projection="3d"))
             axes[1].set_title("Reconstruction")
-            axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
+            axes[1].plot_surface(x_3d, y_3d, reconstructed_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+                                 cmap=elevation_cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
-            axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=vmin, vmax=vmax, cmap=cmap)
+            axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+                                 cmap=elevation_cmap)
             warnings.filterwarnings("default", category=UserWarning)
             fig.colorbar(mat, ax=axes, fraction=0.015)
 
@@ -164,35 +180,83 @@ class ResultsPlotter:
                 plt.show()
             plt.close()
 
-            if ground_truth_elevation_map is not None:
-                fig = plt.figure(figsize=[1.75 * 6.4, 1.25 * 4.8])
-                plt.clf()
-                axes = []
+            if ground_truth_elevation_map is not None \
+                    or data_uncertainty_map is not None or model_uncertainty_map is not None:
+                fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
 
-                axes.append(fig.add_subplot(121))
-                axes[0].set_title("Reconstruction error")
-                abs_error = np.abs(reconstructed_elevation_map - ground_truth_elevation_map)
-                # matshow plots x and y swapped
-                mat = axes[0].matshow(np.swapaxes(abs_error, 0, 1), cmap=plt.get_cmap("RdYlGn_r"))
-                if plot_robot_position:
-                    axes[0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-                axes[0].grid(False)
+                error_uncertainty_vmin = np.Inf
+                error_uncertainty_vmax = -np.Inf
+                if data_uncertainty_map is not None:
+                    data_uncertainty_min = np.min(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
+                    data_uncertainty_max = np.max(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
+                    error_uncertainty_vmin = np.min([error_uncertainty_vmin, data_uncertainty_min])
+                    error_uncertainty_vmax = np.max([error_uncertainty_vmax, data_uncertainty_max])
+                if model_uncertainty_map is not None:
+                    model_uncertainty_min = np.min(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
+                    model_uncertainty_max = np.max(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
+                    error_uncertainty_vmin = np.min([error_uncertainty_vmin, model_uncertainty_min])
+                    error_uncertainty_vmax = np.max([error_uncertainty_vmax, model_uncertainty_max])
 
-                axes.append(fig.add_subplot(122, projection="3d"))
-                axes[1].set_title("Reconstruction error")
-                # the np.NaNs in the ground-truth elevation maps give us these warnings:
-                warnings.filterwarnings("ignore", category=UserWarning)
-                axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - ground_truth_elevation_map),
-                                     cmap=plt.get_cmap("RdYlGn_r"))
-                warnings.filterwarnings("default", category=UserWarning)
-                axes[1].set_xlabel("x [m]")
-                axes[1].set_ylabel("y [m]")
-                axes[1].set_zlabel("z [m]")
+                error_uncertainty_cmap = plt.get_cmap("RdYlGn_r")
 
-                fig.colorbar(mat, ax=axes, fraction=0.021)
+                if ground_truth_elevation_map is not None:
+                    rec_abs_error = np.abs(reconstructed_elevation_map - ground_truth_elevation_map)
+                    comp_abs_error = np.abs(composed_elevation_map - ground_truth_elevation_map)
+
+                    error_uncertainty_vmin = np.min([error_uncertainty_vmin,
+                                                     np.min(rec_abs_error), np.min(comp_abs_error)])
+                    error_uncertainty_vmax = np.max([error_uncertainty_vmax,
+                                                     np.max(rec_abs_error), np.max(comp_abs_error)])
+
+                    axes[0, 0].set_title("Reconstruction error")
+                    # matshow plots x and y swapped
+                    mat = axes[0, 0].matshow(np.swapaxes(rec_abs_error, 0, 1), cmap=error_uncertainty_cmap,
+                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+                    if plot_robot_position:
+                        axes[0, 0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                    axes[0, 0].grid(False)
+
+                    axes[0, 1].set_title("Composition error")
+                    # matshow plots x and y swapped
+                    mat = axes[0, 1].matshow(np.swapaxes(comp_abs_error, 0, 1), cmap=error_uncertainty_cmap,
+                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+                    if plot_robot_position:
+                        axes[0, 1].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                    axes[0, 1].grid(False)
+
+                    # axes.append(fig.add_subplot(122, projection="3d"))
+                    # axes[1].set_title("Reconstruction error")
+                    # # the np.NaNs in the ground-truth elevation maps give us these warnings:
+                    # warnings.filterwarnings("ignore", category=UserWarning)
+                    # axes[1].plot_surface(x_3d, y_3d, np.abs(reconstructed_elevation_map - ground_truth_elevation_map),
+                    #                      cmap=plt.get_cmap("RdYlGn_r"))
+                    # warnings.filterwarnings("default", category=UserWarning)
+                    # axes[1].set_xlabel("x [m]")
+                    # axes[1].set_ylabel("y [m]")
+                    # axes[1].set_zlabel("z [m]")
+
+                if data_uncertainty_map is not None:
+                    axes[1, 0].set_title("Data uncertainty")
+                    # matshow plots x and y swapped
+                    mat = axes[1, 0].matshow(np.swapaxes(data_uncertainty_map, 0, 1), cmap=error_uncertainty_cmap,
+                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+                    if plot_robot_position:
+                        axes[1, 0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                    axes[1, 0].grid(False)
+
+                if model_uncertainty_map is not None:
+                    axes[1, 1].set_title("Model uncertainty")
+                    # matshow plots x and y swapped
+                    mat = axes[1, 1].matshow(np.swapaxes(model_uncertainty_map, 0, 1), cmap=error_uncertainty_cmap,
+                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+                    if plot_robot_position:
+                        axes[1, 1].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
+                    axes[1, 1].grid(False)
+
+                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
                 plt.draw()
-                plt.savefig(str(logdir / f"reconstruction_error_{idx}.pdf"))
+                plt.savefig(str(logdir / f"error_uncertainty{idx}.pdf"))
                 if self.remote is not True:
                     plt.show()
                 plt.close()
