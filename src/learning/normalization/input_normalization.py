@@ -10,8 +10,8 @@ class InputNormalization:
                   batch=True, norm_consts: dict = None) -> Tuple[torch.Tensor, Dict]:
         generate_norm_consts = norm_consts is None
 
-        if channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or channel == ChannelEnum.GROUND_TRUTH_ELEVATION_MAP \
-                or channel == ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
+        if channel == ChannelEnum.OCC_DEM or channel == ChannelEnum.GT_DEM \
+                or channel == ChannelEnum.REC_DEM:
             if batch:
                 normalized_elevation_map = input.clone()
                 if generate_norm_consts:
@@ -50,8 +50,8 @@ class InputNormalization:
     @staticmethod
     def denormalize(channel: ChannelEnum, input: torch.Tensor, norm_consts: Dict,
                     mean: bool = True, stdev: bool = True, batch=True) -> torch.Tensor:
-        if channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or channel == ChannelEnum.GROUND_TRUTH_ELEVATION_MAP \
-                or channel == ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
+        if channel == ChannelEnum.OCC_DEM or channel == ChannelEnum.GT_DEM \
+                or channel == ChannelEnum.REC_DEM:
             if batch:
                 denormalized_elevation_map = input.clone()
                 for idx in range(input.size(0)):

@@ -25,12 +25,15 @@ class UNet(BaseModel):
 
         factor = 2 if bilinear else 1
 
-        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0], nn_module=nn_module)]
+        encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0],
+                                     nn_module=nn_module, dropout_p=self.dropout_p)]
         for in_idx, num_out_channels in enumerate(self.hidden_dims[1:]):
             if (in_idx + 1) >= len(self.hidden_dims[1:]):
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels // factor, nn_module=nn_module))
+                num_down_out_channels = num_out_channels // factor
             else:
-                encoder_layers.append(Down(self.hidden_dims[in_idx], num_out_channels, nn_module=nn_module))
+                num_down_out_channels = num_out_channels
+            encoder_layers.append(Down(self.hidden_dims[in_idx], num_down_out_channels,
+                                       nn_module=nn_module, dropout_p=self.dropout_p))
 
         self.encoder = nn_module.Sequential(*encoder_layers)
 
@@ -39,19 +42,19 @@ class UNet(BaseModel):
         reversed_hidden_dims.reverse()
         for in_idx, num_out_channels in enumerate(reversed_hidden_dims[1:]):
             if (in_idx + 1) >= len(reversed_hidden_dims[1:]):
-                decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels, self.bilinear))
+                num_up_out_channels = num_out_channels
             else:
-                decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_out_channels // factor, self.bilinear))
+                num_up_out_channels = num_out_channels // factor
+            decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_up_out_channels,
+                                     self.bilinear, nn_module=nn_module, dropout_p=self.dropout_p))
+
         decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels), nn_module=nn_module))
 
         self.decoder = nn_module.Sequential(*decoder_layers)
 
         self.feature_extractor = None
 
-    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
-                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
-        input, norm_consts = self.assemble_input(data)
-
+    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs) -> dict:
         if self.adf:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):
@@ -70,8 +73,7 @@ class UNet(BaseModel):
                     x = decoder_layer(*x)
 
             # TODO: implement the propagation of the uncertainty
-            reconstruced_dem = x[0].squeeze(dim=1)
-
+            x = x[0]
         else:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):
@@ -89,13 +91,7 @@ class UNet(BaseModel):
                 else:
                     x = decoder_layer(x)
 
-            reconstruced_dem = x.squeeze(dim=1)
-
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstruced_dem}
-
-        output = self.denormalize_output(data, output, norm_consts)
-
-        return output
+        return x.squeeze(dim=1)
 
     def loss_function(self,
                       loss_config: dict,
@@ -120,8 +116,8 @@ class UNet(BaseModel):
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
+                                                                   mask=data[ChannelEnum.OCC_MASK])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \

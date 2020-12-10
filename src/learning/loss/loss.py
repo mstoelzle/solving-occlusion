@@ -343,6 +343,18 @@ def style_loss_fct(input: torch.Tensor, target: torch.Tensor, **kwargs):
     return l1_loss_fct(gram_matrix(input), gram_matrix(target), **kwargs)
 
 
+def log_likelihood_fct(input_mean: torch.Tensor, input_variance: torch.Tensor, target: torch.Tensor,
+                       **kwargs) -> torch.Tensor:
+    input_sigma = torch.sqrt(input_variance)
+
+    dist = torch.distributions.normal.Normal(loc=input_mean, scale=input_sigma)
+    log_likelihood = dist.log_prob(target)
+
+    log_likelihood = reduction_fct(log_likelihood, **kwargs)
+
+    return log_likelihood
+
+
 def gram_matrix(feat: torch.Tensor):
     """
     Auto correlation on feature map (Gram matrix)

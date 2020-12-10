@@ -12,7 +12,7 @@ import torchvision
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
 
-    def __init__(self, in_channels, out_channels, mid_channels=None, nn_module=None):
+    def __init__(self, in_channels, out_channels, mid_channels=None, nn_module=None, dropout_p: float = 0.0, **kwargs):
         super().__init__()
         if not mid_channels:
             mid_channels = out_channels
@@ -20,14 +20,26 @@ class DoubleConv(nn.Module):
         if nn_module is None:
             nn_module = nn
 
-        self.double_conv = nn_module.Sequential(
-            nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
-            nn_module.BatchNorm2d(num_features=mid_channels),
-            nn_module.ReLU(inplace=True),
-            nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
-            nn_module.BatchNorm2d(num_features=out_channels),
-            nn_module.ReLU(inplace=True)
-        )
+        if dropout_p > 0.0:
+            self.double_conv = nn_module.Sequential(
+                nn_module.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(mid_channels),
+                nn_module.ReLU(inplace=True),
+                nn_module.Dropout(p=dropout_p),
+                nn_module.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(out_channels),
+                nn_module.ReLU(inplace=True),
+                nn_module.Dropout(p=dropout_p)
+            )
+        else:
+            self.double_conv = nn_module.Sequential(
+                nn_module.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(mid_channels),
+                nn_module.ReLU(inplace=True),
+                nn_module.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
+                nn_module.BatchNorm2d(out_channels),
+                nn_module.ReLU(inplace=True)
+            )
 
     def forward(self, *x):
         return self.double_conv(*x)
@@ -36,7 +48,7 @@ class DoubleConv(nn.Module):
 class Down(nn.Module):
     """Downscaling with maxpool then double conv"""
 
-    def __init__(self, in_channels, out_channels, nn_module=None):
+    def __init__(self, in_channels, out_channels, nn_module=None, **kwargs):
         super().__init__()
 
         if nn_module is None:
@@ -44,7 +56,7 @@ class Down(nn.Module):
 
         self.maxpool_conv = nn_module.Sequential(
             nn_module.MaxPool2d(kernel_size=2),
-            DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
+            DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module, **kwargs)
         )
 
     def forward(self, *x):
@@ -54,7 +66,7 @@ class Down(nn.Module):
 class Up(nn.Module):
     """Upscaling then double conv"""
 
-    def __init__(self, in_channels, out_channels, bilinear=True, nn_module=None):
+    def __init__(self, in_channels, out_channels, bilinear=True, nn_module=None, **kwargs):
         super().__init__()
 
         if nn_module is None:
@@ -63,11 +75,10 @@ class Up(nn.Module):
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
             self.up = nn_module.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-            self.conv = DoubleConv(in_channels=in_channels, out_channels=out_channels,
-                                   mid_channels=in_channels // 2, nn_module=nn_module)
+            self.conv = DoubleConv(in_channels, out_channels, in_channels // 2, **kwargs)
         else:
             self.up = nn_module.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
-            self.conv = DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module)
+            self.conv = DoubleConv(in_channels, out_channels, **kwargs)
 
     def forward(self, x1, x2):
         if type(x1) == torch.Tensor and type(x2) == torch.Tensor:

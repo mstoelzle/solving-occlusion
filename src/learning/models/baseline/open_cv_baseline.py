@@ -16,7 +16,7 @@ class OpenCVBaseline(BaseBaselineModel):
         super().__init__(**kwargs)
 
         self.in_channels = []
-        self.out_channels = [ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+        self.out_channels = [ChannelEnum.REC_DEM]
 
         if name == "NavierStokes":
             self.inpainting_method = cv.INPAINT_NS
@@ -44,11 +44,11 @@ class OpenCVBaseline(BaseBaselineModel):
         # we need to call this to generate the binary occlusion map into the data dict
         _ = self.assemble_input(data)
 
-        reconstructed_elevation_map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP].clone()
+        rec_dem = data[ChannelEnum.OCC_DEM].clone()
 
-        for idx in range(reconstructed_elevation_map.size(0)):
-            map = data[ChannelEnum.OCCLUDED_ELEVATION_MAP][idx, ...].clone()
-            binary_occlusion_map = data[ChannelEnum.BINARY_OCCLUSION_MAP][idx, ...]
+        for idx in range(rec_dem.size(0)):
+            map = data[ChannelEnum.OCC_DEM][idx, ...].clone()
+            occ_mask = data[ChannelEnum.OCC_MASK][idx, ...]
 
             min = torch.min(map[~torch.isnan(map)])
             max = torch.max(map[~torch.isnan(map)])
@@ -57,7 +57,7 @@ class OpenCVBaseline(BaseBaselineModel):
             map[torch.isnan(map)] = 0
 
             np_map = map.detach().cpu().numpy()
-            np_mask = binary_occlusion_map.detach().cpu().numpy().astype('uint8')
+            np_mask = occ_mask.detach().cpu().numpy().astype('uint8')
 
             if self.inpainting_method == "PatchMatch":
                 # we are forced to use 3 channels for the PyPatchMatch package
@@ -84,13 +84,13 @@ class OpenCVBaseline(BaseBaselineModel):
             # plt.matshow(reconstructed_map)
             # plt.show()
 
-            reconstructed_elevation_map[idx, ...] = reconstructed_map
+            rec_dem[idx, ...] = reconstructed_map
 
-        composed_elevation_map = self.create_composed_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
-                                                                    reconstructed_elevation_map)
+        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM],
+                                                                    rec_dem)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
-                  ChannelEnum.COMPOSED_ELEVATION_MAP: composed_elevation_map}
+        output = {ChannelEnum.REC_DEM: rec_dem,
+                  ChannelEnum.COMP_DEM: comp_dem}
 
         return output
 

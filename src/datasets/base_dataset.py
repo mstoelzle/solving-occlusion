@@ -55,7 +55,7 @@ class BaseDataset(ABC):
             elif issubclass(type(value), np.ndarray):
                 value = torch.tensor(value)
 
-            if key == ChannelEnum.BINARY_OCCLUSION_MAP:
+            if key == ChannelEnum.OCC_MASK:
                 if value.dim() == 3:
                     value = value[0, ...]  # we are only using the first channel if we get a channel-wise input
 
@@ -63,18 +63,18 @@ class BaseDataset(ABC):
 
             output[key] = value
 
-        if ChannelEnum.BINARY_OCCLUSION_MAP not in output and ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
-            output[ChannelEnum.BINARY_OCCLUSION_MAP] = self.create_binary_occlusion_map(
-                occluded_elevation_map=output[ChannelEnum.OCCLUDED_ELEVATION_MAP])
+        if ChannelEnum.OCC_MASK not in output and ChannelEnum.OCC_DEM in output:
+            output[ChannelEnum.OCC_MASK] = self.create_binary_occlusion_map(
+                occluded_elevation_map=output[ChannelEnum.OCC_DEM])
         else:
             if invert_mask:
-                output[ChannelEnum.BINARY_OCCLUSION_MAP] = ~output[ChannelEnum.BINARY_OCCLUSION_MAP]
+                output[ChannelEnum.OCC_MASK] = ~output[ChannelEnum.OCC_MASK]
 
         # we require square dimension for now
-        if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
-            sample_map = output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
-        elif ChannelEnum.BINARY_OCCLUSION_MAP in output:
-            sample_map = output[ChannelEnum.BINARY_OCCLUSION_MAP]
+        if ChannelEnum.GT_DEM in output:
+            sample_map = output[ChannelEnum.GT_DEM]
+        elif ChannelEnum.OCC_MASK in output:
+            sample_map = output[ChannelEnum.OCC_MASK]
         else:
             raise ValueError
 
@@ -112,21 +112,21 @@ class BaseDataset(ABC):
 
                 output[key] = value
 
-        if ChannelEnum.BINARY_OCCLUSION_MAP in output and ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
-            output[ChannelEnum.OCCLUDED_ELEVATION_MAP] = \
-                self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                                                   binary_occlusion_map=output[ChannelEnum.BINARY_OCCLUSION_MAP])
+        if ChannelEnum.OCC_MASK in output and ChannelEnum.GT_DEM in output:
+            output[ChannelEnum.OCC_DEM] = \
+                self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GT_DEM],
+                                                   occ_mask=output[ChannelEnum.OCC_MASK])
 
-        elif ChannelEnum.OCCLUDED_ELEVATION_MAP in output:
+        elif ChannelEnum.OCC_DEM in output:
             pass
         else:
             raise ValueError
 
         if self.config.get("self_supervision", False) is True:
-            if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in output:
+            if ChannelEnum.GT_DEM in output:
                 warnings.warn("Overwriting the ground-truth in the dataset as self-supervision is activated.")
 
-            output[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = output[ChannelEnum.OCCLUDED_ELEVATION_MAP].clone()
+            output[ChannelEnum.GT_DEM] = output[ChannelEnum.OCC_DEM].clone()
 
         if self.transform is not None:
             output = self.transform(output)
@@ -134,14 +134,14 @@ class BaseDataset(ABC):
         return output
 
     def create_occluded_elevation_map(self, elevation_map: torch.Tensor,
-                                      binary_occlusion_map: torch.Tensor) -> torch.Tensor:
+                                      occ_mask: torch.Tensor) -> torch.Tensor:
         occluded_elevation_map = elevation_map.clone()
 
-        occluded_elevation_map[binary_occlusion_map == 1] = np.nan
+        occluded_elevation_map[occ_mask == 1] = np.nan
 
         return occluded_elevation_map
 
     def create_binary_occlusion_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
-        binary_occlusion_map = (occluded_elevation_map != occluded_elevation_map)
+        occ_mask = (occluded_elevation_map != occluded_elevation_map)
 
-        return binary_occlusion_map
+        return occ_mask

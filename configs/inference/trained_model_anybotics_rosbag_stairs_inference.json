@@ -5,7 +5,7 @@
         "task_path": {
             "defaults": {
                 "domain_defaults": {
-                    "batch_size": 144,
+                    "batch_size": 32,
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-10-25-16-47-00_dataset_generation_anybotics_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
@@ -17,7 +17,7 @@
                 "model": {
                     "name": "UNet",
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,

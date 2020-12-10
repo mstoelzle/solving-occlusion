@@ -31,11 +31,11 @@ class SupervisedLearning(BaseLearning):
                 self.optimizer.zero_grad()
 
                 data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
+                batch_size = data[ChannelEnum.GT_DEM].size(0)
 
                 output = self.model(data)
 
-                if torch.isnan(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]).sum() > 0:
+                if torch.isnan(output[ChannelEnum.REC_DEM]).sum() > 0:
                     raise RuntimeError("We detected NaNs in the model outputs which means "
                                        "that the training is diverging")
 
@@ -60,7 +60,7 @@ class SupervisedLearning(BaseLearning):
             progress_bar = Bar(f"Validate epoch {epoch} of task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0)
+                batch_size = data[ChannelEnum.GT_DEM].size(0)
 
                 output = self.model(data)
 
@@ -68,7 +68,6 @@ class SupervisedLearning(BaseLearning):
                                                      output=output,
                                                      data=data,
                                                      dataloader_meta_info=dataloader_meta_info)
-                loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
                 progress_bar.next()
             progress_bar.finish()
