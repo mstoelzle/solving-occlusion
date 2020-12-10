@@ -1,4 +1,4 @@
-# requires Python 3.8.6
+# requires Python 3.9.1
 coloredlogs==15.0
 gspread>=3.6, <4.0
 h5py>=3.1.0, <4.0
