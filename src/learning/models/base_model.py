@@ -7,7 +7,7 @@ from typing import *
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
-    l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct
+    l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct, log_likelihood_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -52,13 +52,17 @@ class BaseModel(ABC, nn.Module):
                 for i in range(self.num_solutions):
                     solutions.append(self.forward_pass(input=input, data=data))
 
-                mean = torch.mean(torch.stack(solutions), dim=0)
-                var = torch.var(torch.stack(solutions), dim=0)
+                reconstructed_elevation_map = torch.mean(torch.stack(solutions), dim=0)
+                model_uncertainty = torch.var(torch.stack(solutions), dim=0)
             else:
                 raise NotImplementedError
 
-            output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: mean,
-                      ChannelEnum.MODEL_UNCERTAINTY_MAP: var}
+            # TODO: add data uncertainty to total uncertainty
+            total_uncertainty = model_uncertainty
+
+            output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: reconstructed_elevation_map,
+                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty,
+                      ChannelEnum.TOTAL_UNCERTAINTY_MAP: total_uncertainty}
 
         else:
             x = self.forward_pass(input=input, data=data)
@@ -321,6 +325,22 @@ class BaseModel(ABC, nn.Module):
                                                           data_min=dataloader_meta_info.min,
                                                           data_max=dataloader_meta_info.max,
                                                           **kwargs)
+
+        if ChannelEnum.DATA_UNCERTAINTY_MAP in output:
+            nll_data = -log_likelihood_fct(input_mean=output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                           input_variance=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
+                                           target=data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.NLL_MODEL] = nll_data
+        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+            nll_model = -log_likelihood_fct(input_mean=output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                            input_variance=output[ChannelEnum.MODEL_UNCERTAINTY_MAP],
+                                            target=data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.NLL_MODEL] = nll_model
+        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+            nll_total = -log_likelihood_fct(input_mean=output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
+                                            input_variance=output[ChannelEnum.TOTAL_UNCERTAINTY_MAP],
+                                            target=data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.NLL_TOTAL] = nll_total
 
         weights = loss_config.get("eval_weights", {})
         recons_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
