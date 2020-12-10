@@ -1,4 +1,5 @@
 import numpy as np
+from progress.bar import Bar
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from typing import *
@@ -29,6 +30,7 @@ class DataloaderMetaInfo:
         min = np.Inf
         max = -np.Inf
 
+        progress_bar = Bar(f"We need to infer the min and max values of the dataset manually", max=len(dataloader))
         for batch_data in dataloader:
             if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in batch_data:
                 sample_data = batch_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
@@ -44,6 +46,9 @@ class DataloaderMetaInfo:
             length += int(sample_data.size(0))
             min = np.min([min, sample_min]).item()
             max = np.max([max, sample_max]).item()
+
+            progress_bar.next()
+        progress_bar.finish()
 
         self.length = length
         self.min = min
