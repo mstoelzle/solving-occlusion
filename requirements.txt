@@ -1,8 +1,7 @@
 # requires Python 3.8.6
-coloredlogs==14.0
+coloredlogs==15.0
 gspread>=3.6, <4.0
 h5py>=3.1.0, <4.0
-imagecodecs==2020.5.30
 jsonschema>=3.2, <4.0
 gnupg==2.3.1
 matplotlib>=3.3.3, <4.0
@@ -20,5 +19,5 @@ seaborn>=0.11.0
 scipy==1.5.4
 tensorboard>=2.4.0, <3.0
 tifffile==2020.11.26
-torch>=1.7, <2.0
-torchvision>=0.8.1, <1.0
+torch>=1.7.1, <2.0
+torchvision>=0.8.2, <1.0

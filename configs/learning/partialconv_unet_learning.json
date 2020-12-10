@@ -30,7 +30,7 @@
                     "name": "PartialConvUNet",
                     "save_frequency": 1,
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "input_normalization": false,
                     "NaN_replacement": 0,

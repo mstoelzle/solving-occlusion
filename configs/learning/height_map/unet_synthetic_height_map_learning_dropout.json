@@ -1,5 +1,5 @@
 {
-    "name": "unet_learning_artistic_loss_sweep_1",
+    "name": "unet_synthetic_height_map_learning_dropout",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -11,9 +11,9 @@
                         "mse_rec_all": 0,
                         "mse_rec_nocc": 1,
                         "mse_rec_occ": 6,
-                        "perceptual": 0,
-                        "style": 0,
-                        "total_variation": 0
+                        "perceptual": 0.05,
+                        "style": 120,
+                        "total_variation": 0.1
                     },
                     "eval_weights": {
                         "mse_rec_all": 0,
@@ -51,25 +51,19 @@
                 "controller": {
                     "max_num_epochs": 50,
                     "max_num_better_results": 20
-                }
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
             },
             "tasks": [
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "loss": {
-                        "train_weights": {
-                            "perceptual": 0.05,
-                            "style": 0,
-                            "total_variation": 0
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.2,
+                            "num_solutions": 10
                         }
                     }
                 },
@@ -77,12 +71,11 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "loss": {
-                        "train_weights": {
-                            "perceptual": 0,
-                            "style": 120,
-                            "total_variation": 0
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.2,
+                            "num_solutions": 20
                         }
                     }
                 },
@@ -90,12 +83,11 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "loss": {
-                        "train_weights": {
-                            "perceptual": 0,
-                            "style": 0,
-                            "total_variation": 0.1
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.1,
+                            "num_solutions": 10
                         }
                     }
                 },
@@ -103,12 +95,11 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "loss": {
-                        "train_weights": {
-                            "perceptual": 0.05,
-                            "style": 120,
-                            "total_variation": 0.1
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.3,
+                            "num_solutions": 10
                         }
                     }
                 }
@@ -116,7 +107,9 @@
         },
         "visualization": {"sample_frequency":  10}
     },
-    "logging": {"upload": false},
+    "logging": {
+        "upload": false
+    },
     "remote": true,
     "seeds": [101]
 }

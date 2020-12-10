@@ -35,36 +35,36 @@
                                         "type": "random_vertical_scale",
                                         "min": 0.8,
                                         "max": 3,
-                                        "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
+                                        "apply_to": ["params", "occ_dem", "gt_dem"]
                                     },
                                     {
                                         "type": "random_vertical_offset",
                                         "min": -1,
                                         "max": 1,
-                                        "apply_to": ["params", "occluded_elevation_map", "ground_truth_elevation_map"]
+                                        "apply_to": ["params", "occ_dem", "gt_dem"]
                                     },
                                     {
                                         "type": "white_noise",
                                         "stdev": 0.001,
-                                        "apply_to": ["occluded_elevation_map"]
+                                        "apply_to": ["occ_dem"]
                                     },
                                     {
                                         "type": "range_adjusted_white_noise",
                                         "stdev": 0.01,
                                         "range": 10,
-                                        "apply_to": ["occluded_elevation_map"]
+                                        "apply_to": ["occ_dem"]
                                     },
                                     {
                                         "type": "gaussian_filtered_white_noise",
                                         "probability": 0.05,
                                         "horizontal_stdev": 1,
                                         "vertical_stdev": 0.03,
-                                        "apply_to": ["occluded_elevation_map"]
+                                        "apply_to": ["occ_dem"]
                                     },
                                     {
                                         "type": "random_occlusion",
                                         "probability": 0.02,
-                                        "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        "apply_to": ["occ_dem", "occ_mask"]
                                     }
                                 ]
                             }
@@ -84,8 +84,8 @@
                     "name": "UNet",
                     "save_frequency": 1,
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
-                    "out_channels": ["reconstructed_elevation_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
                     "NaN_replacement": 0,

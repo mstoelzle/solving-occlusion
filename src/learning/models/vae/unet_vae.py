@@ -82,7 +82,7 @@ class UNetVAE(BaseVAE):
 
         x = self.decode(x, encodings)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: x.squeeze(dim=1),
+        output = {ChannelEnum.REC_DEM: x.squeeze(dim=1),
                   "mu": mu,
                   "log_var": log_var}
 
@@ -136,13 +136,13 @@ class UNetVAE(BaseVAE):
             # kld_weight: Account for the minibatch samples from the dataset
             kld_weight = weights.get("kld", None)
             if kld_weight is None:
-                kld_weight = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP].size(0) / dataloader_meta_info.length
+                kld_weight = data[ChannelEnum.GT_DEM].size(0) / dataloader_meta_info.length
 
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
+                                                                   mask=data[ChannelEnum.OCC_MASK])
 
             kld_loss = kld_loss_fct(output["mu"], output["log_var"])
 

@@ -17,7 +17,7 @@
                 "model": {
                     "name": "UNet",
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,

@@ -7,7 +7,7 @@ from typing import *
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
-    l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct
+    l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct, log_likelihood_fct
 from src.learning.normalization.input_normalization import InputNormalization
 
 
@@ -28,9 +28,50 @@ class BaseModel(ABC, nn.Module):
         else:
             self.input_normalization = input_normalization
 
-    @abstractmethod
-    def forward(self, *inputs: torch.Tensor) -> torch.Tensor:
-        pass
+        self.model_uncertainty_method = None
+        self.dropout_p = 0.0
+        self.num_solutions = 1
+        if self.config.get("model_uncertainty_estimation") is not None:
+            model_uncertainty_config = self.config["model_uncertainty_estimation"]
+            self.model_uncertainty_method = ModelUncertaintyMethod(model_uncertainty_config["method"])
+            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+                self.dropout_p = model_uncertainty_config["probability"]
+                self.num_solutions = model_uncertainty_config["num_solutions"]
+            elif self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_VAE:
+                self.num_solutions = model_uncertainty_config["num_solutions"]
+            else:
+                raise NotImplementedError
+
+    def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
+                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+        input, norm_consts = self.assemble_input(data)
+
+        if self.num_solutions > 1:
+            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+                solutions = []
+                for i in range(self.num_solutions):
+                    solutions.append(self.forward_pass(input=input, data=data))
+
+                rec_dem = torch.mean(torch.stack(solutions), dim=0)
+                model_uncertainty = torch.var(torch.stack(solutions), dim=0)
+            else:
+                raise NotImplementedError
+
+            # TODO: add data uncertainty to total uncertainty
+            total_uncertainty = model_uncertainty
+
+            output = {ChannelEnum.REC_DEM: rec_dem,
+                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty,
+                      ChannelEnum.TOTAL_UNCERTAINTY_MAP: total_uncertainty}
+
+        else:
+            x = self.forward_pass(input=input, data=data)
+
+            output = {ChannelEnum.REC_DEM: x}
+
+        output = self.denormalize_output(data, output, norm_consts)
+
+        return output
 
     @abstractmethod
     def loss_function(self, *inputs: Any, **kwargs) -> torch.Tensor:
@@ -46,16 +87,16 @@ class BaseModel(ABC, nn.Module):
                 raise NotImplementedError
 
             if self.input_normalization is not None:
-                if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP or \
-                        in_channel == ChannelEnum.GROUND_TRUTH_ELEVATION_MAP:
+                if in_channel == ChannelEnum.OCC_DEM or \
+                        in_channel == ChannelEnum.GT_DEM:
                     channel_data, norm_consts[in_channel] = InputNormalization.normalize(in_channel, channel_data,
                                                                                          **self.input_normalization,
                                                                                          batch=True)
 
-            if in_channel == ChannelEnum.OCCLUDED_ELEVATION_MAP:
+            if in_channel == ChannelEnum.OCC_DEM:
                 channel_data = self.preprocess_occluded_elevation_map(channel_data)
 
-            if in_channel == ChannelEnum.BINARY_OCCLUSION_MAP:
+            if in_channel == ChannelEnum.OCC_MASK:
                 channel_data = ~channel_data
 
             if input is None:
@@ -66,28 +107,28 @@ class BaseModel(ABC, nn.Module):
 
         return input, norm_consts
 
-    def preprocess_occluded_elevation_map(self, occluded_elevation_map: torch.Tensor) -> torch.Tensor:
-        poem = occluded_elevation_map.clone()
+    def preprocess_occluded_elevation_map(self, occ_dem: torch.Tensor) -> torch.Tensor:
+        poem = occ_dem.clone()
 
         NaN_replacement = self.config.get("NaN_replacement", 0)
 
         # replace NaNs signifying occluded areas with arbitrary high or low number
-        # poem[occluded_elevation_map != occluded_elevation_map] = -10000
-        poem[occluded_elevation_map != occluded_elevation_map] = NaN_replacement
+        # poem[occ_dem != occ_dem] = -10000
+        poem[occ_dem != occ_dem] = NaN_replacement
 
         # TODO: for torch==1.8
-        # poem = torch.nan_to_num(occluded_elevation_map, nan=NaN_replacement)
+        # poem = torch.nan_to_num(occ_dem, nan=NaN_replacement)
 
         return poem
 
-    def create_composed_elevation_map(self, occluded_elevation_map: torch.Tensor,
-                                      reconstructed_elevation_map: torch.Tensor) -> torch.Tensor:
-        composed_elevation_map = occluded_elevation_map.clone()
+    def create_composed_elevation_map(self, occ_dem: torch.Tensor,
+                                      rec_dem: torch.Tensor) -> torch.Tensor:
+        comp_dem = occ_dem.clone()
 
-        selector = torch.isnan(occluded_elevation_map)
-        composed_elevation_map[selector] = reconstructed_elevation_map[selector]
+        selector = torch.isnan(occ_dem)
+        comp_dem[selector] = rec_dem[selector]
 
-        return composed_elevation_map
+        return comp_dem
 
     def denormalize_output(self,
                            data: Dict[ChannelEnum, torch.Tensor],
@@ -97,15 +138,15 @@ class BaseModel(ABC, nn.Module):
         if self.input_normalization is not None:
             denormalized_output = {}
             for key, value in output.items():
-                if ChannelEnum.RECONSTRUCTED_ELEVATION_MAP:
-                    if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP in norm_consts:
-                        denormalize_norm_const = norm_consts[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
-                    elif ChannelEnum.OCCLUDED_ELEVATION_MAP in norm_consts:
-                        denormalize_norm_const = norm_consts[ChannelEnum.OCCLUDED_ELEVATION_MAP]
+                if ChannelEnum.REC_DEM:
+                    if ChannelEnum.GT_DEM in norm_consts:
+                        denormalize_norm_const = norm_consts[ChannelEnum.GT_DEM]
+                    elif ChannelEnum.OCC_DEM in norm_consts:
+                        denormalize_norm_const = norm_consts[ChannelEnum.OCC_DEM]
                     else:
                         raise ValueError
 
-                    denormalized_output[key] = InputNormalization.denormalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
+                    denormalized_output[key] = InputNormalization.denormalize(ChannelEnum.REC_DEM,
                                                                               input=value, batch=True,
                                                                               norm_consts=denormalize_norm_const,
                                                                               **self.input_normalization)
@@ -114,10 +155,10 @@ class BaseModel(ABC, nn.Module):
         else:
             denormalized_output = output
 
-        reconstructed_elevation_map = denormalized_output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-        composed_elevation_map = self.create_composed_elevation_map(data[ChannelEnum.OCCLUDED_ELEVATION_MAP],
-                                                                    reconstructed_elevation_map)
-        denormalized_output[ChannelEnum.COMPOSED_ELEVATION_MAP] = composed_elevation_map
+        rec_dem = denormalized_output[ChannelEnum.REC_DEM]
+        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM],
+                                                                    rec_dem)
+        denormalized_output[ChannelEnum.COMP_DEM] = comp_dem
 
         return denormalized_output
 
@@ -131,19 +172,19 @@ class BaseModel(ABC, nn.Module):
         if LossEnum.MSE_REC_ALL.value in normalization_config or \
                 LossEnum.MSE_REC_OCC.value in normalization_config or \
                 LossEnum.MSE_REC_NOCC.value in normalization_config:
-            elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
-            reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+            elevation_map = data[ChannelEnum.GT_DEM]
+            rec_dem = output[ChannelEnum.REC_DEM]
             norm_elevation_map, ground_truth_norm_consts = InputNormalization.normalize(
-                ChannelEnum.GROUND_TRUTH_ELEVATION_MAP,
+                ChannelEnum.GT_DEM,
                 input=elevation_map,
                 batch=True,
                 mean=True, stdev=True)
-            norm_reconstructed_elevation_map, _ = InputNormalization.normalize(ChannelEnum.RECONSTRUCTED_ELEVATION_MAP,
-                                                                               input=reconstructed_elevation_map,
+            norm_rec_dem, _ = InputNormalization.normalize(ChannelEnum.REC_DEM,
+                                                                               input=rec_dem,
                                                                                batch=True, mean=True, stdev=True,
                                                                                norm_consts=ground_truth_norm_consts)
-            norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP] = norm_elevation_map
-            norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP] = norm_reconstructed_elevation_map
+            norm_data[ChannelEnum.GT_DEM] = norm_elevation_map
+            norm_data[ChannelEnum.REC_DEM] = norm_rec_dem
 
         return norm_data
 
@@ -153,11 +194,11 @@ class BaseModel(ABC, nn.Module):
                            data: Dict[ChannelEnum, torch.Tensor],
                            dataloader_meta_info: DataloaderMetaInfo = None,
                            **kwargs) -> dict:
-        sample_tensor = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
+        sample_tensor = output[ChannelEnum.REC_DEM]
 
         loss_dict = {}
 
-        if ChannelEnum.GROUND_TRUTH_ELEVATION_MAP not in data:
+        if ChannelEnum.GT_DEM not in data:
             return {LossEnum.LOSS: sample_tensor.new_tensor(0),
                     LossEnum.L1_REC_ALL: sample_tensor.new_tensor(0),
                     LossEnum.L1_REC_OCC: sample_tensor.new_tensor(0),
@@ -173,117 +214,133 @@ class BaseModel(ABC, nn.Module):
         norm_data = self.get_normalized_data(loss_config, output, data, **kwargs)
 
         if LossEnum.L1_REC_ALL in norm_data:
-            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                         norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(norm_data[ChannelEnum.REC_DEM],
+                                                         norm_data[ChannelEnum.GT_DEM], **kwargs)
         else:
-            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                         data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.L1_REC_ALL] = l1_loss_fct(output[ChannelEnum.REC_DEM],
+                                                         data[ChannelEnum.GT_DEM], **kwargs)
 
         if LossEnum.L1_REC_OCC in norm_data:
             loss_dict[LossEnum.L1_REC_OCC] = masked_loss_fct(
                 l1_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                norm_data[ChannelEnum.REC_DEM],
+                norm_data[ChannelEnum.GT_DEM],
+                data[ChannelEnum.OCC_MASK],
                 **kwargs)
         else:
             loss_dict[LossEnum.L1_REC_OCC] = masked_loss_fct(
                 l1_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                output[ChannelEnum.REC_DEM],
+                data[ChannelEnum.GT_DEM],
+                data[ChannelEnum.OCC_MASK],
                 **kwargs)
 
         if LossEnum.L1_REC_NOCC in norm_data:
             loss_dict[LossEnum.L1_REC_NOCC] = masked_loss_fct(
                 l1_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                norm_data[ChannelEnum.REC_DEM],
+                norm_data[ChannelEnum.GT_DEM],
+                ~data[ChannelEnum.OCC_MASK],
                 **kwargs)
         else:
             loss_dict[LossEnum.L1_REC_NOCC] = masked_loss_fct(
                 l1_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                output[ChannelEnum.REC_DEM],
+                data[ChannelEnum.GT_DEM],
+                ~data[ChannelEnum.OCC_MASK],
                 **kwargs)
 
         if LossEnum.L1_COMP_ALL in norm_data:
-            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                          norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(norm_data[ChannelEnum.COMP_DEM],
+                                                          norm_data[ChannelEnum.GT_DEM], **kwargs)
         else:
-            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                          data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.L1_COMP_ALL] = l1_loss_fct(output[ChannelEnum.COMP_DEM],
+                                                          data[ChannelEnum.GT_DEM], **kwargs)
 
         if LossEnum.MSE_REC_ALL in norm_data:
-            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                           norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(norm_data[ChannelEnum.REC_DEM],
+                                                           norm_data[ChannelEnum.GT_DEM], **kwargs)
         else:
-            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                           data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.MSE_REC_ALL] = mse_loss_fct(output[ChannelEnum.REC_DEM],
+                                                           data[ChannelEnum.GT_DEM], **kwargs)
 
         if LossEnum.MSE_REC_OCC in norm_data:
             loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
                 mse_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                norm_data[ChannelEnum.REC_DEM],
+                norm_data[ChannelEnum.GT_DEM],
+                data[ChannelEnum.OCC_MASK],
                 **kwargs)
         else:
             loss_dict[LossEnum.MSE_REC_OCC] = masked_loss_fct(
                 mse_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                output[ChannelEnum.REC_DEM],
+                data[ChannelEnum.GT_DEM],
+                data[ChannelEnum.OCC_MASK],
                 **kwargs)
 
         if LossEnum.MSE_REC_NOCC in norm_data:
             loss_dict[LossEnum.MSE_REC_NOCC] = masked_loss_fct(
                 mse_loss_fct,
-                norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                norm_data[ChannelEnum.REC_DEM],
+                norm_data[ChannelEnum.GT_DEM],
+                ~data[ChannelEnum.OCC_MASK],
                 **kwargs)
         else:
             loss_dict[LossEnum.MSE_REC_NOCC] = masked_loss_fct(
                 mse_loss_fct,
-                output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
-                ~data[ChannelEnum.BINARY_OCCLUSION_MAP],
+                output[ChannelEnum.REC_DEM],
+                data[ChannelEnum.GT_DEM],
+                ~data[ChannelEnum.OCC_MASK],
                 **kwargs)
 
         if LossEnum.MSE_COMP_ALL in norm_data:
-            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                            norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(norm_data[ChannelEnum.COMP_DEM],
+                                                            norm_data[ChannelEnum.GT_DEM], **kwargs)
         else:
-            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                            data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP], **kwargs)
+            loss_dict[LossEnum.MSE_COMP_ALL] = mse_loss_fct(output[ChannelEnum.COMP_DEM],
+                                                            data[ChannelEnum.GT_DEM], **kwargs)
 
         if LossEnum.SSIM_REC in norm_data:
-            loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(norm_data[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                         norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+            loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(norm_data[ChannelEnum.REC_DEM],
+                                                         norm_data[ChannelEnum.GT_DEM],
                                                          data_min=dataloader_meta_info.min,
                                                          data_max=dataloader_meta_info.max,
                                                          **kwargs)
         else:
-            loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP],
-                                                         data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+            loss_dict[LossEnum.SSIM_REC] = ssim_loss_fct(output[ChannelEnum.REC_DEM],
+                                                         data[ChannelEnum.GT_DEM],
                                                          data_min=dataloader_meta_info.min,
                                                          data_max=dataloader_meta_info.max,
                                                          **kwargs)
         if LossEnum.SSIM_COMP in norm_data:
-            loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(norm_data[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                          norm_data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+            loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(norm_data[ChannelEnum.COMP_DEM],
+                                                          norm_data[ChannelEnum.GT_DEM],
                                                           data_min=dataloader_meta_info.min,
                                                           data_max=dataloader_meta_info.max,
                                                           **kwargs)
         else:
-            loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                          data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP],
+            loss_dict[LossEnum.SSIM_COMP] = ssim_loss_fct(output[ChannelEnum.COMP_DEM],
+                                                          data[ChannelEnum.GT_DEM],
                                                           data_min=dataloader_meta_info.min,
                                                           data_max=dataloader_meta_info.max,
                                                           **kwargs)
+
+        if ChannelEnum.DATA_UNCERTAINTY_MAP in output:
+            nll_data = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
+                                           input_variance=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
+                                           target=data[ChannelEnum.GT_DEM], **kwargs)
+            loss_dict[LossEnum.NLL_MODEL] = nll_data
+        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+            nll_model = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
+                                            input_variance=output[ChannelEnum.MODEL_UNCERTAINTY_MAP],
+                                            target=data[ChannelEnum.GT_DEM], **kwargs)
+            loss_dict[LossEnum.NLL_MODEL] = nll_model
+        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+            nll_total = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
+                                            input_variance=output[ChannelEnum.TOTAL_UNCERTAINTY_MAP],
+                                            target=data[ChannelEnum.GT_DEM], **kwargs)
+            loss_dict[LossEnum.NLL_TOTAL] = nll_total
 
         weights = loss_config.get("eval_weights", {})
         recons_weight = weights.get(LossEnum.MSE_REC_ALL.value, 0)
@@ -309,14 +366,14 @@ class BaseModel(ABC, nn.Module):
         perceptual_loss = 0.
         style_loss = 0.
         if self.feature_extractor is not None:
-            ground_truth_elevation_map = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP]
-            reconstructed_elevation_map = output[ChannelEnum.RECONSTRUCTED_ELEVATION_MAP]
-            inpainted_elevation_map = output[ChannelEnum.COMPOSED_ELEVATION_MAP]
+            gt_dem = data[ChannelEnum.GT_DEM]
+            rec_dem = output[ChannelEnum.REC_DEM]
+            inpainted_elevation_map = output[ChannelEnum.COMP_DEM]
 
             # features for the ground-truth, the reconstructed elevation map and the inpainted elevation map
             # the feature extractor expects an image with three channels as an input
-            feat_gt = self.feature_extractor(ground_truth_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
-            feat_recons = self.feature_extractor(reconstructed_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_gt = self.feature_extractor(gt_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_recons = self.feature_extractor(rec_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
             feat_inpaint = self.feature_extractor(inpainted_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
 
             for i in range(len(feat_gt)):

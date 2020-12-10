@@ -32,7 +32,7 @@
                                     {
                                         "type": "random_occlusion",
                                         "probability": 0.03,
-                                        "apply_to": ["occluded_elevation_map", "binary_occlusion_map"]
+                                        "apply_to": ["occ_dem", "occ_mask"]
                                     }
                                 ]
                             }
@@ -43,8 +43,8 @@
                 },
                 "model": {
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
-                    "out_channels": ["reconstructed_elevation_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
                     "input_normalization": false,
                     "inpaint_radius": 3
                 },

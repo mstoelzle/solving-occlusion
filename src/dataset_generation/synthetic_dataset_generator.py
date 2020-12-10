@@ -18,8 +18,8 @@ class Position:
 @dataclass
 class ElevationMap:
     terrain_origin_offset: Position  # offset of center of elevation map grid from terrain origin
-    ground_truth_elevation_map: np.array
-    occluded_elevation_map: np.array
+    gt_dem: np.array
+    occ_dem: np.array
 
 
 @dataclass
@@ -76,9 +76,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
             params_dim = 5
             params_dataset = hdf5_group.create_dataset(name=ChannelEnum.PARAMS.value, shape=(0, params_dim),
                                                        maxshape=(num_samples, params_dim))
-            elevation_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.GROUND_TRUTH_ELEVATION_MAP.value,
+            elevation_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.GT_DEM.value,
                                                               shape=dataset_shape, maxshape=dataset_maxshape)
-            binary_occlusion_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.BINARY_OCCLUSION_MAP.value,
+            binary_occlusion_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.OCC_MASK.value,
                                                                      shape=dataset_shape, maxshape=dataset_maxshape)
 
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
@@ -152,14 +152,14 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 robot_position = Position(x=robot_x, y=robot_y, yaw=robot_yaw)
                 elevation_map_object = ElevationMap(terrain_origin_offset=terrain_origin_offset,
-                                                    ground_truth_elevation_map=elevation_map,
-                                                    occluded_elevation_map=None)
+                                                    gt_dem=elevation_map,
+                                                    occ_dem=None)
                 robot = Robot(robot_position=robot_position, height_viewpoint=height_viewpoint,
                               elevation_map=elevation_map_object)
 
-                binary_occlusion_map = self.raycast_occlusion(robot)
+                occ_mask = self.raycast_occlusion(robot)
 
-                if np.sum(binary_occlusion_map) == 0:
+                if np.sum(occ_mask) == 0:
                     # we skip the elevation map if we do not find any occlusion
                     continue
 
@@ -167,7 +167,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.params.append(np.array([self.terrain_resolution, robot_position.x,
                                              robot_position.y, robot_position.z, robot_position.yaw]))
                 self.elevation_maps.append(elevation_map)
-                self.binary_occlusion_maps.append(binary_occlusion_map)
+                self.binary_occlusion_maps.append(occ_mask)
                 self.update_dataset_range(elevation_map)
 
                 if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
@@ -182,9 +182,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                             or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
                         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2 * 6.4, 1 * 4.8])
 
-                        occluded_elevation_map = elevation_map.copy()
-                        occluded_elevation_map[binary_occlusion_map == 1] = np.nan
-                        non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
+                        occ_dem = elevation_map.copy()
+                        occ_dem[occ_mask == 1] = np.nan
+                        non_occluded_elevation_map = occ_dem[~np.isnan(occ_dem)]
 
                         vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
                         vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
@@ -196,7 +196,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                               cmap=cmap)
                         # matshow plots x and y swapped
                         axes[1].set_title("Occlusion")
-                        mat = axes[1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=vmin, vmax=vmax,
+                        mat = axes[1].matshow(np.swapaxes(occ_dem, 0, 1), vmin=vmin, vmax=vmax,
                                               cmap=cmap)
 
                         robot_plot_x = self.terrain_height / 2 + robot_position.x / self.terrain_resolution
@@ -230,8 +230,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         If the ray to a cell is occluded, we insert a NaN for that cell
         """
 
-        elevation_map = robot.elevation_map.ground_truth_elevation_map
-        binary_occlusion_map = np.zeros(shape=elevation_map.shape, dtype=np.bool)
+        elevation_map = robot.elevation_map.gt_dem
+        occ_mask = np.zeros(shape=elevation_map.shape, dtype=np.bool)
 
         center_i = int(elevation_map.shape[0] / 2)
         center_j = int(elevation_map.shape[1] / 2)
@@ -287,7 +287,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 occlusion_condition = ray_cast_world_scan[:, 2] <= ray[:, 1]
 
                 if np.sum(occlusion_condition) < ray_cast_world_scan.shape[0]:
-                    binary_occlusion_map[i][j] = 1
+                    occ_mask[i][j] = 1
 
                     # fig = plt.figure()
                     # ax = fig.add_subplot(111, projection='3d')
@@ -295,7 +295,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
                     # plt.show()
 
-        return binary_occlusion_map
+        return occ_mask
 
     @staticmethod
     def body_to_world_coordinates(body_coordinates: np.array, body_position: Position,

@@ -102,7 +102,7 @@ class PartialConv(nn.Module):
 
 class PCBActiv(nn.Module):
     def __init__(self, in_ch, out_ch, bn=True, sample='none-3', activ='relu',
-                 conv_bias=False, partial_conv: bool = True):
+                 conv_bias=False, partial_conv: bool = True, dropout_p: float = 0.0, **kwargs):
         super().__init__()
 
         if sample == 'down-7':
@@ -137,6 +137,9 @@ class PCBActiv(nn.Module):
         elif activ == 'leaky':
             self.activation = nn.LeakyReLU(negative_slope=0.2)
 
+        if dropout_p > 0.0:
+            self.dropout = nn.Dropout(p=dropout_p)
+
     def forward(self, input, input_mask):
         if isinstance(self.conv, PartialConv):
             h, h_mask = self.conv(input, input_mask)
@@ -149,8 +152,13 @@ class PCBActiv(nn.Module):
 
         if hasattr(self, 'bn'):
             h = self.bn(h)
+
         if hasattr(self, 'activation'):
             h = self.activation(h)
+
+        if hasattr(self, 'dropout'):
+            h = self.dropout(h)
+
         return h, h_mask
 
 
@@ -164,7 +172,7 @@ class PartialConvUNet(BaseModel):
         input_channels = len(self.in_channels) - 1
 
         # this only works for input channels occluded elevation map and binary occlusion map
-        assert self.in_channels == [ChannelEnum.OCCLUDED_ELEVATION_MAP, ChannelEnum.BINARY_OCCLUSION_MAP]
+        assert self.in_channels == [ChannelEnum.OCC_DEM, ChannelEnum.OCC_MASK]
 
         # either we use the standard Nvidia architecture or our own hidden_dims specification
         assert hidden_dims is None or num_layers is None
@@ -177,22 +185,27 @@ class PartialConvUNet(BaseModel):
         if hidden_dims is None:
             self.num_layers = num_layers
 
-            self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7', partial_conv=self.partial_conv)
-            self.enc_2 = PCBActiv(64, 128, sample='down-5', partial_conv=self.partial_conv)
-            self.enc_3 = PCBActiv(128, 256, sample='down-5', partial_conv=self.partial_conv)
-            self.enc_4 = PCBActiv(256, 512, sample='down-3', partial_conv=self.partial_conv)
+            self.enc_1 = PCBActiv(input_channels, 64, bn=False, sample='down-7', partial_conv=self.partial_conv,
+                                  dropout_p=self.dropout_p)
+            self.enc_2 = PCBActiv(64, 128, sample='down-5', partial_conv=self.partial_conv, dropout_p=self.dropout_p)
+            self.enc_3 = PCBActiv(128, 256, sample='down-5', partial_conv=self.partial_conv, dropout_p=self.dropout_p)
+            self.enc_4 = PCBActiv(256, 512, sample='down-3', partial_conv=self.partial_conv, dropout_p=self.dropout_p)
             for i in range(4, self.num_layers):
                 name = 'enc_{:d}'.format(i + 1)
-                setattr(self, name, PCBActiv(512, 512, sample='down-3', partial_conv=self.partial_conv))
+                setattr(self, name, PCBActiv(512, 512, sample='down-3', partial_conv=self.partial_conv,
+                                             dropout_p=self.dropout_p))
 
             for i in range(4, self.num_layers):
                 name = 'dec_{:d}'.format(i + 1)
-                setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky', partial_conv=self.partial_conv))
-            self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky', partial_conv=self.partial_conv)
-            self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky', partial_conv=self.partial_conv)
-            self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky', partial_conv=self.partial_conv)
-            self.dec_1 = PCBActiv(64 + input_channels, len(self.out_channels),
-                                  bn=False, activ=None, conv_bias=True, partial_conv=self.partial_conv)
+                setattr(self, name, PCBActiv(512 + 512, 512, activ='leaky', partial_conv=self.partial_conv,
+                                             dropout_p=self.dropout_p))
+            self.dec_4 = PCBActiv(512 + 256, 256, activ='leaky', partial_conv=self.partial_conv,
+                                  dropout_p=self.dropout_p)
+            self.dec_3 = PCBActiv(256 + 128, 128, activ='leaky', partial_conv=self.partial_conv,
+                                  dropout_p=self.dropout_p)
+            self.dec_2 = PCBActiv(128 + 64, 64, activ='leaky', partial_conv=self.partial_conv, dropout_p=self.dropout_p)
+            self.dec_1 = PCBActiv(64 + input_channels, len(self.out_channels), bn=False, activ=None, conv_bias=True,
+                                  partial_conv=self.partial_conv, dropout_p=self.dropout_p)
         else:
             self.num_layers = len(hidden_dims)
             self.hidden_dims = hidden_dims
@@ -205,19 +218,19 @@ class PartialConvUNet(BaseModel):
 
                 name = f"enc_{i+1}"
                 self.__setattr__(name, PCBActiv(in_channels, out_channels, bn=bn, sample="down-3",
-                                                partial_conv=self.partial_conv))
+                                                partial_conv=self.partial_conv, dropout_p=self.dropout_p))
 
                 in_channels = out_channels
 
             for i, out_channels in enumerate(reversed(self.hidden_dims[:-1])):
                 name = f"dec_{len(self.hidden_dims) - i}"
                 self.__setattr__(name, PCBActiv(in_channels + out_channels, out_channels, activ='leaky',
-                                                partial_conv=self.partial_conv))
+                                                partial_conv=self.partial_conv, dropout_p=self.dropout_p))
 
                 in_channels = out_channels
 
-            self.dec_1 = PCBActiv(in_channels + input_channels, len(self.out_channels),
-                                  bn=False, activ=None, conv_bias=True, partial_conv=self.partial_conv)
+            self.dec_1 = PCBActiv(in_channels + input_channels, len(self.out_channels), bn=False, activ=None,
+                                  conv_bias=True, partial_conv=self.partial_conv, dropout_p=self.dropout_p)
 
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
@@ -262,7 +275,7 @@ class PartialConvUNet(BaseModel):
             h_mask = torch.cat([h_mask, h_mask_dict[enc_h_key]], dim=1)
             h, h_mask = getattr(self, dec_l_key)(h, h_mask)
 
-        output = {ChannelEnum.RECONSTRUCTED_ELEVATION_MAP: h[:, 0, ...]}
+        output = {ChannelEnum.REC_DEM: h[:, 0, ...]}
 
         output = self.denormalize_output(data, output, norm_consts)
 
@@ -295,8 +308,8 @@ class PartialConvUNet(BaseModel):
             reconstruction_occlusion_weight = weights.get(LossEnum.MSE_REC_OCC.value, 1)
             total_variation_weight = weights.get(LossEnum.TV.value, 0)
 
-            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMPOSED_ELEVATION_MAP],
-                                                                   mask=data[ChannelEnum.BINARY_OCCLUSION_MAP])
+            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
+                                                                   mask=data[ChannelEnum.OCC_MASK])
 
             loss = reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \

@@ -22,3 +22,6 @@ class LossEnum(Enum):
     STYLE = "style"
     PERCEPTUAL = "perceptual"
     TV = "total_variation"
+    NLL_DATA = "nll_data"
+    NLL_MODEL = "nll_model"
+    NLL_TOTAL = "nll_total"
