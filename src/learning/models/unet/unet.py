@@ -54,7 +54,7 @@ class UNet(BaseModel):
 
         self.feature_extractor = None
 
-    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs) -> dict:
+    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs):
         if self.adf:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):

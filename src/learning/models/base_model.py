@@ -53,28 +53,59 @@ class BaseModel(ABC, nn.Module):
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
+        data_uncertainty = None
+        model_uncertainty = None
+        output = {}
+
         if self.num_solutions > 1:
             if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
-                solutions = []
+                dem_solutions = []
+                data_uncertainties = []
                 for i in range(self.num_solutions):
-                    solutions.append(self.forward_pass(input=input, data=data))
+                    x = self.forward_pass(input=input, data=data)
 
-                rec_dem = torch.mean(torch.stack(solutions), dim=0)
-                model_uncertainty = torch.var(torch.stack(solutions), dim=0)
+                    if type(x) == tuple:
+                        dem_solutions.append(x[0])
+                        data_uncertainties.append(x[1])
+                    else:
+                        dem_solutions.append(x)
+
+                rec_dem = torch.mean(torch.stack(dem_solutions), dim=0)
+                model_uncertainty = torch.var(torch.stack(dem_solutions), dim=0)
+
+                if len(data_uncertainties) > 0:
+                    data_uncertainty = torch.var(torch.stack(data_uncertainties), dim=0)
             else:
                 raise NotImplementedError
 
-            # TODO: add data uncertainty to total uncertainty
-            total_uncertainty = model_uncertainty
-
             output = {ChannelEnum.REC_DEM: rec_dem,
-                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty,
-                      ChannelEnum.TOTAL_UNCERTAINTY_MAP: total_uncertainty}
+                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty}
 
         else:
             x = self.forward_pass(input=input, data=data)
+            if type(x) == tuple:
+                rec_dem = x[0]
+                data_uncertainty = x[1]
+            else:
+                rec_dem = x
 
-            output = {ChannelEnum.REC_DEM: x}
+        output[ChannelEnum.REC_DEM] = rec_dem
+
+        if data_uncertainty is not None:
+            output[ChannelEnum.DATA_UNCERTAINTY_MAP] = data_uncertainty
+        if model_uncertainty is not None:
+            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
+
+        if data_uncertainty is not None and model_uncertainty is not None:
+            total_uncertainty = data_uncertainty + model_uncertainty
+        elif data_uncertainty is not None:
+            total_uncertainty = data_uncertainty
+        elif model_uncertainty is not None:
+            total_uncertainty = model_uncertainty
+        else:
+            total_uncertainty = None
+        if total_uncertainty is not None:
+            output[ChannelEnum.TOTAL_UNCERTAINTY_MAP] = total_uncertainty
 
         output = self.denormalize_output(data, output, norm_consts)
 
@@ -168,8 +199,7 @@ class BaseModel(ABC, nn.Module):
             denormalized_output = output
 
         rec_dem = denormalized_output[ChannelEnum.REC_DEM]
-        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM],
-                                                      rec_dem)
+        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM], rec_dem)
         denormalized_output[ChannelEnum.COMP_DEM] = comp_dem
 
         return denormalized_output
