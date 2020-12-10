@@ -68,7 +68,6 @@ class SupervisedLearning(BaseLearning):
                                                      output=output,
                                                      data=data,
                                                      dataloader_meta_info=dataloader_meta_info)
-                loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
                 progress_bar.next()
             progress_bar.finish()
