@@ -54,7 +54,7 @@ class UNet(BaseModel):
 
         self.feature_extractor = None
 
-    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs):
+    def forward_pass(self, input: torch.Tensor, data: dict, **kwargs) -> Union[torch.Tensor, Tuple[torch.Tensor]]:
         if self.adf:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):
@@ -72,8 +72,9 @@ class UNet(BaseModel):
                 else:
                     x = decoder_layer(*x)
 
-            # TODO: implement the propagation of the uncertainty
-            x = x[0]
+            # remove channels dimension from tensor
+            for tensor in x:
+                x = x.squeeze(dim=1)
         else:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):
@@ -91,7 +92,9 @@ class UNet(BaseModel):
                 else:
                     x = decoder_layer(x)
 
-        return x.squeeze(dim=1)
+            x = x.squeeze(dim=1)
+
+        return x
 
     def loss_function(self,
                       loss_config: dict,

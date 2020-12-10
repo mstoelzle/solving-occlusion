@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning_deep_uncertainty_estimation",
+    "name": "unet_synthetic_height_map_learning_afd",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -35,7 +35,7 @@
                     "name": "UNet",
                     "save_frequency": 1,
                     "input_dim": [64, 64],
-                    "in_channels": ["occluded_elevation_map", "binary_occlusion_map"],
+                    "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["reconstructed_elevation_map"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
@@ -52,14 +52,14 @@
                 "controller": {
                     "max_num_epochs": 50,
                     "max_num_better_results": 20
-                }
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
             },
             "tasks": [
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"}
+                    "domains": {"target": {}}
                 }
             ]
         },
@@ -69,5 +69,5 @@
         "upload": false
     },
     "remote": true,
-    "seeds": [101, 102, 103]
+    "seeds": [101]
 }
