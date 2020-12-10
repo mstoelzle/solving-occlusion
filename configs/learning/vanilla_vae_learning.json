@@ -26,7 +26,7 @@
                     "save_frequency": 10,
                     "input_dim": [64, 64],
                     "in_channels": ["occ_dem", "occ_mask"],
-                    "out_channels": ["reconstructed_elevation_map"],
+                    "out_channels": ["rec_dem"],
                     "latent_dim": 128,
                     "input_normalization": false,
                     "NaN_replacement": 0
