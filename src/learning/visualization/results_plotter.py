@@ -256,7 +256,7 @@ class ResultsPlotter:
                 fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
                 plt.draw()
-                plt.savefig(str(logdir / f"error_uncertainty{idx}.pdf"))
+                plt.savefig(str(logdir / f"error_uncertainty_{idx}.pdf"))
                 if self.remote is not True:
                     plt.show()
                 plt.close()
