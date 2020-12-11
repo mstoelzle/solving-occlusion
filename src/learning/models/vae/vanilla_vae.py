@@ -148,7 +148,7 @@ class VanillaVAE(BaseVAE):
                                             dataloader_meta_info=dataloader_meta_info, **kwargs)
 
         if self.training:
-            kld_loss = kld_loss_fct(output["mu"], output["log_var"])
+            kld_loss = kld_log_var_loss_fct(output["mu"], output["log_var"])
 
             weights = loss_config.get("train_weights", {})
 

@@ -9,7 +9,7 @@ from ..unet.unet_parts import *
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
-from src.learning.loss.loss import kld_loss_fct, total_variation_loss_fct, masked_total_variation_loss_fct
+from src.learning.loss.loss import kld_log_var_loss_fct, total_variation_loss_fct, masked_total_variation_loss_fct
 
 
 class UNetVAE(BaseVAE):
@@ -144,7 +144,7 @@ class UNetVAE(BaseVAE):
             total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
                                                                    mask=data[ChannelEnum.OCC_MASK])
 
-            kld_loss = kld_loss_fct(output["mu"], output["log_var"])
+            kld_loss = kld_log_var_loss_fct(output["mu"], output["log_var"])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \

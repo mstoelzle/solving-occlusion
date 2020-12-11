@@ -4,7 +4,7 @@ from typing import *
 
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
-from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct
+from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct, kld_loss_fct
 from .unet_parts import *
 from ..base_model import BaseModel
 
@@ -127,10 +127,12 @@ class UNet(BaseModel):
                                                                          mask=data[ChannelEnum.OCC_MASK])
 
             if self.adf and kld_weight > 0:
-                input_variance = output[ChannelEnum.DATA_UNCERTAINTY_MAP]
-                loss_dict[LossEnum.KLD] = adf_heteroscedastic_loss_fct(input_mean=output[ChannelEnum.REC_DEM],
-                                                                       input_variance=input_variance,
-                                                                       target=data[ChannelEnum.GT_DEM])
+                # input_variance = output[ChannelEnum.DATA_UNCERTAINTY_MAP]
+                # loss_dict[LossEnum.KLD] = adf_heteroscedastic_loss_fct(input_mean=output[ChannelEnum.REC_DEM],
+                #                                                        input_variance=input_variance,
+                #                                                        target=data[ChannelEnum.GT_DEM])
+                loss_dict[LossEnum.KLD] = kld_loss_fct(mu=output[ChannelEnum.REC_DEM],
+                                                       var=output[ChannelEnum.DATA_UNCERTAINTY_MAP])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \

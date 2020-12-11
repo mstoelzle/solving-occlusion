@@ -272,8 +272,14 @@ def ssim_loss_fct(input, target, data_min: float, data_max: float, **kwargs) -> 
     return ssim_loss
 
 
-def kld_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
-    kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
+def kld_loss_fct(mu: torch.Tensor, var: torch.Tensor):
+    return kld_log_var_loss_fct(mu, torch.log(var))
+
+
+def kld_log_var_loss_fct(mu: torch.Tensor, log_var: torch.Tensor):
+    sum_dims = tuple(range(1, mu.dim()))
+
+    kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=sum_dims), dim=0)
 
     return kld_loss
 
