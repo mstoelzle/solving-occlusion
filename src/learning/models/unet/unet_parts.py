@@ -95,7 +95,7 @@ class Up(nn.Module):
             # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
             x = torch.cat([x2, x1], dim=1)
             return self.conv(x)
-        elif type(x1) == tuple and type(x2) == tuple:
+        elif type(x1) == list and type(x2) == list:
             # adjustments for AFD: we get a mean and a variance as an input
             assert len(x1) == len(x2) == 2
 

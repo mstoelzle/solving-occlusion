@@ -4,7 +4,7 @@ import logging
 import numpy as np
 import pathlib
 from pytorch_msssim import ssim
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import *
 import warnings
 
 import torch

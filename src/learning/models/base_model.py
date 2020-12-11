@@ -64,7 +64,7 @@ class BaseModel(ABC, nn.Module):
                 for i in range(self.num_solutions):
                     x = self.forward_pass(input=input, data=data)
 
-                    if type(x) == tuple:
+                    if type(x) [list, tuple]:
                         dem_solutions.append(x[0])
                         data_uncertainties.append(x[1])
                     else:
@@ -83,7 +83,7 @@ class BaseModel(ABC, nn.Module):
 
         else:
             x = self.forward_pass(input=input, data=data)
-            if type(x) == tuple:
+            if type(x) in [list, tuple]:
                 rec_dem = x[0]
                 data_uncertainty = x[1]
             else:

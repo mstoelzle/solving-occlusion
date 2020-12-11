@@ -23,7 +23,7 @@ class AvgPool2d(nn.AvgPool2d):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         outputs_mean = F.avg_pool2d(inputs_mean, self.kernel_size, self.stride,
                                     self.padding, self.ceil_mode, self.count_include_pad, self.divisor_override)
         outputs_variance = F.avg_pool2d(inputs_variance, self.kernel_size, self.stride,
@@ -37,7 +37,7 @@ class AvgPool2d(nn.AvgPool2d):
         #       weight, that is 1/number of neurons in the channel
         #      outputs_variance*1/(H*W) should be enough already
 
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Softmax(nn.Softmax):
@@ -45,7 +45,7 @@ class Softmax(nn.Softmax):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, features_mean, features_variance, eps=1e-5):
+    def forward(self, features_mean, features_variance, eps=1e-5) -> list:
         """Softmax function applied to a multivariate Gaussian distribution.
         It works under the assumption that features_mean and features_variance
         are the parameters of a the indepent gaussians that contribute to the
@@ -67,7 +67,7 @@ class Softmax(nn.Softmax):
 
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class ReLU(nn.ReLU):
@@ -75,7 +75,7 @@ class ReLU(nn.ReLU):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, features_mean, features_variance):
+    def forward(self, features_mean, features_variance) -> list:
         features_stddev = torch.sqrt(features_variance)
         div = features_mean / features_stddev
         pdf = normpdf(div)
@@ -85,7 +85,7 @@ class ReLU(nn.ReLU):
                            + features_mean * features_stddev * pdf - outputs_mean ** 2
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class LeakyReLU(nn.LeakyReLU):
@@ -93,7 +93,7 @@ class LeakyReLU(nn.LeakyReLU):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, features_mean, features_variance):
+    def forward(self, features_mean, features_variance) -> list:
         features_stddev = torch.sqrt(features_variance)
         div = features_mean / features_stddev
         pdf = normpdf(div)
@@ -114,7 +114,7 @@ class LeakyReLU(nn.LeakyReLU):
                            - 2.0 * self._negative_slope * covxy
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Dropout2d(nn.Dropout2d):
@@ -122,7 +122,7 @@ class Dropout2d(nn.Dropout2d):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         if self.training:
             binary_mask = torch.ones_like(inputs_mean)
             binary_mask = F.dropout2d(binary_mask, self.p, self.training, self.inplace)
@@ -137,7 +137,7 @@ class Dropout2d(nn.Dropout2d):
         outputs_variance = inputs_variance
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return inputs_mean, outputs_variance
+        return [inputs_mean, outputs_variance]
 
 
 class MaxPool2d(nn.MaxPool2d):
@@ -177,10 +177,10 @@ class MaxPool2d(nn.MaxPool2d):
             mu_a, mu_b, var_a, var_b)
         return outputs_mean, outputs_variance
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         z_mean, z_variance = self._max_pool_1x2(inputs_mean, inputs_variance)
         outputs_mean, outputs_variance = self._max_pool_2x1(z_mean, z_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Linear(nn.Linear):
@@ -188,12 +188,12 @@ class Linear(nn.Linear):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         outputs_mean = F.linear(inputs_mean, self.weight, self.bias)
         outputs_variance = F.linear(inputs_variance, self.weight ** 2, None)
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class BatchNorm2d(nn.BatchNorm2d):
@@ -201,7 +201,7 @@ class BatchNorm2d(nn.BatchNorm2d):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         self._check_input_dim(inputs_mean)
 
         # exponential_average_factor is set to self.momentum
@@ -248,7 +248,7 @@ class BatchNorm2d(nn.BatchNorm2d):
 
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Conv2d(nn.Conv2d):
@@ -256,7 +256,7 @@ class Conv2d(nn.Conv2d):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         if self.padding_mode == 'zeros':
             outputs_mean = F.conv2d(
                 inputs_mean, self.weight, self.bias, self.stride, self.padding, self.dilation, self.groups)
@@ -268,7 +268,7 @@ class Conv2d(nn.Conv2d):
 
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Upsample(nn.Upsample):
@@ -276,13 +276,13 @@ class Upsample(nn.Upsample):
         super().__init__(**kwargs)
         self._keep_variance_fn = keep_variance_fn
 
-    def forward(self, inputs_mean, inputs_variance):
+    def forward(self, inputs_mean, inputs_variance) -> list:
         outputs_mean = super().forward(inputs_mean)
         outputs_variance = super().forward(inputs_variance)
 
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
-        return outputs_mean, outputs_variance
+        return [outputs_mean, outputs_variance]
 
 
 class Sequential(nn.Sequential):
