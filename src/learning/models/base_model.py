@@ -77,16 +77,19 @@ class BaseModel(ABC, nn.Module):
                     else:
                         dem_solutions.append(x)
 
-                rec_dem = torch.mean(torch.stack(dem_solutions), dim=0)
-                model_uncertainty = torch.var(torch.stack(dem_solutions), dim=0)
+                dem_solutions = torch.stack(dem_solutions, dim=1)
+                rec_dem = torch.mean(dem_solutions, dim=1)
+                model_uncertainty = torch.var(dem_solutions, dim=1)
 
                 if len(data_uncertainties) > 0:
-                    data_uncertainty = torch.var(torch.stack(data_uncertainties), dim=0)
+                    data_uncertainties = torch.stack(data_uncertainties, dim=1)
+                    data_uncertainty = torch.var(data_uncertainties, dim=1)
             else:
                 raise NotImplementedError
 
             output = {ChannelEnum.REC_DEM: rec_dem,
-                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty}
+                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty,
+                      ChannelEnum.REC_DEMS: dem_solutions}
 
         else:
             x = self.forward_pass(input=input, data=data)
@@ -189,9 +192,9 @@ class BaseModel(ABC, nn.Module):
                            norm_consts: dict) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
 
         if self.input_normalization is not None:
-            denormalized_output = {}
+            denorm_output = {}
             for key, value in output.items():
-                if ChannelEnum.REC_DEM:
+                if key in [ChannelEnum.REC_DEM, ChannelEnum.REC_DEMS]:
                     if ChannelEnum.GT_DEM in norm_consts:
                         denormalize_norm_const = norm_consts[ChannelEnum.GT_DEM]
                     elif ChannelEnum.OCC_DEM in norm_consts:
@@ -199,20 +202,28 @@ class BaseModel(ABC, nn.Module):
                     else:
                         raise ValueError
 
-                    denormalized_output[key] = InputNormalization.denormalize(ChannelEnum.REC_DEM,
-                                                                              input=value, batch=True,
-                                                                              norm_consts=denormalize_norm_const,
-                                                                              **self.input_normalization)
+                    denorm_output[key] = InputNormalization.denormalize(key,
+                                                                        input=value, batch=True,
+                                                                        norm_consts=denormalize_norm_const,
+                                                                        **self.input_normalization)
                 else:
-                    denormalized_output[key] = value
+                    denorm_output[key] = value
         else:
-            denormalized_output = output
+            denorm_output = output
 
-        rec_dem = denormalized_output[ChannelEnum.REC_DEM]
+        rec_dem = denorm_output[ChannelEnum.REC_DEM]
         comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM], rec_dem)
-        denormalized_output[ChannelEnum.COMP_DEM] = comp_dem
+        denorm_output[ChannelEnum.COMP_DEM] = comp_dem
 
-        return denormalized_output
+        if ChannelEnum.REC_DEMS in denorm_output:
+            rec_dems = denorm_output[ChannelEnum.REC_DEMS]
+            occ_dems = []
+            for i in range(rec_dems.size(dim=1)):
+                occ_dems.append(data[ChannelEnum.OCC_DEM])
+            occ_dems = torch.stack(occ_dems, dim=1)
+            denorm_output[ChannelEnum.COMP_DEMS] = self.create_composed_elevation_map(occ_dems, rec_dems)
+
+        return denorm_output
 
     def get_normalized_data(self,
                             loss_config: dict,
