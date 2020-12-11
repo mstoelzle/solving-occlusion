@@ -355,6 +355,12 @@ def log_likelihood_fct(input_mean: torch.Tensor, input_variance: torch.Tensor, t
     return log_likelihood
 
 
+def adf_heteroscedastic_loss_fct(input_mean: torch.Tensor, input_variance: torch.Tensor,
+                             target: torch.Tensor, eps=1e-5, **kwargs) -> torch.Tensor:
+    precision = 1 / (input_variance + eps)
+    return torch.mean(0.5 * precision * (target - input_mean) ** 2 + 0.5 * torch.log(input_variance + eps))
+
+
 def gram_matrix(feat: torch.Tensor):
     """
     Auto correlation on feature map (Gram matrix)

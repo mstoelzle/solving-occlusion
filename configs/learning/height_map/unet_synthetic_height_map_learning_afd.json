@@ -13,7 +13,8 @@
                         "mse_rec_occ": 6,
                         "perceptual": 0.05,
                         "style": 120,
-                        "total_variation": 0.1
+                        "total_variation": 0.1,
+                        "kld": 1
                     },
                     "eval_weights": {
                         "mse_rec_all": 0,

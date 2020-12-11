@@ -1,15 +1,12 @@
 """ Full assembly of the parts to form the complete network """
 
-from torch import nn
 from typing import *
 
-from .unet_parts import *
-from ..base_model import BaseModel
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
-from src.datasets.base_dataset import BaseDataset
-from src.learning.models.adf import adf
-from src.learning.loss.loss import total_variation_loss_fct, masked_total_variation_loss_fct
+from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct
+from .unet_parts import *
+from ..base_model import BaseModel
 
 
 class UNet(BaseModel):
@@ -92,7 +89,7 @@ class UNet(BaseModel):
             x = encodings[0]
             for decoding_idx, decoder_layer in enumerate(self.decoder):
                 if decoding_idx + 1 < len(self.decoder):
-                    x = decoder_layer(x, encodings[decoding_idx+1])
+                    x = decoder_layer(x, encodings[decoding_idx + 1])
                 else:
                     x = decoder_layer(x)
 
@@ -119,19 +116,28 @@ class UNet(BaseModel):
             perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
             style_weight = weights.get(LossEnum.STYLE.value, 0)
             total_variation_weight = weights.get(LossEnum.TV.value, 0)
+            kld_weight = weights.get(LossEnum.KLD.value, 0)
 
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
                 loss_dict.update(artistic_loss)
-            total_variation_loss = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
-                                                                   mask=data[ChannelEnum.OCC_MASK])
+
+            if total_variation_weight > 0:
+                loss_dict[LossEnum.TV] = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
+                                                                         mask=data[ChannelEnum.OCC_MASK])
+
+            if self.adf and kld_weight > 0:
+                input_variance = output[ChannelEnum.DATA_UNCERTAINTY_MAP]
+                loss_dict[LossEnum.KLD] = adf_heteroscedastic_loss_fct(input_mean=output[ChannelEnum.REC_DEM],
+                                                                       input_variance=input_variance,
+                                                                       target=data[ChannelEnum.GT_DEM])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
                    + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
-                   + total_variation_weight * total_variation_loss
+                   + total_variation_weight * loss_dict.get(LossEnum.TV, 0.)
 
             loss_dict.update({LossEnum.LOSS: loss})
 
@@ -139,7 +145,7 @@ class UNet(BaseModel):
         else:
             return loss_dict
 
-    def train(self,  mode: bool = True):
+    def train(self, mode: bool = True):
         if mode is True and self.config.get("feature_extractor", False) is True:
             device, = list(set(p.device for p in self.parameters()))
             self.feature_extractor = VGG16FeatureExtractor()
