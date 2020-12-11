@@ -98,11 +98,11 @@ class Up(nn.Module):
         elif type(x1) == tuple and type(x2) == tuple:
             # adjustments for AFD: we get a mean and a variance as an input
             assert len(x1) == len(x2) == 2
-            mu1, var1 = x1
-            mu2, var2 = x2
 
             # upsampling
-            mu1, var1 = self.up(mu1), self.up(var1)
+            mu1, var1 = self.up(*x1)
+
+            mu2, var2 = x2
 
             # input is CHW
             diffY = mu2.size(2) - mu1.size(2)
