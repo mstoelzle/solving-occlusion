@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -70,7 +71,7 @@ class BaseModel(ABC, nn.Module):
                 for i in range(self.num_solutions):
                     x = self.forward_pass(input=input, data=data)
 
-                    if type(x) [list, tuple]:
+                    if type(x) in [list, tuple]:
                         dem_solutions.append(x[0])
                         data_uncertainties.append(x[1])
                     else:
@@ -121,7 +122,8 @@ class BaseModel(ABC, nn.Module):
     def loss_function(self, *inputs: Any, **kwargs) -> torch.Tensor:
         pass
 
-    def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) -> Tuple[torch.Tensor, Dict]:
+    def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) \
+            -> Tuple[Union[List, torch.Tensor], Dict]:
         input = None
         norm_consts = {}
         for channel_idx, in_channel in enumerate(self.in_channels):
@@ -138,7 +140,7 @@ class BaseModel(ABC, nn.Module):
                                                                                          batch=True)
 
             if in_channel == ChannelEnum.OCC_DEM:
-                channel_data = self.preprocess_occluded_elevation_map(channel_data)
+                channel_data = self.preprocess_occluded_map(channel_data)
 
             if in_channel == ChannelEnum.OCC_MASK:
                 channel_data = ~channel_data
@@ -152,11 +154,13 @@ class BaseModel(ABC, nn.Module):
         if self.adf:
             # TODO: implement actual data uncertainty estimation
             var = torch.ones_like(input) * 0.0001
-            input = (input, var)
+            var[data[ChannelEnum.OCC_MASK] == 1] = np.NaN
+            var = self.preprocess_occluded_map(var)
+            input = [input, var]
 
         return input, norm_consts
 
-    def preprocess_occluded_elevation_map(self, occ_dem: torch.Tensor) -> torch.Tensor:
+    def preprocess_occluded_map(self, occ_dem: torch.Tensor) -> torch.Tensor:
         poem = occ_dem.clone()
 
         NaN_replacement = self.config.get("NaN_replacement", 0)
