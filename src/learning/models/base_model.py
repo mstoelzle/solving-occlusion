@@ -202,8 +202,7 @@ class BaseModel(ABC, nn.Module):
                     else:
                         raise ValueError
 
-                    denorm_output[key] = InputNormalization.denormalize(key,
-                                                                        input=value, batch=True,
+                    denorm_output[key] = InputNormalization.denormalize(key, input=value, batch=True,
                                                                         norm_consts=denormalize_norm_const,
                                                                         **self.input_normalization)
                 else:

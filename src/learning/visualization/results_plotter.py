@@ -75,6 +75,13 @@ class ResultsPlotter:
             if ChannelEnum.MODEL_UNCERTAINTY_MAP.value in data_hdf5_group:
                 model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UNCERTAINTY_MAP.value][idx, ...]
 
+            rec_dems = None
+            if ChannelEnum.REC_DEMS.value in data_hdf5_group:
+                rec_dems = data_hdf5_group[ChannelEnum.REC_DEMS.value][idx, ...]
+            comp_dems = None
+            if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
+                comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
+
             # 2D
             elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(rec_dem),
                                      np.min(comp_dem)])
@@ -257,6 +264,64 @@ class ResultsPlotter:
 
                 plt.draw()
                 plt.savefig(str(logdir / f"error_uncertainty_{idx}.pdf"))
+                if self.remote is not True:
+                    plt.show()
+                plt.close()
+
+            if rec_dems is not None:
+                num_solutions = rec_dems.shape[0]
+                grid_size = int(np.floor(np.sqrt(num_solutions)).item())
+
+                fig, axes = plt.subplots(nrows=grid_size, ncols=grid_size, figsize=[2 * 6.4, 2 * 6.4])
+                plt.title("Reconstruction solutions")
+
+                rec_dems_vmin = np.min(rec_dems)
+                rec_dems_vmax = np.max(rec_dems)
+
+                rec_dems_cmap = plt.get_cmap("viridis")
+
+                solution_idx = 0
+                for i in range(grid_size):
+                    for j in range(grid_size):
+                        mat = axes[i, j].matshow(np.swapaxes(rec_dems[solution_idx, ...], 0, 1),
+                                                 cmap=rec_dems_cmap, vmin=rec_dems_vmin, vmax=rec_dems_vmax)
+                        axes[i, j].grid(False)
+
+                        solution_idx += 1
+
+                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+
+                plt.draw()
+                plt.savefig(str(logdir / f"rec_dems_{idx}.pdf"))
+                if self.remote is not True:
+                    plt.show()
+                plt.close()
+
+            if comp_dems is not None:
+                num_solutions = comp_dems.shape[0]
+                grid_size = int(np.floor(np.sqrt(num_solutions)).item())
+
+                fig, axes = plt.subplots(nrows=grid_size, ncols=grid_size, figsize=[2 * 6.4, 2 * 6.4])
+                plt.title("Composition solutions")
+
+                comp_dems_vmin = np.min(comp_dems)
+                comp_dems_vmax = np.max(comp_dems)
+
+                comp_dems_cmap = plt.get_cmap("viridis")
+
+                solution_idx = 0
+                for i in range(grid_size):
+                    for j in range(grid_size):
+                        mat = axes[i, j].matshow(np.swapaxes(comp_dems[solution_idx, ...], 0, 1),
+                                                 cmap=comp_dems_cmap, vmin=comp_dems_vmin, vmax=comp_dems_vmax)
+                        axes[i, j].grid(False)
+
+                        solution_idx += 1
+
+                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+
+                plt.draw()
+                plt.savefig(str(logdir / f"comp_dems_{idx}.pdf"))
                 if self.remote is not True:
                     plt.show()
                 plt.close()
