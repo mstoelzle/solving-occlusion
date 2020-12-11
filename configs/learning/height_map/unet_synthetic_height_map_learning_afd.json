@@ -42,7 +42,10 @@
                     "NaN_replacement": 0,
                     "bilinear": true,
                     "feature_extractor": true,
-                    "data_uncertainty_estimation": "ADF"
+                    "data_uncertainty_estimation": {
+                        "method": "ADF",
+                        "min_variance": 0.001
+                    }
                 },
                 "optimizer": {
                     "name": "Adam",

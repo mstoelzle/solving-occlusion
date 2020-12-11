@@ -6,6 +6,7 @@ from typing import *
 
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
+from src.learning.models.adf import adf
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, \
     l1_loss_fct, psnr_loss_fct, ssim_loss_fct, perceptual_loss_fct, style_loss_fct, log_likelihood_fct
 from src.learning.normalization.input_normalization import InputNormalization
@@ -28,23 +29,28 @@ class BaseModel(ABC, nn.Module):
         else:
             self.input_normalization = input_normalization
 
-        self.data_uncertainty_estimation = self.config.get("data_uncertainty_estimation", None)
         self.adf = False
-        if self.data_uncertainty_estimation is not None:
-            self.data_uncertainty_estimation = DataUncertaintyEstimationEnum(self.data_uncertainty_estimation)
-        if self.data_uncertainty_estimation == DataUncertaintyEstimationEnum.ADF:
-            self.adf = True
+        self.keep_variance_fn = None
+        if self.config.get("data_uncertainty_estimation") is not None:
+            data_uncertainty_config = self.config["data_uncertainty_estimation"]
+            self.data_uncertainty_method = DataUncertaintyMethodEnum(data_uncertainty_config["method"])
+            if self.data_uncertainty_method == DataUncertaintyMethodEnum.ADF:
+                self.adf = True
+                min_variance = data_uncertainty_config.get("min_variance", 0.001)
+                self.keep_variance_fn = lambda x: adf.keep_variance(x, min_variance=min_variance)
+            else:
+                raise NotImplementedError
 
         self.model_uncertainty_method = None
         self.dropout_p = 0.0
         self.num_solutions = 1
         if self.config.get("model_uncertainty_estimation") is not None:
             model_uncertainty_config = self.config["model_uncertainty_estimation"]
-            self.model_uncertainty_method = ModelUncertaintyMethod(model_uncertainty_config["method"])
-            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+            self.model_uncertainty_method = ModelUncertaintyMethodEnum(model_uncertainty_config["method"])
+            if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
                 self.dropout_p = model_uncertainty_config["probability"]
                 self.num_solutions = model_uncertainty_config["num_solutions"]
-            elif self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_VAE:
+            elif self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_VAE:
                 self.num_solutions = model_uncertainty_config["num_solutions"]
             else:
                 raise NotImplementedError
@@ -58,7 +64,7 @@ class BaseModel(ABC, nn.Module):
         output = {}
 
         if self.num_solutions > 1:
-            if self.model_uncertainty_method == ModelUncertaintyMethod.MONTE_CARLO_DROPOUT:
+            if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
                 dem_solutions = []
                 data_uncertainties = []
                 for i in range(self.num_solutions):

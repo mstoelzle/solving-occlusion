@@ -8,6 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
+from src.learning.models.adf import adf
+
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
@@ -20,26 +22,32 @@ class DoubleConv(nn.Module):
         if nn_module is None:
             nn_module = nn
 
-        if dropout_p > 0.0:
-            self.double_conv = nn_module.Sequential(
-                nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(num_features=mid_channels),
-                nn_module.ReLU(inplace=True),
-                nn_module.Dropout(p=dropout_p),
-                nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(num_features=out_channels),
-                nn_module.ReLU(inplace=True),
-                nn_module.Dropout(p=dropout_p)
-            )
+        if nn_module == adf:
+            conv_1 = nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels,
+                                      kernel_size=3, padding=1, **kwargs)
+            batch_norm_1 = nn_module.BatchNorm2d(num_features=mid_channels, **kwargs)
+            relu_1 = nn_module.ReLU(inplace=True, **kwargs)
+            dropout_1 = nn_module.Dropout2d(p=dropout_p, **kwargs)
+            conv_2 = nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels,
+                                      kernel_size=3, padding=1, **kwargs)
+            batch_norm_2 = nn_module.BatchNorm2d(num_features=out_channels, **kwargs)
+            relu_2 = nn_module.ReLU(inplace=True, **kwargs)
+            dropout_2 = nn_module.Dropout2d(p=dropout_p, **kwargs)
         else:
-            self.double_conv = nn_module.Sequential(
-                nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(num_features=mid_channels),
-                nn_module.ReLU(inplace=True),
-                nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1),
-                nn_module.BatchNorm2d(num_features=out_channels),
-                nn_module.ReLU(inplace=True)
-            )
+            conv_1 = nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1)
+            batch_norm_1 = nn_module.BatchNorm2d(num_features=mid_channels)
+            relu_1 = nn_module.ReLU(inplace=True)
+            dropout_1 = nn_module.Dropout2d(p=dropout_p)
+            conv_2 = nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1)
+            batch_norm_2 = nn_module.BatchNorm2d(num_features=out_channels)
+            relu_2 = nn_module.ReLU(inplace=True)
+            dropout_2 = nn_module.Dropout2d(p=dropout_p)
+
+        if dropout_p > 0.0:
+            self.double_conv = nn_module.Sequential(conv_1, batch_norm_1, relu_1, dropout_1,
+                                                    conv_2, batch_norm_2, relu_2, dropout_2)
+        else:
+            self.double_conv = nn_module.Sequential(conv_1, batch_norm_1, relu_1, conv_2, batch_norm_2, relu_2)
 
     def forward(self, *x):
         return self.double_conv(*x)
@@ -54,8 +62,13 @@ class Down(nn.Module):
         if nn_module is None:
             nn_module = nn
 
+        if nn_module == adf:
+            max_pool = nn_module.MaxPool2d(kernel_size=2, keep_variance_fn=kwargs.get("keep_variance_fn"))
+        else:
+            max_pool = nn_module.MaxPool2d(kernel_size=2)
+
         self.maxpool_conv = nn_module.Sequential(
-            nn_module.MaxPool2d(kernel_size=2),
+            max_pool,
             DoubleConv(in_channels=in_channels, out_channels=out_channels, nn_module=nn_module, **kwargs)
         )
 
@@ -74,10 +87,20 @@ class Up(nn.Module):
 
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
-            self.up = nn_module.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+            if nn_module == adf:
+                self.up = nn_module.Upsample(scale_factor=2, mode='bilinear', align_corners=True,
+                                             keep_variance_fn=kwargs.get("keep_variance_fn"))
+            else:
+                self.up = nn_module.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2, nn_module=nn_module, **kwargs)
         else:
-            self.up = nn_module.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
+            if nn_module == adf:
+                self.up = nn_module.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2,
+                                                    keep_variance_fn=kwargs.get("keep_variance_fn"))
+            else:
+                self.up = nn_module.ConvTranspose2d(in_channels, in_channels // 2, kernel_size=2, stride=2)
+
             self.conv = DoubleConv(in_channels, out_channels, nn_module=nn_module **kwargs)
 
     def forward(self, x1, x2):
@@ -122,13 +145,16 @@ class Up(nn.Module):
 
 
 class OutConv(nn.Module):
-    def __init__(self, in_channels, out_channels, nn_module=None):
+    def __init__(self, in_channels, out_channels, nn_module=None, **kwargs):
         super(OutConv, self).__init__()
 
         if nn_module is None:
             nn_module = nn
 
-        self.conv = nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1)
+        if nn_module == adf:
+            self.conv = nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, **kwargs)
+        else:
+            self.conv = nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1)
 
     def forward(self, *x):
         return self.conv(*x)

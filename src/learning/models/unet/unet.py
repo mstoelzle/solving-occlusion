@@ -26,14 +26,16 @@ class UNet(BaseModel):
         factor = 2 if bilinear else 1
 
         encoder_layers = [DoubleConv(len(self.in_channels), self.hidden_dims[0],
-                                     nn_module=nn_module, dropout_p=self.dropout_p)]
+                                     nn_module=nn_module, dropout_p=self.dropout_p,
+                                     keep_variance_fn=self.keep_variance_fn)]
         for in_idx, num_out_channels in enumerate(self.hidden_dims[1:]):
             if (in_idx + 1) >= len(self.hidden_dims[1:]):
                 num_down_out_channels = num_out_channels // factor
             else:
                 num_down_out_channels = num_out_channels
             encoder_layers.append(Down(self.hidden_dims[in_idx], num_down_out_channels,
-                                       nn_module=nn_module, dropout_p=self.dropout_p))
+                                       nn_module=nn_module, dropout_p=self.dropout_p,
+                                       keep_variance_fn=self.keep_variance_fn))
 
         self.encoder = nn_module.Sequential(*encoder_layers)
 
@@ -46,9 +48,11 @@ class UNet(BaseModel):
             else:
                 num_up_out_channels = num_out_channels // factor
             decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_up_out_channels,
-                                     self.bilinear, nn_module=nn_module, dropout_p=self.dropout_p))
+                                     self.bilinear, nn_module=nn_module, dropout_p=self.dropout_p,
+                                     keep_variance_fn=self.keep_variance_fn))
 
-        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels), nn_module=nn_module))
+        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels), nn_module=nn_module,
+                                      keep_variance_fn=self.keep_variance_fn))
 
         self.decoder = nn_module.Sequential(*decoder_layers)
 
