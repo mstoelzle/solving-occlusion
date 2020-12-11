@@ -1,16 +1,10 @@
-import operator
-from collections import OrderedDict
-from itertools import islice
+from typing import *
 
 import torch
 import torch.nn as nn
-from torch.nn.parameter import Parameter
 from torch.nn import functional as F
-from torch.nn.modules.conv import _ConvNd
-from torch.nn.modules.conv import _ConvTransposeMixin
 from torch.nn.modules.utils import _pair
 
-from .interpolation import resize2D_as
 from .math import normpdf, normcdf
 
 
@@ -266,6 +260,26 @@ class Conv2d(nn.Conv2d):
             outputs_mean = F.conv2d(F.pad(input, self._reversed_padding_repeated_twice, mode=self.padding_mode),
                                     self.weight, self.bias, self.stride, _pair(0), self.dilation, self.groups)
 
+        if self._keep_variance_fn is not None:
+            outputs_variance = self._keep_variance_fn(outputs_variance)
+        return [outputs_mean, outputs_variance]
+
+
+class ConvTranspose2d(nn.ConvTranspose2d):
+    def __init__(self, keep_variance_fn=None, **kwargs):
+        super().__init__(**kwargs)
+        self._keep_variance_fn = keep_variance_fn
+
+    def forward(self, inputs_mean, inputs_variance, output_size: Optional[List[int]] = None) -> list:
+        if self.padding_mode != 'zeros':
+            raise ValueError('Only `zeros` padding mode is supported for ConvTranspose2d')
+
+        output_padding = self._output_padding(inputs_mean, output_size,
+                                              self.stride, self.padding, self.kernel_size, self.dilation)
+        outputs_mean = F.conv_transpose2d(inputs_mean, self.weight, self.bias, self.stride, self.padding,
+                                          output_padding, self.groups, self.dilation)
+        outputs_variance = F.conv_transpose2d(inputs_variance, self.weight ** 2, None, self.stride, self.padding,
+                                              output_padding, self.groups, self.dilation)
         if self._keep_variance_fn is not None:
             outputs_variance = self._keep_variance_fn(outputs_variance)
         return [outputs_mean, outputs_variance]
