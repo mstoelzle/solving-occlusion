@@ -56,6 +56,17 @@ class BaseModel(ABC, nn.Module):
             else:
                 raise NotImplementedError
 
+    def train(self, mode: bool = True):
+        super().train(mode=mode)
+
+        # PyTorch automatically deactivates dropout for evaluation
+        # however for uncertainty estimation with monte carlo dropout we still need it during evaluation
+        if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT and mode is False:
+            for m in self.modules():
+                # print(m.__class__.__name__)
+                if m.__class__.__name__.startswith('Dropout'):
+                    m.train()
+
     def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
