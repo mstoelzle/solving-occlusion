@@ -28,7 +28,7 @@
                         "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64]
                     },
-                    "num_workers": 4,
+                    "num_workers": 8,
                     "shuffle": true
                 },
                 "model": {
@@ -49,36 +49,12 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 50,
-                    "max_num_better_results": 20
+                    "max_num_epochs": 10,
+                    "max_num_better_results": 5
                 },
                 "dataloaders": {"labeled_dataloader":  "target"}
             },
             "tasks": [
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "model": {
-                        "model_uncertainty_estimation": {
-                            "method": "monte_carlo_dropout",
-                            "probability": 0.2,
-                            "num_solutions": 10
-                        }
-                    }
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "model": {
-                        "model_uncertainty_estimation": {
-                            "method": "monte_carlo_dropout",
-                            "probability": 0.2,
-                            "num_solutions": 20
-                        }
-                    }
-                },
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
@@ -98,7 +74,43 @@
                     "model": {
                         "model_uncertainty_estimation": {
                             "method": "monte_carlo_dropout",
-                            "probability": 0.3,
+                            "probability": 0.2,
+                            "num_solutions": 10
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.4,
+                            "num_solutions": 10
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.5,
+                            "num_solutions": 10
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {
+                        "model_uncertainty_estimation": {
+                            "method": "monte_carlo_dropout",
+                            "probability": 0.6,
                             "num_solutions": 10
                         }
                     }
