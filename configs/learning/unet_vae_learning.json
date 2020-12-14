@@ -42,7 +42,12 @@
                     "latent_dim": 1024,
                     "input_normalization": false,
                     "NaN_replacement": 0,
-                    "bilinear": true
+                    "bilinear": true,
+                    "model_uncertainty_estimation": {
+                        "method": "monte_carlo_vae",
+                        "num_solutions": 10,
+                        "use_mean_as_rec": false
+                    }
                 },
                 "optimizer": {
                     "name": "Adam",

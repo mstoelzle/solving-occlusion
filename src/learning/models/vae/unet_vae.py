@@ -75,16 +75,38 @@ class UNetVAE(BaseVAE):
 
         mu = self.fc_mu(x_flat)
         log_var = self.fc_var(x_flat)
-        z = self.reparameterize(mu, log_var)
+
+        if self.training:
+            z = self.reparameterize(mu, log_var)
+        else:
+            z = mu
 
         x = self.fc_decoder_input(z)
         x = x.view(encodings[-1].size(0), encodings[-1].size(1), encodings[-1].size(2), encodings[-1].size(3))
+        rec_dem = self.decode(x, encodings).squeeze(dim=1)
 
-        x = self.decode(x, encodings)
+        output = {ChannelEnum.REC_DEM: rec_dem, "mu": mu, "log_var": log_var}
 
-        output = {ChannelEnum.REC_DEM: x.squeeze(dim=1),
-                  "mu": mu,
-                  "log_var": log_var}
+        if self.num_solutions > 1 and self.training is False:
+            dem_solutions = []
+            for i in range(self.num_solutions):
+                z = self.reparameterize(mu, log_var)
+
+                x = self.fc_decoder_input(z)
+                x = x.view(encodings[-1].size(0), encodings[-1].size(1), encodings[-1].size(2), encodings[-1].size(3))
+                x = self.decode(x, encodings).squeeze(dim=1)
+
+                dem_solutions.append(x)
+
+            dem_solutions = torch.stack(dem_solutions, dim=1)
+            model_uncertainty = torch.var(dem_solutions, dim=1)
+
+            output[ChannelEnum.REC_DEMS] = dem_solutions
+            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
+            output[ChannelEnum.TOTAL_UNCERTAINTY_MAP] = model_uncertainty
+
+            if self.use_mean_as_rec:
+                output[ChannelEnum.REC_DEM] = torch.mean(dem_solutions, dim=1)
 
         output = self.denormalize_output(data, output, norm_consts)
 
