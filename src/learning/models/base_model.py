@@ -57,7 +57,7 @@ class BaseModel(ABC, nn.Module):
                 self.num_solutions = int(model_uncertainty_config["num_solutions"])
                 self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
             elif self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_VAE:
-                self.num_solutions = int(model_uncertainty_config["num_solutions"]),
+                self.num_solutions = int(model_uncertainty_config["num_solutions"])
                 self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
             else:
                 raise NotImplementedError
@@ -420,7 +420,7 @@ class BaseModel(ABC, nn.Module):
                                             input_variance=output[ChannelEnum.MODEL_UNCERTAINTY_MAP],
                                             target=data[ChannelEnum.GT_DEM], **kwargs)
             loss_dict[LossEnum.NLL_MODEL] = nll_model
-        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+        if ChannelEnum.TOTAL_UNCERTAINTY_MAP in output:
             nll_total = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
                                             input_variance=output[ChannelEnum.TOTAL_UNCERTAINTY_MAP],
                                             target=data[ChannelEnum.GT_DEM], **kwargs)
