@@ -51,17 +51,18 @@ class BaseModel(ABC, nn.Module):
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
                 self.dropout_p = model_uncertainty_config["probability"]
                 self.num_solutions = model_uncertainty_config["num_solutions"]
+                self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
             elif self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_VAE:
                 self.num_solutions = model_uncertainty_config["num_solutions"]
             else:
                 raise NotImplementedError
 
-    def train(self, mode: bool = True):
+    def train(self, mode: bool = True, dropout_mode: bool = False):
         super().train(mode=mode)
 
         # PyTorch automatically deactivates dropout for evaluation
         # however for uncertainty estimation with monte carlo dropout we still need it during evaluation
-        if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT and mode is False:
+        if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT and dropout_mode is False:
             for m in self.modules():
                 # print(m.__class__.__name__)
                 if m.__class__.__name__.startswith('Dropout'):
@@ -71,12 +72,23 @@ class BaseModel(ABC, nn.Module):
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
-        data_uncertainty = None
-        model_uncertainty = None
         output = {}
 
+        self.train(mode=self.training, dropout_mode=self.training)
+        data_uncertainty = None
+        x = self.forward_pass(input=input, data=data)
+        if type(x) in [list, tuple]:
+            rec_dem = x[0]
+            data_uncertainty = x[1]
+        else:
+            rec_dem = x
+        output[ChannelEnum.REC_DEM] = rec_dem
+
+        model_uncertainty = None
         if self.num_solutions > 1:
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
+                self.train(mode=self.training, dropout_mode=True)
+
                 dem_solutions = []
                 data_uncertainties = []
                 for i in range(self.num_solutions):
@@ -89,28 +101,19 @@ class BaseModel(ABC, nn.Module):
                         dem_solutions.append(x)
 
                 dem_solutions = torch.stack(dem_solutions, dim=1)
-                rec_dem = torch.mean(dem_solutions, dim=1)
                 model_uncertainty = torch.var(dem_solutions, dim=1)
 
-                if len(data_uncertainties) > 0:
-                    data_uncertainties = torch.stack(data_uncertainties, dim=1)
-                    data_uncertainty = torch.var(data_uncertainties, dim=1)
+                if self.use_mean_as_rec:
+                    output[ChannelEnum.REC_DEM] = torch.mean(dem_solutions, dim=1)
+
+                    if len(data_uncertainties) > 0:
+                        data_uncertainties = torch.stack(data_uncertainties, dim=1)
+                        data_uncertainty = torch.mean(data_uncertainties, dim=1)
             else:
                 raise NotImplementedError
 
-            output = {ChannelEnum.REC_DEM: rec_dem,
-                      ChannelEnum.MODEL_UNCERTAINTY_MAP: model_uncertainty,
-                      ChannelEnum.REC_DEMS: dem_solutions}
-
-        else:
-            x = self.forward_pass(input=input, data=data)
-            if type(x) in [list, tuple]:
-                rec_dem = x[0]
-                data_uncertainty = x[1]
-            else:
-                rec_dem = x
-
-        output[ChannelEnum.REC_DEM] = rec_dem
+            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
+            output[ChannelEnum.REC_DEMS] = dem_solutions
 
         if data_uncertainty is not None:
             output[ChannelEnum.DATA_UNCERTAINTY_MAP] = data_uncertainty

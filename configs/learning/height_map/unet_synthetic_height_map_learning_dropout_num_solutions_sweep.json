@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning_dropout",
+    "name": "unet_synthetic_height_map_learning_dropout_num_solutions_sweep",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -64,7 +64,26 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}}
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"num_solutions": 5}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"num_solutions": 10}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"num_solutions": 15}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"num_solutions": 20}}
                 }
             ]
         },

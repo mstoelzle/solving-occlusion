@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning_dropout",
+    "name": "unet_synthetic_height_map_learning_dropout_use_mean_sweep",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -55,8 +55,8 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 10,
-                    "max_num_better_results": 5
+                    "max_num_epochs": 50,
+                    "max_num_better_results": 20
                 },
                 "dataloaders": {"labeled_dataloader":  "target"}
             },
@@ -64,7 +64,14 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "domains": {"target": {}}
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"use_mean_as_rec": false}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "model": {"model_uncertainty_estimation": {"use_mean_as_rec": true}}
                 }
             ]
         },
