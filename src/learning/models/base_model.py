@@ -25,10 +25,10 @@ class BaseModel(ABC, nn.Module):
         self.in_channels = [ChannelEnum(in_channel) for in_channel in in_channels]
         self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
 
-        if input_normalization is None or input_normalization is False:
-            self.input_normalization = None
-        else:
-            self.input_normalization = input_normalization
+        self.input_normalization = None if input_normalization is False else input_normalization
+
+        self.dropout_p = self.config.get("training_dropout_probability", 0.0)
+        self.training_dropout = True if self.dropout_p > 0.0 else False
 
         self.adf = False
         self.keep_variance_fn = None
@@ -43,17 +43,22 @@ class BaseModel(ABC, nn.Module):
                 raise NotImplementedError
 
         self.model_uncertainty_method = None
-        self.dropout_p = 0.0
-        self.num_solutions = 1
+        self.num_solutions: int = 1
         if self.config.get("model_uncertainty_estimation") is not None:
             model_uncertainty_config = self.config["model_uncertainty_estimation"]
             self.model_uncertainty_method = ModelUncertaintyMethodEnum(model_uncertainty_config["method"])
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
-                self.dropout_p = model_uncertainty_config["probability"]
-                self.num_solutions = model_uncertainty_config["num_solutions"]
+                print("training dropout activated", self.training_dropout)
+                if self.training_dropout:
+                    assert self.dropout_p == model_uncertainty_config["probability"]
+                else:
+                    self.dropout_p = model_uncertainty_config["probability"]
+
+                self.num_solutions = int(model_uncertainty_config["num_solutions"])
                 self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
             elif self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_VAE:
-                self.num_solutions = model_uncertainty_config["num_solutions"]
+                self.num_solutions = int(model_uncertainty_config["num_solutions"]),
+                self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
             else:
                 raise NotImplementedError
 
@@ -62,11 +67,14 @@ class BaseModel(ABC, nn.Module):
 
         # PyTorch automatically deactivates dropout for evaluation
         # however for uncertainty estimation with monte carlo dropout we still need it during evaluation
-        if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT and dropout_mode is False:
+        if mode != dropout_mode:
             for m in self.modules():
                 # print(m.__class__.__name__)
                 if m.__class__.__name__.startswith('Dropout'):
-                    m.train()
+                    if dropout_mode:
+                        m.train()
+                    else:
+                        m.eval()
 
     def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
@@ -74,7 +82,7 @@ class BaseModel(ABC, nn.Module):
 
         output = {}
 
-        self.train(mode=self.training, dropout_mode=self.training)
+        self.train(mode=self.training, dropout_mode=True if self.training and self.training_dropout else False)
         data_uncertainty = None
         x = self.forward_pass(input=input, data=data)
         if type(x) in [list, tuple]:
@@ -85,7 +93,7 @@ class BaseModel(ABC, nn.Module):
         output[ChannelEnum.REC_DEM] = rec_dem
 
         model_uncertainty = None
-        if self.num_solutions > 1:
+        if self.num_solutions > 1 and self.training is False:
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
                 self.train(mode=self.training, dropout_mode=True)
 

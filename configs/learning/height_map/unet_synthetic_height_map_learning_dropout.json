@@ -47,7 +47,8 @@
                         "probability": 0.1,
                         "num_solutions": 10,
                         "use_mean_as_rec": false
-                    }
+                    },
+                    "training_dropout_probability": 0.0
                 },
                 "optimizer": {
                     "name": "Adam",
