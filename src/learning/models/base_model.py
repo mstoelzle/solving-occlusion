@@ -48,7 +48,6 @@ class BaseModel(ABC, nn.Module):
             model_uncertainty_config = self.config["model_uncertainty_estimation"]
             self.model_uncertainty_method = ModelUncertaintyMethodEnum(model_uncertainty_config["method"])
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
-                print("training dropout activated", self.training_dropout)
                 if self.training_dropout:
                     assert self.dropout_p == model_uncertainty_config["probability"]
                 else:
