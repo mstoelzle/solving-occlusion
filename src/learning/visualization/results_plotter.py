@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pathlib
+from progress.bar import Bar
 import seaborn as sns
 import torch
 from typing import *
@@ -55,6 +56,8 @@ class ResultsPlotter:
         data_hdf5_group = purpose_hdf5_group[f"data"]
         dataset_length = len(data_hdf5_group[ChannelEnum.REC_DEM.value])
         num_samples = int(dataset_length / self.config["sample_frequency"])
+
+        progress_bar = Bar(f"Plot samples for {str(purpose_hdf5_group)}", max=len(num_samples))
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
@@ -325,6 +328,9 @@ class ResultsPlotter:
                 if self.remote is not True:
                     plt.show()
                 plt.close()
+
+            progress_bar.next()
+        progress_bar.finish()
 
     def plot_correlation_area_occluded(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
