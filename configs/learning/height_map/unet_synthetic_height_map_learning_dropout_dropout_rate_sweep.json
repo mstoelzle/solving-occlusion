@@ -65,16 +65,16 @@
             },
             "tasks": [
                 {
-                    "model": {"model_uncertainty_estimation": {"probability": 1}}
+                    "model": {"model_uncertainty_estimation": {"probability": 0.01}}
                 },
                 {
-                    "model": {"model_uncertainty_estimation": {"probability": 5}}
+                    "model": {"model_uncertainty_estimation": {"probability": 0.05}}
                 },
                 {
-                    "model": {"model_uncertainty_estimation": {"probability": 10}}
+                    "model": {"model_uncertainty_estimation": {"probability": 0.10}}
                 },
                 {
-                    "model": {"model_uncertainty_estimation": {"probability": 15}}
+                    "model": {"model_uncertainty_estimation": {"probability": 0.15}}
                 }
             ]
         },
