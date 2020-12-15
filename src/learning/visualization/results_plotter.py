@@ -57,7 +57,7 @@ class ResultsPlotter:
         dataset_length = len(data_hdf5_group[ChannelEnum.REC_DEM.value])
         num_samples = int(dataset_length / self.config["sample_frequency"])
 
-        progress_bar = Bar(f"Plot samples for {str(purpose_hdf5_group)}", max=num_samples)
+        progress_bar = Bar(f"Plot samples for {str(purpose_hdf5_group.name)}", max=num_samples)
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
             params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
