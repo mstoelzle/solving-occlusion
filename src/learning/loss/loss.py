@@ -361,10 +361,14 @@ def log_likelihood_fct(input_mean: torch.Tensor, input_variance: torch.Tensor, t
     return log_likelihood
 
 
-def adf_heteroscedastic_loss_fct(input_mean: torch.Tensor, input_variance: torch.Tensor,
-                             target: torch.Tensor, eps=1e-5, **kwargs) -> torch.Tensor:
-    precision = 1 / (input_variance + eps)
-    return torch.mean(0.5 * precision * (target - input_mean) ** 2 + 0.5 * torch.log(input_variance + eps))
+def adf_heteroscedastic_loss_fct(mu: torch.Tensor, log_var: torch.Tensor, target: torch.Tensor, **kwargs):
+    precision = torch.exp(-log_var)
+
+    adf_het_loss = torch.mean(0.5*precision * (target - mu)**2 + 0.5 * log_var, dim=tuple(range(1, mu.dim())))
+
+    adf_het_loss = reduction_fct(adf_het_loss, **kwargs)
+
+    return adf_het_loss
 
 
 def gram_matrix(feat: torch.Tensor):

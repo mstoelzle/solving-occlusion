@@ -4,7 +4,7 @@ from typing import *
 
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
-from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct, kld_loss_fct
+from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct
 from .unet_parts import *
 from ..base_model import BaseModel
 
@@ -116,7 +116,7 @@ class UNet(BaseModel):
             perceptual_weight = weights.get(LossEnum.PERCEPTUAL.value, 0)
             style_weight = weights.get(LossEnum.STYLE.value, 0)
             total_variation_weight = weights.get(LossEnum.TV.value, 0)
-            kld_weight = weights.get(LossEnum.KLD.value, 0)
+            adf_het_weight = weights.get(LossEnum.ADF_HET.value, 0)
 
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
@@ -126,13 +126,10 @@ class UNet(BaseModel):
                 loss_dict[LossEnum.TV] = masked_total_variation_loss_fct(input=output[ChannelEnum.COMP_DEM],
                                                                          mask=data[ChannelEnum.OCC_MASK])
 
-            if self.adf and kld_weight > 0:
-                # input_variance = output[ChannelEnum.DATA_UNCERTAINTY_MAP]
-                # loss_dict[LossEnum.KLD] = adf_heteroscedastic_loss_fct(input_mean=output[ChannelEnum.REC_DEM],
-                #                                                        input_variance=input_variance,
-                #                                                        target=data[ChannelEnum.GT_DEM])
-                loss_dict[LossEnum.KLD] = kld_loss_fct(mu=output[ChannelEnum.REC_DEM],
-                                                       var=output[ChannelEnum.DATA_UNCERTAINTY_MAP])
+            if self.adf and adf_het_weight > 0:
+                loss_dict[LossEnum.ADF_HET] = adf_heteroscedastic_loss_fct(mu=output[ChannelEnum.REC_DEM],
+                                                                           log_var=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
+                                                                           target=data[ChannelEnum.GT_DEM])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \

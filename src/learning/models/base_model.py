@@ -177,9 +177,11 @@ class BaseModel(ABC, nn.Module):
 
         if self.adf:
             # TODO: implement actual data uncertainty estimation
-            var = torch.ones_like(input) * 0.0001
-            var[data[ChannelEnum.OCC_MASK] == 1] = np.NaN
-            var = self.preprocess_occluded_map(var)
+            occ_data_uncertainty = torch.ones_like(data[ChannelEnum.OCC_DEM]) * 0.0001
+            occ_data_uncertainty[data[ChannelEnum.OCC_MASK] == 1] = np.NaN
+            occ_data_uncertainty = self.preprocess_occluded_map(occ_data_uncertainty)
+            var = torch.zeros_like(input)
+            var[:, 0, ...] = occ_data_uncertainty
             input = [input, var]
 
         return input, norm_consts
