@@ -44,7 +44,7 @@
                     "feature_extractor": true,
                     "model_uncertainty_estimation": {
                         "method": "monte_carlo_dropout",
-                        "probability": 0.1,
+                        "probability": 0.05,
                         "num_solutions": 10,
                         "use_mean_as_rec": false
                     },
@@ -59,13 +59,13 @@
                     "max_num_epochs": 10,
                     "max_num_better_results": 5
                 },
-                "dataloaders": {"labeled_dataloader":  "target"}
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}}
             },
             "tasks": [
                 {
                     "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}}
+                    "model_to_train": "untrained"
                 }
             ]
         },
