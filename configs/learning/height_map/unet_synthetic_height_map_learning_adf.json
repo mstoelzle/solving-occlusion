@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning_afd",
+    "name": "unet_synthetic_height_map_learning_adf",
     "cuda": true,
     "experiment": {
         "task_path": {
