@@ -29,7 +29,7 @@ class BaseModel(ABC, nn.Module):
 
         self.dropout_mode = False
         self.dropout_p = self.config.get("training_dropout_probability", 0.0)
-        self.training_dropout = True if self.dropout_p > 0.0 else False
+        self.use_training_dropout = True if self.dropout_p > 0.0 else False
 
         self.adf = False
         self.keep_variance_fn = None
@@ -49,7 +49,7 @@ class BaseModel(ABC, nn.Module):
             model_uncertainty_config = self.config["model_uncertainty_estimation"]
             self.model_uncertainty_method = ModelUncertaintyMethodEnum(model_uncertainty_config["method"])
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
-                if self.training_dropout:
+                if self.use_training_dropout:
                     assert self.dropout_p == model_uncertainty_config["probability"]
                 else:
                     self.dropout_p = model_uncertainty_config["probability"]
@@ -62,26 +62,13 @@ class BaseModel(ABC, nn.Module):
             else:
                 raise NotImplementedError
 
-    def train(self, mode: bool = True, dropout_mode: bool = False):
+    def train(self, mode: bool = True):
         """
         Attention: This method is quite resource-intensive. Only call if needed
         """
-
         super().train(mode=mode)
 
-        # PyTorch automatically deactivates dropout for evaluation
-        # however for uncertainty estimation with monte carlo dropout we still need it during evaluation
-        if mode != dropout_mode:
-            # TODO: could we solve this more efficiently?
-            for m in self.modules():
-                # print(m.__class__.__name__)
-                if m.__class__.__name__.startswith('Dropout'):
-                    if dropout_mode:
-                        m.train()
-                    else:
-                        m.eval()
-
-        self.dropout_mode = dropout_mode
+        self.dropout_mode = mode
 
     def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
@@ -89,8 +76,7 @@ class BaseModel(ABC, nn.Module):
 
         output = {}
 
-        if self.dropout_mode != self.training_dropout:
-            self.train(mode=self.training, dropout_mode=True if self.training and self.training_dropout else False)
+        self.set_dropout_mode(dropout_mode=True if self.training and self.use_training_dropout else False)
 
         data_uncertainty = None
         x = self.forward_pass(input=input, data=data)
@@ -104,9 +90,7 @@ class BaseModel(ABC, nn.Module):
         model_uncertainty = None
         if self.num_solutions > 1 and self.training is False:
             if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
-                if self.dropout_mode is False:
-                    # activate dropout if necessary
-                    self.train(mode=self.training, dropout_mode=True)
+                self.set_dropout_mode(True)
 
                 dem_solutions = []
                 data_uncertainties = []
@@ -482,3 +466,16 @@ class BaseModel(ABC, nn.Module):
 
         return {LossEnum.PERCEPTUAL: perceptual_loss,
                 LossEnum.STYLE: style_loss}
+
+    def set_dropout_mode(self, dropout_mode: bool = False):
+        if self.dropout_mode != dropout_mode:
+            self.apply(lambda m: apply_dropout(m, dropout_mode))
+            self.dropout_mode = dropout_mode
+
+
+def apply_dropout(m: nn.Module, dropout_mode: bool = False):
+    if m.__class__.__name__.startswith('Dropout'):
+        if dropout_mode:
+            m.train()
+        else:
+            m.eval()
