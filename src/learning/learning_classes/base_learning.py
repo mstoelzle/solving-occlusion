@@ -9,6 +9,7 @@ from typing import *
 
 import torch
 from torch import optim
+import torch.autograd.profiler as profiler
 
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
@@ -17,8 +18,8 @@ from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.tasks import Task
-from src.utils.log import get_logger, log_memory_usage
 from src.utils.digest import TensorboardDigest
+from src.utils.log import get_logger
 
 logger = get_logger("base_learning")
 
@@ -127,7 +128,6 @@ class BaseLearning(ABC):
 
         if self.optimizer is not None:
             for epoch in self.controller:
-                log_memory_usage(f"before epoch {epoch}", self.logger)
                 self.train_epoch(epoch)
                 self.validate_epoch(epoch)
 
@@ -164,14 +164,17 @@ class BaseLearning(ABC):
             raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
         dataloader_meta_info = DataloaderMetaInfo(dataloader)
-        with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad():
+        with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad(), \
+             profiler.profile() as prof:
             start_idx = 0
             progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
-                output = self.model(data)
+                with profiler.record_function("model_inference"):
+                    output = self.model(data)
+
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx,
                                                     dataloader_meta_info.length)
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, start_idx,
@@ -189,7 +192,12 @@ class BaseLearning(ABC):
 
                 start_idx += batch_size
                 progress_bar.next()
+
             progress_bar.finish()
+
+        with open(str(self.task.logdir / "test_cputime.txt"), "a") as f:
+            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+        prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
 
     def infer(self):
         hdf5_group_prefix = f"/task_{self.task.uid}/inference"
@@ -203,19 +211,26 @@ class BaseLearning(ABC):
 
         dataloader_meta_info = DataloaderMetaInfo(dataloader)
 
-        start_idx = 0
-        progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
-        for batch_idx, data in enumerate(dataloader):
-            data = self.dict_to_device(data)
-            batch_size = data[ChannelEnum.OCC_DEM].size(0)
+        with torch.no_grad(), profiler.profile() as prof:
+            start_idx = 0
+            progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
+            for batch_idx, data in enumerate(dataloader):
+                data = self.dict_to_device(data)
+                batch_size = data[ChannelEnum.OCC_DEM].size(0)
 
-            output = self.model(data)
-            self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
-            self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
+                with profiler.record_function("model_inference"):
+                    output = self.model(data)
 
-            start_idx += batch_size
-            progress_bar.next()
-        progress_bar.finish()
+                self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
+                self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
+
+                start_idx += batch_size
+                progress_bar.next()
+            progress_bar.finish()
+
+        with open(str(self.task.logdir / "inference_cputime.txt"), "a") as f:
+            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+        prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:
