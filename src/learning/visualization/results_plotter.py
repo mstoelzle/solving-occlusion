@@ -9,6 +9,7 @@ import torch
 from typing import *
 import warnings
 
+from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot
 from src.enums import *
 from src.utils.log import get_logger
 
@@ -129,6 +130,10 @@ class ResultsPlotter:
             # we only visualize the robot position if its inside the elevation map
             plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
                                   and 0 < robot_plot_y < occluded_elevation_map.shape[1]
+            if plot_robot_position:
+                robot_position = np.array([robot_plot_x, robot_plot_y])
+            else:
+                robot_position = None
 
             for i, ax in enumerate(axes.reshape(-1)):
                 if plot_robot_position:
@@ -192,142 +197,18 @@ class ResultsPlotter:
 
             if gt_dem is not None \
                     or data_uncertainty_map is not None or model_uncertainty_map is not None:
-                fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
-
-                error_uncertainty_vmin = np.Inf
-                error_uncertainty_vmax = -np.Inf
-                if data_uncertainty_map is not None:
-                    data_uncertainty_min = np.min(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
-                    data_uncertainty_max = np.max(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
-                    error_uncertainty_vmin = np.min([error_uncertainty_vmin, data_uncertainty_min])
-                    error_uncertainty_vmax = np.max([error_uncertainty_vmax, data_uncertainty_max])
-                if model_uncertainty_map is not None:
-                    model_uncertainty_min = np.min(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
-                    model_uncertainty_max = np.max(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
-                    error_uncertainty_vmin = np.min([error_uncertainty_vmin, model_uncertainty_min])
-                    error_uncertainty_vmax = np.max([error_uncertainty_vmax, model_uncertainty_max])
-
-                error_uncertainty_cmap = plt.get_cmap("RdYlGn_r")
-
-                if gt_dem is not None:
-                    rec_abs_error = np.abs(rec_dem - gt_dem)
-                    comp_abs_error = np.abs(comp_dem - gt_dem)
-
-                    error_uncertainty_vmin = np.min([error_uncertainty_vmin,
-                                                     np.min(rec_abs_error), np.min(comp_abs_error)])
-                    error_uncertainty_vmax = np.max([error_uncertainty_vmax,
-                                                     np.max(rec_abs_error), np.max(comp_abs_error)])
-
-                    axes[0, 0].set_title("Reconstruction error")
-                    # matshow plots x and y swapped
-                    mat = axes[0, 0].matshow(np.swapaxes(rec_abs_error, 0, 1), cmap=error_uncertainty_cmap,
-                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
-                    if plot_robot_position:
-                        axes[0, 0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-                    axes[0, 0].grid(False)
-
-                    axes[0, 1].set_title("Composition error")
-                    # matshow plots x and y swapped
-                    mat = axes[0, 1].matshow(np.swapaxes(comp_abs_error, 0, 1), cmap=error_uncertainty_cmap,
-                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
-                    if plot_robot_position:
-                        axes[0, 1].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-                    axes[0, 1].grid(False)
-
-                    # axes.append(fig.add_subplot(122, projection="3d"))
-                    # axes[1].set_title("Reconstruction error")
-                    # # the np.NaNs in the ground-truth elevation maps give us these warnings:
-                    # warnings.filterwarnings("ignore", category=UserWarning)
-                    # axes[1].plot_surface(x_3d, y_3d, np.abs(rec_dem - gt_dem),
-                    #                      cmap=plt.get_cmap("RdYlGn_r"))
-                    # warnings.filterwarnings("default", category=UserWarning)
-                    # axes[1].set_xlabel("x [m]")
-                    # axes[1].set_ylabel("y [m]")
-                    # axes[1].set_zlabel("z [m]")
-
-                if data_uncertainty_map is not None:
-                    axes[1, 0].set_title("Data uncertainty")
-                    # matshow plots x and y swapped
-                    mat = axes[1, 0].matshow(np.swapaxes(data_uncertainty_map, 0, 1), cmap=error_uncertainty_cmap,
-                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
-                    if plot_robot_position:
-                        axes[1, 0].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-                    axes[1, 0].grid(False)
-
-                if model_uncertainty_map is not None:
-                    axes[1, 1].set_title("Model uncertainty")
-                    # matshow plots x and y swapped
-                    mat = axes[1, 1].matshow(np.swapaxes(model_uncertainty_map, 0, 1), cmap=error_uncertainty_cmap,
-                                             vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
-                    if plot_robot_position:
-                        axes[1, 1].plot(robot_plot_x, robot_plot_y, marker="*", color="blue")
-                    axes[1, 1].grid(False)
-
-                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
-
-                plt.draw()
-                plt.savefig(str(logdir / f"error_uncertainty_{idx}.pdf"))
-                if self.remote is not True:
-                    plt.show()
-                plt.close()
+                draw_error_uncertainty_plot(idx, logdir,
+                                            gt_dem, rec_dem, comp_dem,
+                                            model_uncertainty_map, data_uncertainty_map,
+                                            robot_position=robot_position, remote=self.remote)
 
             if rec_dems is not None:
-                num_solutions = rec_dems.shape[0]
-                grid_size = int(np.floor(np.sqrt(num_solutions)).item())
-
-                fig, axes = plt.subplots(nrows=grid_size, ncols=grid_size, figsize=[2 * 6.4, 2 * 6.4])
-                plt.title("Reconstruction solutions")
-
-                rec_dems_vmin = np.min(rec_dems)
-                rec_dems_vmax = np.max(rec_dems)
-
-                rec_dems_cmap = plt.get_cmap("viridis")
-
-                solution_idx = 0
-                for i in range(grid_size):
-                    for j in range(grid_size):
-                        mat = axes[i, j].matshow(np.swapaxes(rec_dems[solution_idx, ...], 0, 1),
-                                                 cmap=rec_dems_cmap, vmin=rec_dems_vmin, vmax=rec_dems_vmax)
-                        axes[i, j].grid(False)
-
-                        solution_idx += 1
-
-                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
-
-                plt.draw()
-                plt.savefig(str(logdir / f"rec_dems_{idx}.pdf"))
-                if self.remote is not True:
-                    plt.show()
-                plt.close()
+                draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
+                                    robot_position=robot_position, remote=self.remote)
 
             if comp_dems is not None:
-                num_solutions = comp_dems.shape[0]
-                grid_size = int(np.floor(np.sqrt(num_solutions)).item())
-
-                fig, axes = plt.subplots(nrows=grid_size, ncols=grid_size, figsize=[2 * 6.4, 2 * 6.4])
-                plt.title("Composition solutions")
-
-                comp_dems_vmin = np.min(comp_dems)
-                comp_dems_vmax = np.max(comp_dems)
-
-                comp_dems_cmap = plt.get_cmap("viridis")
-
-                solution_idx = 0
-                for i in range(grid_size):
-                    for j in range(grid_size):
-                        mat = axes[i, j].matshow(np.swapaxes(comp_dems[solution_idx, ...], 0, 1),
-                                                 cmap=comp_dems_cmap, vmin=comp_dems_vmin, vmax=comp_dems_vmax)
-                        axes[i, j].grid(False)
-
-                        solution_idx += 1
-
-                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
-
-                plt.draw()
-                plt.savefig(str(logdir / f"comp_dems_{idx}.pdf"))
-                if self.remote is not True:
-                    plt.show()
-                plt.close()
+                draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
+                                    robot_position=robot_position, remote=self.remote)
 
             progress_bar.next()
         progress_bar.finish()
