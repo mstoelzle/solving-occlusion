@@ -200,7 +200,8 @@ class ResultsPlotter:
                 draw_error_uncertainty_plot(idx, logdir,
                                             gt_dem, rec_dem, comp_dem,
                                             model_uncertainty_map, data_uncertainty_map,
-                                            robot_position=robot_position, remote=self.remote)
+                                            robot_position=robot_position, remote=self.remote,
+                                            indiv_vranges=self.config.get("indiv_vranges", False))
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
