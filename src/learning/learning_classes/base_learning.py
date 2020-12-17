@@ -17,8 +17,9 @@ from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.tasks import Task
-from src.utils.log import get_logger, log_memory_usage
 from src.utils.digest import TensorboardDigest
+from src.utils.log import get_logger, log_memory_usage
+from src.utils.runtime import RuntimeStatistics
 
 logger = get_logger("base_learning")
 
@@ -163,6 +164,9 @@ class BaseLearning(ABC):
         else:
             raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
+        runtime_statistics = RuntimeStatistics("test", dataloader.batch_size,
+                                               log=True, logdir=self.task.logdir)
+
         dataloader_meta_info = DataloaderMetaInfo(dataloader)
         with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad():
             start_idx = 0
@@ -171,7 +175,9 @@ class BaseLearning(ABC):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
-                output = self.model(data)
+                with runtime_statistics:
+                    output = self.model(data)
+
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx,
                                                     dataloader_meta_info.length)
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, output, start_idx,
@@ -189,6 +195,8 @@ class BaseLearning(ABC):
 
                 start_idx += batch_size
                 progress_bar.next()
+
+            duration_mean, duration_std = runtime_statistics.collect_statistics()
             progress_bar.finish()
 
     def infer(self):
