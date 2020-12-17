@@ -427,7 +427,7 @@ class BaseModel(ABC, nn.Module):
             nll_data = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
                                            input_variance=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
                                            target=data[ChannelEnum.GT_DEM], **kwargs)
-            loss_dict[LossEnum.NLL_MODEL] = nll_data
+            loss_dict[LossEnum.NLL_DATA] = nll_data
         if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
             nll_model = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
                                             input_variance=output[ChannelEnum.MODEL_UNCERTAINTY_MAP],
