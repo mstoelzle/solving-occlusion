@@ -92,6 +92,20 @@ class ResultsPlotter:
             if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
                 comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
 
+            terrain_resolution = params[0]
+            robot_position_x = params[1]
+            robot_position_y = params[2]
+            robot_position_z = params[3]
+            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
+            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
+            # we only visualize the robot position if its inside the elevation map
+            plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
+                                  and 0 < robot_plot_y < occluded_elevation_map.shape[1]
+            if plot_robot_position:
+                robot_plot_position = np.array([robot_plot_x, robot_plot_y])
+            else:
+                robot_plot_position = None
+
             # 2D
             elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(rec_dem),
                                      np.min(comp_dem)])
@@ -126,20 +140,6 @@ class ResultsPlotter:
             mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
             fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
-
-            terrain_resolution = params[0]
-            robot_position_x = params[1]
-            robot_position_y = params[2]
-            robot_position_z = params[3]
-            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
-            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
-            # we only visualize the robot position if its inside the elevation map
-            plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
-                                  and 0 < robot_plot_y < occluded_elevation_map.shape[1]
-            if plot_robot_position:
-                robot_position = np.array([robot_plot_x, robot_plot_y])
-            else:
-                robot_position = None
 
             for i, ax in enumerate(axes.reshape(-1)):
                 if plot_robot_position:
@@ -207,16 +207,16 @@ class ResultsPlotter:
                                             gt_dem, rec_dem, comp_dem,
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
-                                            robot_position=robot_position, remote=self.remote,
+                                            robot_plot_position=robot_plot_position, remote=self.remote,
                                             indiv_vranges=self.config.get("indiv_vranges", False))
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
-                                    robot_position=robot_position, remote=self.remote)
+                                    robot_plot_position=robot_plot_position, remote=self.remote)
 
             if comp_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
-                                    robot_position=robot_position, remote=self.remote)
+                                    robot_plot_position=robot_plot_position, remote=self.remote)
 
             progress_bar.next()
         progress_bar.finish()

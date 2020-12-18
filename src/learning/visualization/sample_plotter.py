@@ -9,7 +9,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                 gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
                                 rec_data_um: np.array = None, comp_data_um: np.array = None,
                                 model_um: np.array = None, total_um: np.array = None,
-                                robot_position: np.array = None, remote=False, indiv_vranges=False):
+                                robot_plot_position: np.array = None, remote=False, indiv_vranges=False):
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9*10])
 
     cmap = plt.get_cmap("RdYlGn_r")
@@ -57,8 +57,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[0, 0], fraction=0.10)
-        if robot_position is not None:
-            axes[0, 0].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[0, 0].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[0, 0].grid(False)
 
         axes[0, 1].set_title("Composition error")
@@ -67,8 +67,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[0, 1], fraction=0.10)
-        if robot_position is not None:
-            axes[0, 1].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[0, 1].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[0, 1].grid(False)
 
         # axes.append(fig.add_subplot(122, projection="3d"))
@@ -89,8 +89,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 0], fraction=0.10)
-        if robot_position is not None:
-            axes[1, 0].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[1, 0].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[1, 0].grid(False)
 
     if comp_data_um is not None:
@@ -100,8 +100,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 1], fraction=0.10)
-        if robot_position is not None:
-            axes[1, 1].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[1, 1].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[1, 1].grid(False)
 
 
@@ -112,8 +112,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[2, 0], fraction=0.10)
-        if robot_position is not None:
-            axes[2, 0].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[2, 0].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[2, 0].grid(False)
 
     if total_um is not None:
@@ -123,8 +123,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[2, 1], fraction=0.10)
-        if robot_position is not None:
-            axes[2, 1].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        if robot_plot_position is not None:
+            axes[2, 1].plot(robot_plot_position[0], robot_plot_position[1], marker="*", color="blue")
         axes[2, 1].grid(False)
 
     if indiv_vranges is False:
@@ -139,7 +139,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 
 def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
                         channel: ChannelEnum, dems: np.array,
-                        robot_position: np.array = None, remote=False):
+                        robot_plot_position: np.array = None, remote=False):
 
     num_solutions = dems.shape[0]
     grid_size = int(np.floor(np.sqrt(num_solutions)).item())
