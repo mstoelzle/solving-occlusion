@@ -102,8 +102,8 @@ class UNetVAE(BaseVAE):
             model_uncertainty = torch.var(dem_solutions, dim=1)
 
             output[ChannelEnum.REC_DEMS] = dem_solutions
-            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
-            output[ChannelEnum.TOTAL_UNCERTAINTY_MAP] = model_uncertainty
+            output[ChannelEnum.MODEL_UM] = model_uncertainty
+            output[ChannelEnum.TOTAL_UM] = model_uncertainty
 
             if self.use_mean_as_rec:
                 output[ChannelEnum.REC_DEM] = torch.mean(dem_solutions, dim=1)

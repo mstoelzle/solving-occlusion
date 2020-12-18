@@ -73,11 +73,11 @@ class ResultsPlotter:
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
             data_uncertainty_map = None
-            if ChannelEnum.DATA_UNCERTAINTY_MAP.value in data_hdf5_group:
-                data_uncertainty_map = data_hdf5_group[ChannelEnum.DATA_UNCERTAINTY_MAP.value][idx, ...]
+            if ChannelEnum.REC_DATA_UM.value in data_hdf5_group:
+                data_uncertainty_map = data_hdf5_group[ChannelEnum.REC_DATA_UM.value][idx, ...]
             model_uncertainty_map = None
-            if ChannelEnum.MODEL_UNCERTAINTY_MAP.value in data_hdf5_group:
-                model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UNCERTAINTY_MAP.value][idx, ...]
+            if ChannelEnum.MODEL_UM.value in data_hdf5_group:
+                model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UM.value][idx, ...]
 
             rec_dems = None
             if ChannelEnum.REC_DEMS.value in data_hdf5_group:

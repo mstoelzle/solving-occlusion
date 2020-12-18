@@ -115,13 +115,13 @@ class BaseModel(ABC, nn.Module):
             else:
                 raise NotImplementedError
 
-            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
+            output[ChannelEnum.MODEL_UM] = model_uncertainty
             output[ChannelEnum.REC_DEMS] = dem_solutions
 
         if data_uncertainty is not None:
-            output[ChannelEnum.DATA_UNCERTAINTY_MAP] = data_uncertainty
+            output[ChannelEnum.REC_DATA_UM] = data_uncertainty
         if model_uncertainty is not None:
-            output[ChannelEnum.MODEL_UNCERTAINTY_MAP] = model_uncertainty
+            output[ChannelEnum.MODEL_UM] = model_uncertainty
 
         if data_uncertainty is not None and model_uncertainty is not None:
             total_uncertainty = data_uncertainty + model_uncertainty
@@ -132,7 +132,7 @@ class BaseModel(ABC, nn.Module):
         else:
             total_uncertainty = None
         if total_uncertainty is not None:
-            output[ChannelEnum.TOTAL_UNCERTAINTY_MAP] = total_uncertainty
+            output[ChannelEnum.TOTAL_UM] = total_uncertainty
 
         output = self.denormalize_output(data, output, norm_consts)
 
@@ -407,19 +407,19 @@ class BaseModel(ABC, nn.Module):
                                                           data_max=dataloader_meta_info.max,
                                                           **kwargs)
 
-        if ChannelEnum.DATA_UNCERTAINTY_MAP in output:
+        if ChannelEnum.REC_DATA_UM in output:
             nll_data = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
-                                           input_variance=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
+                                           input_variance=output[ChannelEnum.REC_DATA_UM],
                                            target=data[ChannelEnum.GT_DEM], **kwargs)
             loss_dict[LossEnum.NLL_DATA] = nll_data
-        if ChannelEnum.MODEL_UNCERTAINTY_MAP in output:
+        if ChannelEnum.MODEL_UM in output:
             nll_model = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
-                                            input_variance=output[ChannelEnum.MODEL_UNCERTAINTY_MAP],
+                                            input_variance=output[ChannelEnum.MODEL_UM],
                                             target=data[ChannelEnum.GT_DEM], **kwargs)
             loss_dict[LossEnum.NLL_MODEL] = nll_model
-        if ChannelEnum.TOTAL_UNCERTAINTY_MAP in output:
+        if ChannelEnum.TOTAL_UM in output:
             nll_total = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
-                                            input_variance=output[ChannelEnum.TOTAL_UNCERTAINTY_MAP],
+                                            input_variance=output[ChannelEnum.TOTAL_UM],
                                             target=data[ChannelEnum.GT_DEM], **kwargs)
             loss_dict[LossEnum.NLL_TOTAL] = nll_total
 

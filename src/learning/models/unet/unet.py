@@ -128,7 +128,7 @@ class UNet(BaseModel):
 
             if self.adf and adf_het_weight > 0:
                 loss_dict[LossEnum.ADF_HET] = adf_heteroscedastic_loss_fct(mu=output[ChannelEnum.REC_DEM],
-                                                                           log_var=output[ChannelEnum.DATA_UNCERTAINTY_MAP],
+                                                                           log_var=output[ChannelEnum.REC_DATA_UM],
                                                                            target=data[ChannelEnum.GT_DEM])
 
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
