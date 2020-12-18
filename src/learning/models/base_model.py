@@ -145,6 +145,7 @@ class BaseModel(ABC, nn.Module):
     def assemble_input(self, data: Dict[Union[str, ChannelEnum], torch.Tensor]) \
             -> Tuple[Union[List, torch.Tensor], Dict]:
         input = None
+        var = None
         norm_consts = {}
         for channel_idx, in_channel in enumerate(self.in_channels):
             if in_channel in data:
@@ -161,23 +162,25 @@ class BaseModel(ABC, nn.Module):
 
             if in_channel == ChannelEnum.OCC_DEM:
                 channel_data = self.preprocess_occluded_map(channel_data)
-
-            if in_channel == ChannelEnum.OCC_MASK:
+            elif in_channel == ChannelEnum.OCC_MASK:
                 channel_data = ~channel_data
 
             if input is None:
                 input_size = (channel_data.size(0), len(self.in_channels), channel_data.size(1), channel_data.size(2))
                 input = channel_data.new_zeros(size=input_size, dtype=torch.float32)
 
-            input[:, channel_idx, ...] = channel_data.unsqueeze(dim=1)[:, 0, :, :]
+                if self.adf:
+                    var = channel_data.new_zeros(size=input_size, dtype=torch.float32)
+
+            input[:, channel_idx, ...] = channel_data
+
+            if self.adf:
+                if in_channel == ChannelEnum.OCC_DEM:
+                    occ_data_um = data[ChannelEnum.OCC_DATA_UM]
+                    occ_data_um = self.preprocess_occluded_map(occ_data_um)
+                    var[:, channel_idx, ...] = occ_data_um
 
         if self.adf:
-            # TODO: implement actual data uncertainty estimation
-            occ_data_uncertainty = torch.ones_like(data[ChannelEnum.OCC_DEM]) * 0.0001
-            occ_data_uncertainty[data[ChannelEnum.OCC_MASK] == 1] = np.NaN
-            occ_data_uncertainty = self.preprocess_occluded_map(occ_data_uncertainty)
-            var = torch.zeros_like(input)
-            var[:, 0, ...] = occ_data_uncertainty
             input = [input, var]
 
         return input, norm_consts
@@ -242,7 +245,7 @@ class BaseModel(ABC, nn.Module):
             denorm_output[ChannelEnum.COMP_DEMS] = self.create_composed_map(occ_dems, rec_dems)
 
         if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.REC_DATA_UM in denorm_output:
-            occ_data_um, rec_data_um = data[ChannelEnum.OCC_DATA_UM], data[ChannelEnum.REC_DATA_UM]
+            occ_data_um, rec_data_um = data[ChannelEnum.OCC_DATA_UM], denorm_output[ChannelEnum.REC_DATA_UM]
             denorm_output[ChannelEnum.COMP_DATA_UM] = self.create_composed_map(occ_data_um, rec_data_um)
 
         return denorm_output

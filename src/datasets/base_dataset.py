@@ -128,6 +128,17 @@ class BaseDataset(ABC):
 
             output[ChannelEnum.GT_DEM] = output[ChannelEnum.OCC_DEM].clone()
 
+        if ChannelEnum.OCC_DATA_UM not in output and self.config.get("init_occ_data_um", False) is not False:
+            init_occ_data_um = self.config["init_occ_data_um"]
+            if type(init_occ_data_um) == bool:
+                occ_data_um = torch.zeros(size=output[ChannelEnum.OCC_DEM].size())
+            elif type(init_occ_data_um) == float:
+                occ_data_um = torch.ones(size=output[ChannelEnum.OCC_DEM].size()) * init_occ_data_um
+            else:
+                raise NotImplementedError
+            occ_data_um[output[ChannelEnum.OCC_MASK] == 1] = np.NaN
+            output[ChannelEnum.OCC_DATA_UM] = occ_data_um
+
         if self.transform is not None:
             output = self.transform(output)
 
