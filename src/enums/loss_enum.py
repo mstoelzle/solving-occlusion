@@ -12,6 +12,7 @@ class LossEnum(Enum):
     MSE_REC_ALL = "mse_rec_all"
     MSE_REC_OCC = "mse_rec_occ"
     MSE_REC_NOCC = "mse_rec_nocc"
+    MSE_REC_DATA_UM_NOCC = "mse_rec_data_um_nocc"
     MSE_COMP_ALL = "mse_comp_all"
     NLL_REC_DATA = "nll_rec_data"
     NLL_COMP_DATA = "nll_comp_data"

@@ -117,6 +117,7 @@ class UNet(BaseModel):
             style_weight = weights.get(LossEnum.STYLE.value, 0)
             total_variation_weight = weights.get(LossEnum.TV.value, 0)
             adf_het_weight = weights.get(LossEnum.ADF_HET.value, 0)
+            mse_rec_data_um_nocc_weight = weights.get(LossEnum.MSE_REC_DATA_UM_NOCC.value, 0)
 
             if perceptual_weight > 0 or style_weight > 0:
                 artistic_loss = self.artistic_loss_function(loss_config=loss_config, output=output, data=data, **kwargs)
@@ -136,7 +137,9 @@ class UNet(BaseModel):
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
                    + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
                    + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
-                   + total_variation_weight * loss_dict.get(LossEnum.TV, 0.)
+                   + total_variation_weight * loss_dict.get(LossEnum.TV, 0.) \
+                   + adf_het_weight * loss_dict.get(LossEnum.ADF_HET, 0.) \
+                   + mse_rec_data_um_nocc_weight * loss_dict.get(LossEnum.MSE_REC_DATA_UM_NOCC, 0.)
 
             loss_dict.update({LossEnum.LOSS: loss})
 

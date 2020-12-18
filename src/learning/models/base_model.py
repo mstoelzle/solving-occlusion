@@ -416,6 +416,17 @@ class BaseModel(ABC, nn.Module):
                                                input_variance=output[ChannelEnum.REC_DATA_UM],
                                                target=data[ChannelEnum.GT_DEM], **kwargs)
             loss_dict[LossEnum.NLL_REC_DATA] = nll_rec_data
+
+            # MSE error between input, occluded data uncertainty and reconstructed data uncertainty
+            # masked for non-occluded area
+            mse_rec_data_um_nocc = loss_dict[LossEnum.MSE_REC_NOCC] = masked_loss_fct(
+                mse_loss_fct,
+                output[ChannelEnum.REC_DATA_UM],
+                data[ChannelEnum.OCC_DATA_UM],
+                ~data[ChannelEnum.OCC_MASK],
+                **kwargs)
+            loss_dict[LossEnum.MSE_REC_DATA_UM_NOCC] = mse_rec_data_um_nocc
+
         if ChannelEnum.COMP_DATA_UM in output:
             nll_comp_data = -log_likelihood_fct(input_mean=output[ChannelEnum.COMP_DEM],
                                                input_variance=output[ChannelEnum.COMP_DATA_UM],
