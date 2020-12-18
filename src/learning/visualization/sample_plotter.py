@@ -7,25 +7,36 @@ from src.enums import *
 
 def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                 gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
-                                model_uncertainty_map: np.array = None, data_uncertainty_map: np.array = None,
+                                rec_data_um: np.array = None, comp_data_um: np.array = None,
+                                model_um: np.array = None, total_um: np.array = None,
                                 robot_position: np.array = None, remote=False, indiv_vranges=False):
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9*10])
 
     cmap = plt.get_cmap("RdYlGn_r")
 
     if indiv_vranges is False:
         error_uncertainty_vmin = np.Inf
         error_uncertainty_vmax = -np.Inf
-        if data_uncertainty_map is not None:
-            data_uncertainty_min = np.min(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
-            data_uncertainty_max = np.max(data_uncertainty_map[~np.isnan(data_uncertainty_map)])
-            error_uncertainty_vmin = np.min([error_uncertainty_vmin, data_uncertainty_min])
-            error_uncertainty_vmax = np.max([error_uncertainty_vmax, data_uncertainty_max])
-        if model_uncertainty_map is not None:
-            model_uncertainty_min = np.min(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
-            model_uncertainty_max = np.max(model_uncertainty_map[~np.isnan(model_uncertainty_map)])
-            error_uncertainty_vmin = np.min([error_uncertainty_vmin, model_uncertainty_min])
-            error_uncertainty_vmax = np.max([error_uncertainty_vmax, model_uncertainty_max])
+        if rec_data_um is not None:
+            comp_data_um_min = np.min(rec_data_um[~np.isnan(rec_data_um)])
+            comp_data_um_max = np.max(rec_data_um[~np.isnan(rec_data_um)])
+            error_uncertainty_vmin = np.min([error_uncertainty_vmin, comp_data_um_min])
+            error_uncertainty_vmax = np.max([error_uncertainty_vmax, comp_data_um_max])
+        if comp_data_um is not None:
+            comp_data_um_min = np.min(comp_data_um[~np.isnan(comp_data_um)])
+            comp_data_um_max = np.max(comp_data_um[~np.isnan(comp_data_um)])
+            error_uncertainty_vmin = np.min([error_uncertainty_vmin, comp_data_um_min])
+            error_uncertainty_vmax = np.max([error_uncertainty_vmax, comp_data_um_max])
+        if model_um is not None:
+            total_um_min = np.min(model_um[~np.isnan(model_um)])
+            total_um_max = np.max(model_um[~np.isnan(model_um)])
+            error_uncertainty_vmin = np.min([error_uncertainty_vmin, total_um_min])
+            error_uncertainty_vmax = np.max([error_uncertainty_vmax, total_um_max])
+        if total_um is not None:
+            total_um_min = np.min(total_um[~np.isnan(total_um)])
+            total_um_max = np.max(total_um[~np.isnan(total_um)])
+            error_uncertainty_vmin = np.min([error_uncertainty_vmin, total_um_min])
+            error_uncertainty_vmax = np.max([error_uncertainty_vmax, total_um_max])
     else:
         error_uncertainty_vmin = None
         error_uncertainty_vmax = None
@@ -71,10 +82,10 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
         # axes[1].set_ylabel("y [m]")
         # axes[1].set_zlabel("z [m]")
 
-    if data_uncertainty_map is not None:
-        axes[1, 0].set_title("Data uncertainty")
+    if rec_data_um is not None:
+        axes[1, 0].set_title("Reconstructed data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(data_uncertainty_map, 0, 1), cmap=cmap,
+        mat = axes[1, 0].matshow(np.swapaxes(rec_data_um, 0, 1), cmap=cmap,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 0], fraction=0.10)
@@ -82,10 +93,10 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
             axes[1, 0].plot(robot_position[0], robot_position[1], marker="*", color="blue")
         axes[1, 0].grid(False)
 
-    if model_uncertainty_map is not None:
-        axes[1, 1].set_title("Model uncertainty")
+    if comp_data_um is not None:
+        axes[1, 1].set_title("Composed data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(model_uncertainty_map, 0, 1), cmap=cmap,
+        mat = axes[1, 1].matshow(np.swapaxes(comp_data_um, 0, 1), cmap=cmap,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 1], fraction=0.10)
@@ -93,8 +104,31 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
             axes[1, 1].plot(robot_position[0], robot_position[1], marker="*", color="blue")
         axes[1, 1].grid(False)
 
+
+    if model_um is not None:
+        axes[2, 0].set_title("Model uncertainty")
+        # matshow plots x and y swapped
+        mat = axes[2, 0].matshow(np.swapaxes(model_um, 0, 1), cmap=cmap,
+                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        if indiv_vranges:
+            fig.colorbar(mat, ax=axes[2, 0], fraction=0.10)
+        if robot_position is not None:
+            axes[2, 0].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        axes[2, 0].grid(False)
+
+    if total_um is not None:
+        axes[2, 1].set_title("Total uncertainty")
+        # matshow plots x and y swapped
+        mat = axes[2, 1].matshow(np.swapaxes(total_um, 0, 1), cmap=cmap,
+                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        if indiv_vranges:
+            fig.colorbar(mat, ax=axes[2, 1], fraction=0.10)
+        if robot_position is not None:
+            axes[2, 1].plot(robot_position[0], robot_position[1], marker="*", color="blue")
+        axes[2, 1].grid(False)
+
     if indiv_vranges is False:
-        fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+        fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.1)
 
     plt.draw()
     plt.savefig(str(logdir / f"error_uncertainty_{sample_idx}.pdf"))

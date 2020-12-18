@@ -86,8 +86,8 @@ class OpenCVBaseline(BaseBaselineModel):
 
             rec_dem[idx, ...] = reconstructed_map
 
-        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM],
-                                                                    rec_dem)
+        comp_dem = self.create_composed_map(data[ChannelEnum.OCC_DEM],
+                                            rec_dem)
 
         output = {ChannelEnum.REC_DEM: rec_dem,
                   ChannelEnum.COMP_DEM: comp_dem}

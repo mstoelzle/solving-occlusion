@@ -196,8 +196,8 @@ class BaseModel(ABC, nn.Module):
 
         return poem
 
-    def create_composed_elevation_map(self, occ_dem: torch.Tensor,
-                                      rec_dem: torch.Tensor) -> torch.Tensor:
+    def create_composed_map(self, occ_dem: torch.Tensor,
+                            rec_dem: torch.Tensor) -> torch.Tensor:
         comp_dem = occ_dem.clone()
 
         selector = torch.isnan(occ_dem)
@@ -230,7 +230,7 @@ class BaseModel(ABC, nn.Module):
             denorm_output = output
 
         rec_dem = denorm_output[ChannelEnum.REC_DEM]
-        comp_dem = self.create_composed_elevation_map(data[ChannelEnum.OCC_DEM], rec_dem)
+        comp_dem = self.create_composed_map(data[ChannelEnum.OCC_DEM], rec_dem)
         denorm_output[ChannelEnum.COMP_DEM] = comp_dem
 
         if ChannelEnum.REC_DEMS in denorm_output:
@@ -239,7 +239,11 @@ class BaseModel(ABC, nn.Module):
             for i in range(rec_dems.size(dim=1)):
                 occ_dems.append(data[ChannelEnum.OCC_DEM])
             occ_dems = torch.stack(occ_dems, dim=1)
-            denorm_output[ChannelEnum.COMP_DEMS] = self.create_composed_elevation_map(occ_dems, rec_dems)
+            denorm_output[ChannelEnum.COMP_DEMS] = self.create_composed_map(occ_dems, rec_dems)
+
+        if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.REC_DATA_UM in denorm_output:
+            occ_data_um, rec_data_um = data[ChannelEnum.OCC_DATA_UM], data[ChannelEnum.REC_DATA_UM]
+            denorm_output[ChannelEnum.COMP_DATA_UM] = self.create_composed_map(occ_data_um, rec_data_um)
 
         return denorm_output
 

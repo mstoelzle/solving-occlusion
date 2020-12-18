@@ -72,12 +72,18 @@ class ResultsPlotter:
 
             non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
 
-            data_uncertainty_map = None
+            rec_data_um = None
             if ChannelEnum.REC_DATA_UM.value in data_hdf5_group:
-                data_uncertainty_map = data_hdf5_group[ChannelEnum.REC_DATA_UM.value][idx, ...]
-            model_uncertainty_map = None
+                rec_data_um = data_hdf5_group[ChannelEnum.REC_DATA_UM.value][idx, ...]
+            comp_data_um = None
+            if ChannelEnum.COMP_DATA_UM.value in data_hdf5_group:
+                comp_data_um = data_hdf5_group[ChannelEnum.COMP_DATA_UM.value][idx, ...]
+            model_um = None
             if ChannelEnum.MODEL_UM.value in data_hdf5_group:
-                model_uncertainty_map = data_hdf5_group[ChannelEnum.MODEL_UM.value][idx, ...]
+                model_um = data_hdf5_group[ChannelEnum.MODEL_UM.value][idx, ...]
+            total_um = None
+            if ChannelEnum.TOTAL_UM.value in data_hdf5_group:
+                total_um = data_hdf5_group[ChannelEnum.TOTAL_UM.value][idx, ...]
 
             rec_dems = None
             if ChannelEnum.REC_DEMS.value in data_hdf5_group:
@@ -196,10 +202,11 @@ class ResultsPlotter:
             plt.close()
 
             if gt_dem is not None \
-                    or data_uncertainty_map is not None or model_uncertainty_map is not None:
+                    or rec_data_um is not None or model_um is not None:
                 draw_error_uncertainty_plot(idx, logdir,
                                             gt_dem, rec_dem, comp_dem,
-                                            model_uncertainty_map, data_uncertainty_map,
+                                            rec_data_um=rec_data_um, comp_data_um=comp_data_um,
+                                            model_um=model_um, total_um=total_um,
                                             robot_position=robot_position, remote=self.remote,
                                             indiv_vranges=self.config.get("indiv_vranges", False))
 
