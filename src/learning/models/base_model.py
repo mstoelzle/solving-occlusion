@@ -123,17 +123,6 @@ class BaseModel(ABC, nn.Module):
         if model_uncertainty is not None:
             output[ChannelEnum.MODEL_UM] = model_uncertainty
 
-        if data_uncertainty is not None and model_uncertainty is not None:
-            total_uncertainty = data_uncertainty + model_uncertainty
-        elif data_uncertainty is not None:
-            total_uncertainty = data_uncertainty
-        elif model_uncertainty is not None:
-            total_uncertainty = model_uncertainty
-        else:
-            total_uncertainty = None
-        if total_uncertainty is not None:
-            output[ChannelEnum.TOTAL_UM] = total_uncertainty
-
         output = self.denormalize_output(data, output, norm_consts)
 
         return output
@@ -247,6 +236,14 @@ class BaseModel(ABC, nn.Module):
         if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.REC_DATA_UM in denorm_output:
             occ_data_um, rec_data_um = data[ChannelEnum.OCC_DATA_UM], denorm_output[ChannelEnum.REC_DATA_UM]
             denorm_output[ChannelEnum.COMP_DATA_UM] = self.create_composed_map(occ_data_um, rec_data_um)
+
+        if ChannelEnum.COMP_DATA_UM in denorm_output and ChannelEnum.MODEL_UM in denorm_output:
+            denorm_output[ChannelEnum.TOTAL_UM] = denorm_output[ChannelEnum.COMP_DATA_UM] \
+                                                  + denorm_output[ChannelEnum.MODEL_UM]
+        elif ChannelEnum.COMP_DATA_UM in denorm_output:
+            denorm_output[ChannelEnum.TOTAL_UM] = denorm_output[ChannelEnum.COMP_DATA_UM]
+        elif ChannelEnum.MODEL_UM in denorm_output:
+            denorm_output[ChannelEnum.TOTAL_UM] = denorm_output[ChannelEnum.MODEL_UM]
 
         return denorm_output
 
