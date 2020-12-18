@@ -27,7 +27,18 @@
                     "dataset": {
                         "type": "hdf5",
                         "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                        "size": [64, 64]
+                        "size": [64, 64],
+                        "init_occ_data_um": 0.0001,
+                        "transforms": {
+                            "defaults": [
+                                {
+                                    "type": "range_data_uncertainty",
+                                    "stdev": 0.1,
+                                    "range": 2.56,
+                                    "apply_to": ["occ_data_um"]
+                                }
+                            ]
+                        }
                     },
                     "num_workers": 4,
                     "shuffle": true

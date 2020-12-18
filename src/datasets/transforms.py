@@ -62,10 +62,10 @@ class Transformer:
         # distance of every pixel from the robot
         lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * terrain_resolution
         lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * terrain_resolution
-        off_x, off_y = np.meshgrid(lin_x, lin_y)
+        off_y, off_x = np.meshgrid(lin_x, lin_y)
 
-        dist_x = robot_position_x - off_x
-        dist_y = robot_position_y - off_y
+        dist_x = off_x - robot_position_x
+        dist_y = off_y - robot_position_y
         dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
 
         stdev = transform_config["stdev"]
@@ -174,7 +174,7 @@ class Transformer:
                     # data[channel] = transformed_value.to(dtype=torch.bool)
 
                     value[occlusion == 1] = True
-                elif channel == ChannelEnum.OCC_DEM:
+                elif channel in [ChannelEnum.OCC_DEM, ChannelEnum.OCC_DATA_UM]:
                     value[occlusion == 1] = np.nan
                 else:
                     raise NotImplementedError
@@ -212,6 +212,41 @@ class Transformer:
         dilated_occlusion = dilated_mask.squeeze(dim=0).squeeze(dim=0)
 
         data[ChannelEnum.OCC_MASK] = dilated_occlusion
-        data[ChannelEnum.OCC_DEM][dilated_occlusion == 1] = np.nan
+
+        if ChannelEnum.OCC_DEM in data:
+            data[ChannelEnum.OCC_DEM][dilated_occlusion == 1] = np.nan
+        if ChannelEnum.OCC_DATA_UM in data:
+            data[ChannelEnum.OCC_DATA_UM][dilated_occlusion == 1] = np.nan
+
+        return data
+
+    def range_data_uncertainty(self, transform_config: dict,
+                               data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        params = data[ChannelEnum.PARAMS]
+        terrain_resolution = params[0].item()
+        robot_position_x = params[1].item()
+        robot_position_y = params[2].item()
+
+        sample_grid = data[ChannelEnum.OCC_DATA_UM]
+
+        # distance of every pixel from the robot
+        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * terrain_resolution
+        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * terrain_resolution
+        off_y, off_x = np.meshgrid(lin_x, lin_y)
+
+        dist_x = off_x - robot_position_x
+        dist_y = off_y - robot_position_y
+        dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
+
+        stdev = transform_config["stdev"]
+        range = transform_config["range"]
+
+        range_data_variance = stdev**2 * np.square(1 / range * dist_p2_norm)
+
+        for channel, value in data.items():
+            if channel.value in transform_config["apply_to"]:
+                transformed_value = value + value.new_tensor(range_data_variance, dtype=value.dtype)
+
+                data[channel] = transformed_value
 
         return data
