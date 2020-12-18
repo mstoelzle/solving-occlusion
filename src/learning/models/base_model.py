@@ -412,10 +412,15 @@ class BaseModel(ABC, nn.Module):
                                                           **kwargs)
 
         if ChannelEnum.REC_DATA_UM in output:
-            nll_data = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
-                                           input_variance=output[ChannelEnum.REC_DATA_UM],
-                                           target=data[ChannelEnum.GT_DEM], **kwargs)
-            loss_dict[LossEnum.NLL_DATA] = nll_data
+            nll_rec_data = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
+                                               input_variance=output[ChannelEnum.REC_DATA_UM],
+                                               target=data[ChannelEnum.GT_DEM], **kwargs)
+            loss_dict[LossEnum.NLL_REC_DATA] = nll_rec_data
+        if ChannelEnum.COMP_DATA_UM in output:
+            nll_comp_data = -log_likelihood_fct(input_mean=output[ChannelEnum.COMP_DEM],
+                                               input_variance=output[ChannelEnum.COMP_DATA_UM],
+                                               target=data[ChannelEnum.GT_DEM], **kwargs)
+            loss_dict[LossEnum.NLL_COMP_DATA] = nll_comp_data
         if ChannelEnum.MODEL_UM in output:
             nll_model = -log_likelihood_fct(input_mean=output[ChannelEnum.REC_DEM],
                                             input_variance=output[ChannelEnum.MODEL_UM],
