@@ -1,11 +1,11 @@
-from enum import Enum
+from aenum import MultiValueEnum
 
 
-class ChannelEnum(Enum):
+class ChannelEnum(MultiValueEnum):
     PARAMS = "params"
-    GT_DEM = "gt_dem"
-    OCC_DEM = "occ_dem"
-    OCC_MASK = "occ_mask"
+    GT_DEM = "gt_dem", "ground_truth_elevation_map", "elevation_map"
+    OCC_DEM = "occ_dem", "occluded_elevation_map"
+    OCC_MASK = "occ_mask", "binary_occlusion_map"
     REC_DEM = "rec_dem"
     REC_DEMS = "rec_dems"
     COMP_DEM = "comp_dem"
