@@ -1,5 +1,6 @@
 import pathlib
 import numpy as np
+from scipy.spatial.transform import Rotation
 import torch
 from torchvision.datasets.folder import is_image_file
 from typing import *
@@ -43,9 +44,10 @@ class TrasysPlanetaryDataset(BaseDataset):
         # x_grid = data[ChannelEnum.GT_DEM].size(0) // 2
         # y_grid = data[ChannelEnum.GT_DEM].size(1) // 2
         # robot_position_z = data[ChannelEnum.GROUND_TRUTH_ELEVATION_MAP][x_grid, y_grid] + camera_elevation
-        robot_position_z = camera_elevation
 
-        data[ChannelEnum.PARAMS] = torch.tensor([terrain_resolution, 0., 0., robot_position_z, 0.])
+        data[ChannelEnum.REL_POSITION] = torch.tensor([0., 0., camera_elevation])
+        data[ChannelEnum.REL_ATTITUDE] = torch.tensor(Rotation.from_euler('zyx', [0, 0, 0]).as_quat())
+        data[ChannelEnum.RES_GRID] = torch.tensor([terrain_resolution, terrain_resolution])
 
         data = self.prepare_item(data, invert_mask=True)
 

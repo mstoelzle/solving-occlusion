@@ -52,20 +52,18 @@ class Transformer:
                                    data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         rng = self.rng if self.deterministic else np.random
 
-        params = data[ChannelEnum.PARAMS]
-        terrain_resolution = params[0].item()
-        robot_position_x = params[1].item()
-        robot_position_y = params[2].item()
+        res_grid = data[ChannelEnum.RES_GRID]
+        robot_position = data[ChannelEnum.REL_POSITION]
 
         sample_grid = data[ChannelEnum.OCC_DEM]
 
         # distance of every pixel from the robot
-        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * terrain_resolution
-        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * terrain_resolution
+        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0]
+        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[0]
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
-        dist_x = off_x - robot_position_x
-        dist_y = off_y - robot_position_y
+        dist_x = off_x - robot_position[0]
+        dist_y = off_y - robot_position[1]
         dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
 
         stdev = transform_config["stdev"]
@@ -121,9 +119,9 @@ class Transformer:
 
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
-                if channel is ChannelEnum.PARAMS:
+                if channel is ChannelEnum.REL_POSITION:
                     transformed_value = value.clone()
-                    transformed_value[3] = scale * transformed_value[3]
+                    transformed_value[2] = scale * transformed_value[2]
                 else:
                     transformed_value = scale * value
 
@@ -141,9 +139,9 @@ class Transformer:
 
         for channel, value in data.items():
             if channel.value in transform_config["apply_to"]:
-                if channel is ChannelEnum.PARAMS:
+                if channel is ChannelEnum.REL_POSITION:
                     transformed_value = value.clone()
-                    transformed_value[3] = offset + transformed_value[3]
+                    transformed_value[2] = offset + transformed_value[2]
                 else:
                     transformed_value = offset + value
 
@@ -222,20 +220,18 @@ class Transformer:
 
     def range_data_uncertainty(self, transform_config: dict,
                                data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
-        params = data[ChannelEnum.PARAMS]
-        terrain_resolution = params[0].item()
-        robot_position_x = params[1].item()
-        robot_position_y = params[2].item()
+        res_grid = data[ChannelEnum.RES_GRID]
+        robot_position = data[ChannelEnum.REL_POSITION]
 
         sample_grid = data[ChannelEnum.OCC_DATA_UM]
 
         # distance of every pixel from the robot
-        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * terrain_resolution
-        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * terrain_resolution
+        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0]
+        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1]
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
-        dist_x = off_x - robot_position_x
-        dist_y = off_y - robot_position_y
+        dist_x = off_x - robot_position[0]
+        dist_y = off_y - robot_position[1]
         dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
 
         stdev = transform_config["stdev"]

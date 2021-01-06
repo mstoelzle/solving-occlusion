@@ -2,7 +2,10 @@ from aenum import MultiValueEnum
 
 
 class ChannelEnum(MultiValueEnum):
-    PARAMS = "params"
+    PARAMS = "params"  # deprecated - use RES_GRID and REL_POSE instead
+    RES_GRID = "resolution_grid"  # resolution of grid in x and y dir
+    REL_POSITION = "relative_position"  # relative position of robot to center of grid (3D)
+    REL_ATTITUDE = "relative_attitude"  # relative attitude of robot to grid in quarternion (4D)
     GT_DEM = "gt_dem", "ground_truth_elevation_map", "elevation_map"
     OCC_DEM = "occ_dem", "occluded_elevation_map"
     OCC_MASK = "occ_mask", "binary_occlusion_map"

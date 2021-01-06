@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pathlib
 from PIL import Image
+from scipy.spatial.transform import Rotation
 import tifffile
 import torch
 import torch.nn.functional as F
@@ -70,7 +71,16 @@ class BaseDataset(ABC):
             if invert_mask:
                 output[ChannelEnum.OCC_MASK] = ~output[ChannelEnum.OCC_MASK]
 
-        # we require square dimension for now
+        # for backwards compatibility as ChannelEnum.PARAMS is deprecated
+        if ChannelEnum.PARAMS in output:
+            params = output[ChannelEnum.PARAMS]
+            res = params[0]
+            output[ChannelEnum.RES_GRID] = torch.tensor([res, res])
+            output[ChannelEnum.REL_POSITION] = params[1:4]
+
+            yaw = params[4]
+            output[ChannelEnum.REL_ATTITUDE] = Rotation.from_euler("z", yaw).as_quat()
+
         if ChannelEnum.GT_DEM in output:
             sample_map = output[ChannelEnum.GT_DEM]
         elif ChannelEnum.OCC_MASK in output:
@@ -78,6 +88,7 @@ class BaseDataset(ABC):
         else:
             raise ValueError
 
+        # we require square dimension for now
         assert sample_map.size(0) == sample_map.size(1)
         if type(self.config["size"]) == list:
             assert self.config["size"][0] == self.config["size"][1]
@@ -91,7 +102,9 @@ class BaseDataset(ABC):
 
         if input_size != output_size:
             for key, value in output.items():
-                if key == ChannelEnum.PARAMS:
+                if key == ChannelEnum.RES_GRID:
+                    value = value * input_size / output_size
+                elif key == ChannelEnum.PARAMS:
                     # we need to apply the resizing to the terrain resolution
                     input_resolution = value[0].item()
 

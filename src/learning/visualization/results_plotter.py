@@ -61,7 +61,8 @@ class ResultsPlotter:
         progress_bar = Bar(f"Plot samples for {str(purpose_hdf5_group.name)}", max=num_samples)
         for sample_idx in range(num_samples):
             idx = sample_idx * self.config["sample_frequency"]
-            params = data_hdf5_group[ChannelEnum.PARAMS.value][idx, ...]
+            res_grid = data_hdf5_group[ChannelEnum.RES_GRID.value][idx, ...]
+            rel_position = data_hdf5_group[ChannelEnum.REL_POSITION.value][idx, ...]
             rec_dem = data_hdf5_group[ChannelEnum.REC_DEM.value][idx, ...]
             occluded_elevation_map = data_hdf5_group[ChannelEnum.OCC_DEM.value][idx, ...]
             comp_dem = data_hdf5_group[ChannelEnum.COMP_DEM.value][idx, ...]
@@ -92,12 +93,8 @@ class ResultsPlotter:
             if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
                 comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
 
-            terrain_resolution = params[0]
-            robot_position_x = params[1]
-            robot_position_y = params[2]
-            robot_position_z = params[3]
-            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + robot_position_x / terrain_resolution)
-            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + robot_position_y / terrain_resolution)
+            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0])
+            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1])
             # we only visualize the robot position if its inside the elevation map
             plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
                                   and 0 < robot_plot_y < occluded_elevation_map.shape[1]
@@ -161,9 +158,9 @@ class ResultsPlotter:
             num_cols = 3
 
             x_3d = np.arange(start=-int(occluded_elevation_map.shape[0] / 2),
-                             stop=int(occluded_elevation_map.shape[0] / 2)) * terrain_resolution
+                             stop=int(occluded_elevation_map.shape[0] / 2)) * res_grid[0]
             y_3d = np.arange(start=-int(occluded_elevation_map.shape[1] / 2),
-                             stop=int(occluded_elevation_map.shape[1] / 2)) * terrain_resolution
+                             stop=int(occluded_elevation_map.shape[1] / 2)) * res_grid[1]
             x_3d, y_3d = np.meshgrid(x_3d, y_3d)
 
             axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
@@ -186,8 +183,7 @@ class ResultsPlotter:
 
             for i, ax in enumerate(axes):
                 if plot_robot_position:
-                    ax.scatter([robot_position_x], [robot_position_y],
-                               [robot_position_z], marker="*", color="red")
+                    ax.scatter([rel_position[0]], [rel_position[1]], [rel_position[2]], marker="*", color="red")
                 ax.set_xlabel("x [m]")
                 ax.set_ylabel("y [m]")
                 ax.set_zlabel("z [m]")
