@@ -56,15 +56,17 @@ cd ${WORKSPACE}/opencv_build && make -j7 && sudo make install
 #### 3.3 Install the TerrainDataGenerator
 **System requirements:** Ubuntu >= 16.04, g++ / gcc >= 6, CMake >= 3.10, CPU with support for avx2 instructions (produced within last 6 years)
 
-As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki and different raisim plugins,
+First, please install RaiSim including its plugins raisimLib and raisimOgre: https://raisim.com/sections/Installation.html. Please acquire the appropriate license.
+
+Initialise the raisim build directory: `export LOCAL_INSTALL=$WORKSPACE/raisim_build && mkdir $LOCAL_INSTALL`
+
+As the generation of a synthetic dataset relies on the TerrainDataGenerator by Takahiro Miki,
 the following installation instruction need to be followed recursively after the `src/dataset_generation/synthetic_terrain_data_generator` git submodule is initialised:
 https://bitbucket.org/tamiki/terrain_data_generator
 
-Initialise the raisim build directory: `export LOCAL_BUILD=$WORKSPACE/raisim_build && mkdir $LOCAL_BUILD`
-
 After following the installation instructions, the build directory needs to be added to the CMAKE_PREFIX_PATH:
 ```
-export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$LOCAL_BUILD
+export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$LOCAL_INSTALL
 ```
 
 Additionally, the `terrain_data_generator` submodule has a requirement on OpenCV:
