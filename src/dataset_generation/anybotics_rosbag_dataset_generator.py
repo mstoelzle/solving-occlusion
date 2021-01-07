@@ -114,12 +114,14 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                     self.reset_metadata()
                     self.purpose = "val"
                     self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+                    self.initialized_datasets = False
                 elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
                     self.save_cache()
                     self.write_metadata(self.hdf5_group)
                     self.reset_metadata()
                     self.purpose = "test"
                     self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+                    self.initialized_datasets = False
                 else:
                     pass
 
