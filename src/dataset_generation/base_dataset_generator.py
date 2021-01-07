@@ -51,6 +51,8 @@ class BaseDatasetGenerator(ABC):
     def reset(self):
         self.reset_metadata()
 
+        self.purpose = None
+
         self.hdf5_group = None
         self.initialized_datasets = False
 

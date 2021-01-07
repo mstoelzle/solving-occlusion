@@ -31,7 +31,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         super().reset()
         self.reset_cache()
 
-        self.purpose = None
         self.purpose_max_num_samples = {}
 
     def __enter__(self):
