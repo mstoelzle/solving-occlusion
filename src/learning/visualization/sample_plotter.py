@@ -28,10 +28,10 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
             error_uncertainty_vmin = np.min([error_uncertainty_vmin, comp_data_um_min])
             error_uncertainty_vmax = np.max([error_uncertainty_vmax, comp_data_um_max])
         if model_um is not None:
-            total_um_min = np.min(model_um[~np.isnan(model_um)])
-            total_um_max = np.max(model_um[~np.isnan(model_um)])
-            error_uncertainty_vmin = np.min([error_uncertainty_vmin, total_um_min])
-            error_uncertainty_vmax = np.max([error_uncertainty_vmax, total_um_max])
+            model_um_min = np.min(model_um[~np.isnan(model_um)])
+            model_um_max = np.max(model_um[~np.isnan(model_um)])
+            error_uncertainty_vmin = np.min([error_uncertainty_vmin, model_um_min])
+            error_uncertainty_vmax = np.max([error_uncertainty_vmax, model_um_max])
         if total_um is not None:
             total_um_min = np.min(total_um[~np.isnan(total_um)])
             total_um_max = np.max(total_um[~np.isnan(total_um)])
@@ -47,9 +47,11 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 
         if indiv_vranges is False:
             error_uncertainty_vmin = np.min([error_uncertainty_vmin,
-                                             np.min(rec_abs_error), np.min(comp_abs_error)])
+                                             np.min(rec_abs_error[~np.isnan(rec_abs_error)]),
+                                             np.min(comp_abs_error[~np.isnan(comp_abs_error)])])
             error_uncertainty_vmax = np.max([error_uncertainty_vmax,
-                                             np.max(rec_abs_error), np.max(comp_abs_error)])
+                                             np.max(rec_abs_error[~np.isnan(rec_abs_error)]),
+                                             np.max(comp_abs_error[~np.isnan(comp_abs_error)])])
 
         axes[0, 0].set_title("Reconstruction error")
         # matshow plots x and y swapped
