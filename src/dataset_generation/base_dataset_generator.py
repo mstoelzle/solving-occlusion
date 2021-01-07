@@ -9,6 +9,7 @@ from typing import *
 
 from src.enums import *
 from src.utils.log import create_base_logger, create_logdir
+from src.visualization.sample_plotter import draw_dataset_samples
 
 
 class BaseDatasetGenerator(ABC):
@@ -126,3 +127,30 @@ class BaseDatasetGenerator(ABC):
             if isinstance(dataset, h5py.Dataset):
                 dataset.attrs["min"] = self.min
                 dataset.attrs["max"] = self.max
+
+    def visualize(self, sample_idx: int, res_grid: np.array, rel_position: np.array = None,
+                  gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None):
+        if self.config.get("visualization", None) is not None:
+            if self.config["visualization"] is True \
+                    or sample_idx % self.config["visualization"].get("frequency", 100) == 0:
+                robot_position_pixel = None
+
+                if gt_dem is not None:
+                    h, w = gt_dem.shape[0], gt_dem.shape[1]
+                else:
+                    h, w = occ_dem.shape[0], occ_dem.shape[1]
+
+                if rel_position is not None:
+                    u = int(h / 2 + rel_position[0] / res_grid[0])
+                    v = int(w / 2 + rel_position[1] / res_grid[1])
+                    # we only visualize the robot position if its inside the elevation map
+                    plot_robot_position = 0 < u < h and 0 < v < w
+                    if plot_robot_position:
+                        robot_position_pixel = np.array([u, v])
+
+                sample_dir = self.logdir / f"{self.purpose+'_' if self.purpose is not None else ''}samples"
+                if not sample_dir.is_dir():
+                    sample_dir.mkdir(exist_ok=True, parents=True)
+                draw_dataset_samples(sample_idx=sample_idx, logdir=sample_dir,
+                                     gt_dem=gt_dem, occ_dem=occ_dem, occ_mask=occ_mask,
+                                     robot_position_pixel=robot_position_pixel, remote=self.remote)

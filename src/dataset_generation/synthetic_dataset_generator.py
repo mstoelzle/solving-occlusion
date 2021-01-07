@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import matplotlib.pyplot as plt
 import numpy as np
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
@@ -76,8 +75,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                            shape=dataset_shape, maxshape=dataset_maxshape)
 
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
-            num_accepted_samples = 0
-            while num_accepted_samples < num_samples:
+            sample_idx = 0
+            while sample_idx < num_samples:
                 terrain_idx = np.random.randint(low=0, high=len(self.terrain_types))
                 terrain_type = self.terrain_types[terrain_idx]
                 terrain_id = terrain_type.value
@@ -161,7 +160,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     # we skip the elevation map if we do not find any occlusion
                     continue
 
-                num_accepted_samples += 1
+                sample_idx += 1
 
                 self.res_grid.append(res_grid)
                 self.rel_positions.append(rel_position)
@@ -173,62 +172,17 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 if self.initialized_datasets is False:
                     self.create_base_datasets(self.hdf5_group, num_samples)
 
-                if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
-                        num_accepted_samples >= num_samples:
+                if sample_idx % self.config.get("save_frequency", 50) == 0 or sample_idx >= num_samples:
                     self.save_cache()
 
-                if self.config.get("visualization", None) is not None:
-                    if self.config["visualization"] is True \
-                            or num_accepted_samples % self.config["visualization"].get("frequency", 100) == 0:
-                        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2 * 6.4, 1 * 4.8])
-
-                        occ_dem = elevation_map.copy()
-                        occ_dem[occ_mask == 1] = np.nan
-                        non_occluded_elevation_map = occ_dem[~np.isnan(occ_dem)]
-
-                        vmin = np.min([np.min(elevation_map), np.min(non_occluded_elevation_map)])
-                        vmax = np.max([np.max(elevation_map), np.max(non_occluded_elevation_map)])
-                        cmap = plt.get_cmap("viridis")
-
-                        # matshow plots x and y swapped
-                        axes[0].set_title("Ground-truth")
-                        mat = axes[0].matshow(np.swapaxes(elevation_map, 0, 1), vmin=vmin, vmax=vmax,
-                                              cmap=cmap)
-                        # matshow plots x and y swapped
-                        axes[1].set_title("Occlusion")
-                        mat = axes[1].matshow(np.swapaxes(occ_dem, 0, 1), vmin=vmin, vmax=vmax,
-                                              cmap=cmap)
-
-                        robot_plot_x = self.terrain_height / 2 + robot_position.x / self.terrain_resolution
-                        robot_plot_y = self.terrain_width / 2 + robot_position.y / self.terrain_resolution
-                        for ax in axes:
-                            ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
-
-                            # Hide grid lines
-                            ax.grid(False)
-
-                        fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.021)
-
-                        sample_dir = self.logdir / f"{purpose}_samples"
-                        if not sample_dir.is_dir():
-                            sample_dir.mkdir(exist_ok=True, parents=True)
-
-                        plt.draw()
-                        plt.savefig(str(sample_dir / f"sample_{num_accepted_samples}.pdf"))
-                        if self.remote is False:
-                            plt.show()
-                        plt.close()
+                self.visualize(sample_idx=sample_idx, res_grid=res_grid, rel_position=rel_position,
+                               gt_dem=elevation_map, occ_mask=occ_mask)
 
                 progress_bar.next()
             progress_bar.finish()
             self.write_metadata(self.hdf5_group)
             self.reset()
 
-    def save_cache(self):
-        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
-        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_MASK.value], self.occ_masks)
-
-        super().save_cache()
 
     def raycast_occlusion(self, robot: Robot) -> np.array:
         """

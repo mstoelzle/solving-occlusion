@@ -149,6 +149,9 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
                         self.process_item(res_grid, rel_position, rel_attitude, subgrid)
 
+                        self.visualize(sample_idx=self.sample_idx, res_grid=res_grid, rel_position=rel_position,
+                                       occ_dem=subgrid)
+
                         self.sample_idx += 1
                         progress_bar.next()
                         start_y = stop_y
