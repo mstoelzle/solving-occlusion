@@ -51,6 +51,7 @@ class BaseDatasetGenerator(ABC):
 
     def reset(self):
         self.reset_metadata()
+        self.reset_cache()
 
         self.purpose = None
 
