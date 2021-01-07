@@ -5,12 +5,56 @@ import pathlib
 from src.enums import *
 
 
+def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
+                         gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None,
+                         robot_position_pixel: np.array = None, remote=False):
+    if occ_dem is None and occ_mask is not None:
+        occ_dem = gt_dem.copy()
+        occ_dem[occ_mask == 1] = np.nan
+    nocc_dem = occ_dem[~np.isnan(occ_dem)]
+
+    dem_vmin = np.min(nocc_dem)
+    dem_vmax = np.max(nocc_dem)
+    if gt_dem is not None:
+        dem_vmin = np.min([dem_vmin, np.min(gt_dem[~np.isnan(gt_dem)])])
+        dem_vmax = np.max([dem_vmax, np.max(gt_dem[~np.isnan(gt_dem)])])
+
+    dem_cmap = plt.get_cmap("viridis")
+
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2 * 6.4, 1 * 4.8])
+
+    axes[0].set_title("Occlusion")
+    # matshow plots x and y swapped
+    mat = axes[0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
+                          vmax=dem_vmax, cmap=dem_cmap)
+    fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+
+    if gt_dem is not None:
+        axes[1].set_title("Ground-truth")
+        # matshow plots x and y swapped
+        mat = axes[1].matshow(np.swapaxes(gt_dem, 0, 1), vmin=dem_vmin,
+                                 vmax=dem_vmax, cmap=dem_cmap)
+
+    for i, ax in enumerate(axes.reshape(-1)):
+        if robot_position_pixel is not None:
+            ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
+
+        # Hide grid lines
+        ax.grid(False)
+
+    plt.draw()
+    plt.savefig(str(logdir / f"sample_2d_{sample_idx}.pdf"))
+    if remote is not True:
+        plt.show()
+    plt.close()
+
+
 def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                 gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
                                 rec_data_um: np.array = None, comp_data_um: np.array = None,
                                 model_um: np.array = None, total_um: np.array = None,
                                 robot_position_pixel: np.array = None, remote=False, indiv_vranges=False):
-    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9*10])
+    fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9 * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
 
@@ -106,7 +150,6 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
             axes[1, 1].plot(robot_position_pixel[0], robot_position_pixel[1], marker="*", color="blue")
         axes[1, 1].grid(False)
 
-
     if model_um is not None:
         axes[2, 0].set_title("Model uncertainty")
         # matshow plots x and y swapped
@@ -142,7 +185,6 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
                         channel: ChannelEnum, dems: np.array,
                         robot_position_pixel: np.array = None, remote=False):
-
     num_solutions = dems.shape[0]
     grid_size = int(np.floor(np.sqrt(num_solutions)).item())
 
@@ -176,4 +218,3 @@ def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
     if remote is not True:
         plt.show()
     plt.close()
-
