@@ -81,6 +81,8 @@ class BaseDataset(ABC):
             yaw = params[4]
             output[ChannelEnum.REL_ATTITUDE] = Rotation.from_euler("z", yaw).as_quat()
 
+            del output[ChannelEnum.PARAMS]
+
         if ChannelEnum.GT_DEM in output:
             sample_map = output[ChannelEnum.GT_DEM]
         elif ChannelEnum.OCC_MASK in output:
@@ -88,28 +90,15 @@ class BaseDataset(ABC):
         else:
             raise ValueError
 
-        # we require square dimension for now
-        assert sample_map.size(0) == sample_map.size(1)
-        if type(self.config["size"]) == list:
-            assert self.config["size"][0] == self.config["size"][1]
-        input_size = sample_map.size(0)
-        if type(self.config["size"]) == list:
-            output_size = self.config["size"][0]
-        elif type(self.config["size"]) == int:
-            output_size = self.config["size"]
-        else:
-            raise ValueError
+        input_size = torch.tensor(sample_map.size())
+        output_size = torch.tensor(self.config["size"])
 
-        if input_size != output_size:
+        if (input_size != output_size).any():
             for key, value in output.items():
                 if key == ChannelEnum.RES_GRID:
                     value = value * input_size / output_size
-                elif key == ChannelEnum.PARAMS:
-                    # we need to apply the resizing to the terrain resolution
-                    input_resolution = value[0].item()
-
-                    output_resolution = input_resolution * input_size / output_size
-                    value[0] = output_resolution
+                elif key in [ChannelEnum.REL_POSITION, ChannelEnum.REL_ATTITUDE]:
+                    pass
                 else:
                     channel_is_bool = False
                     if value.dtype == torch.bool:
@@ -117,7 +106,8 @@ class BaseDataset(ABC):
                         value = value.to(dtype=torch.float)
 
                     interpolation_input = value.unsqueeze(dim=0).unsqueeze(dim=0)
-                    interpolation_output = F.interpolate(interpolation_input, size=self.config["size"])
+
+                    interpolation_output = F.interpolate(interpolation_input, size=tuple(self.config["size"]))
                     value = interpolation_output.squeeze()
 
                     if channel_is_bool is True:
