@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 from progress.bar import Bar
+from scipy.spatial.transform import Rotation
 
 from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
@@ -60,26 +61,19 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         super().reset()
         self.reset_cache()
 
-    def reset_cache(self):
-        self.params = []
-        self.elevation_maps = []
-        self.binary_occlusion_maps = []
-
     def run(self):
         for purpose in ["train", "val", "test"]:
             num_samples = self.config[f"num_{purpose}_samples"]
 
-            hdf5_group = self.hdf5_file.create_group(purpose)
+            self.hdf5_group = self.hdf5_file.create_group(purpose)
 
             dataset_shape = (0, self.terrain_height, self.terrain_width)
             dataset_maxshape = (num_samples, self.terrain_height, self.terrain_width)
-            params_dim = 5
-            params_dataset = hdf5_group.create_dataset(name=ChannelEnum.PARAMS.value, shape=(0, params_dim),
-                                                       maxshape=(num_samples, params_dim))
-            elevation_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.GT_DEM.value,
-                                                              shape=dataset_shape, maxshape=dataset_maxshape)
-            binary_occlusion_map_dataset = hdf5_group.create_dataset(name=ChannelEnum.OCC_MASK.value,
-                                                                     shape=dataset_shape, maxshape=dataset_maxshape)
+
+            self.hdf5_group.create_dataset(name=ChannelEnum.GT_DEM.value,
+                                           shape=dataset_shape, maxshape=dataset_maxshape)
+            self.hdf5_group.create_dataset(name=ChannelEnum.OCC_MASK.value,
+                                           shape=dataset_shape, maxshape=dataset_maxshape)
 
             progress_bar = Bar(f"Generating {purpose} dataset", max=num_samples)
             num_accepted_samples = 0
@@ -157,6 +151,10 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 robot = Robot(robot_position=robot_position, height_viewpoint=height_viewpoint,
                               elevation_map=elevation_map_object)
 
+                res_grid = np.array([self.terrain_resolution, self.terrain_resolution])
+                rel_position = np.array([robot_position.x, robot_position.y, robot_position.z])
+                rel_attitude = Rotation.from_euler("z", robot_position.yaw).as_quat()
+
                 occ_mask = self.raycast_occlusion(robot)
 
                 if np.sum(occ_mask) == 0:
@@ -164,18 +162,20 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     continue
 
                 num_accepted_samples += 1
-                self.params.append(np.array([self.terrain_resolution, robot_position.x,
-                                             robot_position.y, robot_position.z, robot_position.yaw]))
-                self.elevation_maps.append(elevation_map)
-                self.binary_occlusion_maps.append(occ_mask)
+
+                self.res_grid.append(res_grid)
+                self.rel_positions.append(rel_position)
+                self.rel_attitudes.append(rel_attitude)
+                self.gt_dems.append(elevation_map)
+                self.occ_masks.append(occ_mask)
                 self.update_dataset_range(elevation_map)
+
+                if self.initialized_datasets is False:
+                    self.create_base_datasets(self.hdf5_group, num_samples)
 
                 if num_accepted_samples % self.config.get("save_frequency", 50) == 0 or \
                         num_accepted_samples >= num_samples:
-                    self.extend_dataset(params_dataset, self.params)
-                    self.extend_dataset(elevation_map_dataset, self.elevation_maps)
-                    self.extend_dataset(binary_occlusion_map_dataset, self.binary_occlusion_maps)
-                    self.reset_cache()
+                    self.save_cache()
 
                 if self.config.get("visualization", None) is not None:
                     if self.config["visualization"] is True \
@@ -221,8 +221,14 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
                 progress_bar.next()
             progress_bar.finish()
-            self.write_metadata(hdf5_group)
+            self.write_metadata(self.hdf5_group)
             self.reset()
+
+    def save_cache(self):
+        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_MASK.value], self.occ_masks)
+
+        super().save_cache()
 
     def raycast_occlusion(self, robot: Robot) -> np.array:
         """

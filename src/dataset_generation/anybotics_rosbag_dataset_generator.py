@@ -32,10 +32,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         self.reset_cache()
 
         self.purpose = None
-        self.hdf5_group = None
-
-        self.sample_idx = 0
-        self.total_num_samples = None
         self.purpose_max_num_samples = {}
 
     def __enter__(self):
@@ -171,10 +167,10 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         self.occ_dems.append(subgrid)
         self.update_dataset_range(subgrid)
 
-        if ChannelEnum.OCC_DEM.value not in self.hdf5_group:
+        if self.initialized_datasets is False:
             max_num_samples = self.purpose_max_num_samples[self.purpose]
 
-            super().create_datasets(self.hdf5_group, max_num_samples)
+            super().create_base_datasets(self.hdf5_group, max_num_samples)
 
             self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
                                            shape=(0, subgrid.shape[0], subgrid.shape[1]),
@@ -185,9 +181,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
             self.save_cache()
 
     def save_cache(self):
-        self.extend_dataset(self.hdf5_group[ChannelEnum.RES_GRID.value], self.res_grid)
-        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_POSITION.value], self.rel_positions)
-        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_ATTITUDE.value], self.rel_attitudes)
         self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
 
-        self.reset_cache()
+        super().save_cache()

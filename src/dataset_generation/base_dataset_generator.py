@@ -35,6 +35,8 @@ class BaseDatasetGenerator(ABC):
 
         self.hdf5_path = pathlib.Path(self.logdir / "DATASET_OCCLUSION.hdf5")
         self.hdf5_file: Optional[h5py.File] = None
+        self.hdf5_group: Optional[h5py.Group] = None
+        self.initialized_datasets = False
 
         self.min = None
         self.max = None
@@ -48,6 +50,9 @@ class BaseDatasetGenerator(ABC):
 
     def reset(self):
         self.reset_metadata()
+
+        self.hdf5_group = None
+        self.initialized_datasets = False
 
         self.sample_idx = 0
         self.total_num_samples = None
@@ -69,10 +74,7 @@ class BaseDatasetGenerator(ABC):
     def run(self):
         pass
 
-    def save_to_dataset(self):
-        pass
-
-    def create_datasets(self, hdf5_group: h5py.Group, max_num_samples: int):
+    def create_base_datasets(self, hdf5_group: h5py.Group, max_num_samples: int):
         assert len(self.res_grid) > 0 and len(self.rel_positions) > 0 and len(self.rel_attitudes) > 0
 
         hdf5_group.create_dataset(name=ChannelEnum.RES_GRID.value,
@@ -86,6 +88,8 @@ class BaseDatasetGenerator(ABC):
                                   shape=(0, self.rel_attitudes[0].shape[0]),
                                   maxshape=(max_num_samples, self.rel_attitudes[0].shape[0]))
 
+        self.initialized_datasets = True
+
     @staticmethod
     def extend_dataset(dataset: h5py.Dataset, data: Union[np.array, List]):
         if type(data) is list:
@@ -94,10 +98,17 @@ class BaseDatasetGenerator(ABC):
         dataset.resize((dataset.shape[0] + data.shape[0]), axis=0)
         dataset[-data.shape[0]:] = data
 
-    def update_dataset_range(self, elevation_map: np.array):
+    def save_cache(self):
+        self.extend_dataset(self.hdf5_group[ChannelEnum.RES_GRID.value], self.res_grid)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_POSITION.value], self.rel_positions)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_ATTITUDE.value], self.rel_attitudes)
+
+        self.reset_cache()
+
+    def update_dataset_range(self, dem: np.array):
         # update min and max
-        sample_min = np.min(elevation_map[~np.isnan(elevation_map)]).item()
-        sample_max = np.max(elevation_map[~np.isnan(elevation_map)]).item()
+        sample_min = np.min(dem[~np.isnan(dem)]).item()
+        sample_max = np.max(dem[~np.isnan(dem)]).item()
         if self.min is None:
             self.min = sample_min
         else:
