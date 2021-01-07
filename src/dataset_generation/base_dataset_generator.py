@@ -99,6 +99,9 @@ class BaseDatasetGenerator(ABC):
         if type(data) is list:
             data = np.array(data)
 
+        if data.shape[0] == 0:
+            return
+
         dataset.resize((dataset.shape[0] + data.shape[0]), axis=0)
         dataset[-data.shape[0]:] = data
 
