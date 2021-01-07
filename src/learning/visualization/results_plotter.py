@@ -93,15 +93,14 @@ class ResultsPlotter:
             if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
                 comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
 
-            robot_plot_x = int(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0])
-            robot_plot_y = int(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1])
+            u = int(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0])
+            v = int(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1])
             # we only visualize the robot position if its inside the elevation map
-            plot_robot_position = 0 < robot_plot_x < occluded_elevation_map.shape[0] \
-                                  and 0 < robot_plot_y < occluded_elevation_map.shape[1]
+            plot_robot_position = 0 < u < occluded_elevation_map.shape[0] and 0 < v < occluded_elevation_map.shape[1]
             if plot_robot_position:
-                robot_plot_position = np.array([robot_plot_x, robot_plot_y])
+                robot_position_pixel = np.array([u, v])
             else:
-                robot_plot_position = None
+                robot_position_pixel = None
 
             # 2D
             elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(rec_dem),
@@ -140,7 +139,7 @@ class ResultsPlotter:
 
             for i, ax in enumerate(axes.reshape(-1)):
                 if plot_robot_position:
-                    ax.plot([robot_plot_x], [robot_plot_y], marker="*", color="red")
+                    ax.plot([u], [v], marker="*", color="red")
 
                 # Hide grid lines
                 ax.grid(False)
@@ -203,16 +202,16 @@ class ResultsPlotter:
                                             gt_dem, rec_dem, comp_dem,
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
-                                            robot_plot_position=robot_plot_position, remote=self.remote,
+                                            robot_position_pixel=robot_position_pixel, remote=self.remote,
                                             indiv_vranges=self.config.get("indiv_vranges", False))
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
-                                    robot_plot_position=robot_plot_position, remote=self.remote)
+                                    robot_position_pixel=robot_position_pixel, remote=self.remote)
 
             if comp_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
-                                    robot_plot_position=robot_plot_position, remote=self.remote)
+                                    robot_position_pixel=robot_position_pixel, remote=self.remote)
 
             progress_bar.next()
         progress_bar.finish()
