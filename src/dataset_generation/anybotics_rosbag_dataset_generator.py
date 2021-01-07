@@ -33,16 +33,10 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
         self.purpose = None
         self.hdf5_group = None
-        self.params_dataset = None
-        self.occluded_elevation_map_dataset = None
 
         self.sample_idx = 0
         self.total_num_samples = None
         self.purpose_max_num_samples = {}
-
-    def reset_cache(self):
-        self.params = []
-        self.occluded_elevation_maps = []
 
     def __enter__(self):
         self.bag = self.rosbag_module.Bag(str(self.rosbag_path), 'r')
@@ -65,6 +59,7 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 length_x = info.length_x
                 length_y = info.length_y
                 resolution = info.resolution
+                res_grid = np.array([resolution, resolution])
                 if resolution == 0.0:
                     warnings.warn("We skip DEMs with resolutions = 0.0")
                     continue
@@ -72,7 +67,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 pose = info.pose
                 position = np.array([pose.position.x, pose.position.y, pose.position.z])
                 orientation = np.array([pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w])
-                yaw = Rotation.from_quat(orientation).as_euler('zyx')[2]
 
                 layout = layer_data.layout
                 dims = layout.dim
@@ -151,10 +145,12 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
                         subgrid_delta_x = resolution * (-grid_map.shape[0]/2 + start_x + target_size_x / 2)
                         subgrid_delta_y = resolution * (-grid_map.shape[1]/2 + start_y + target_size_y / 2)
-                        params = np.array([resolution, position[0] + subgrid_delta_x, position[1] + subgrid_delta_y,
-                                           position[2], yaw])
+                        rel_position = np.array([position[0] + subgrid_delta_x,
+                                                 position[1] + subgrid_delta_y,
+                                                 position[2]])
+                        rel_attitude = orientation
 
-                        self.process_item(params, subgrid)
+                        self.process_item(res_grid, rel_position, rel_attitude, subgrid)
 
                         self.sample_idx += 1
                         progress_bar.next()
@@ -167,28 +163,31 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
         progress_bar.finish()
 
-    def process_item(self, params: np.array, subgrid: np.array, force_save: bool = False):
-        self.params.append(params)
-        self.occluded_elevation_maps.append(subgrid)
+    def process_item(self, res_grid: np.array, rel_position: np.array, rel_attitude: np.array, subgrid: np.array,
+                     force_save: bool = False):
+        self.res_grid.append(res_grid)
+        self.rel_positions.append(rel_position)
+        self.rel_attitudes.append(rel_attitude)
+        self.occ_dems.append(subgrid)
         self.update_dataset_range(subgrid)
 
-        if ChannelEnum.PARAMS.value not in self.hdf5_group or \
-                ChannelEnum.OCC_DEM.value not in self.hdf5_group:
-            dataset_shape = (0, subgrid.shape[0], subgrid.shape[1])
-            dataset_maxshape = (self.purpose_max_num_samples[self.purpose], subgrid.shape[0], subgrid.shape[1])
-            self.params_dataset = self.hdf5_group.create_dataset(name=ChannelEnum.PARAMS.value,
-                                                                 shape=(0, params.shape[0]),
-                                                                 maxshape=(self.purpose_max_num_samples[self.purpose],
-                                                                           params.shape[0]))
-            self.occluded_elevation_map_dataset = \
-                self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
-                                               shape=dataset_shape, maxshape=dataset_maxshape)
+        if ChannelEnum.OCC_DEM.value not in self.hdf5_group:
+            max_num_samples = self.purpose_max_num_samples[self.purpose]
+
+            super().create_datasets(self.hdf5_group, max_num_samples)
+
+            self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
+                                           shape=(0, subgrid.shape[0], subgrid.shape[1]),
+                                           maxshape=(max_num_samples, subgrid.shape[0], subgrid.shape[1]))
 
         if self.sample_idx % self.config.get("save_frequency", 50) == 0 or \
                 self.sample_idx >= self.total_num_samples or force_save is True:
             self.save_cache()
 
     def save_cache(self):
-        self.extend_dataset(self.params_dataset, self.params)
-        self.extend_dataset(self.occluded_elevation_map_dataset, self.occluded_elevation_maps)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.RES_GRID.value], self.res_grid)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_POSITION.value], self.rel_positions)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.REL_ATTITUDE.value], self.rel_attitudes)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
+
         self.reset_cache()

@@ -7,6 +7,7 @@ import pathlib
 import torch
 from typing import *
 
+from src.enums import *
 from src.utils.log import create_base_logger, create_logdir
 
 
@@ -48,12 +49,42 @@ class BaseDatasetGenerator(ABC):
     def reset(self):
         self.reset_metadata()
 
+        self.sample_idx = 0
+        self.total_num_samples = None
+
+    def reset_metadata(self):
+        self.min = None
+        self.max = None
+
+    def reset_cache(self):
+        self.res_grid = []
+        self.rel_positions = []
+        self.rel_attitudes = []
+
+        self.gt_dems = []
+        self.occ_dems = []
+        self.occ_masks = []
+
     @abstractmethod
     def run(self):
         pass
 
     def save_to_dataset(self):
         pass
+
+    def create_datasets(self, hdf5_group: h5py.Group, max_num_samples: int):
+        assert len(self.res_grid) > 0 and len(self.rel_positions) > 0 and len(self.rel_attitudes) > 0
+
+        hdf5_group.create_dataset(name=ChannelEnum.RES_GRID.value,
+                                  shape=(0, self.res_grid[0].shape[0]),
+                                  maxshape=(max_num_samples, self.res_grid[0].shape[0]))
+
+        hdf5_group.create_dataset(name=ChannelEnum.REL_POSITION.value,
+                                  shape=(0, self.rel_positions[0].shape[0]),
+                                  maxshape=(max_num_samples, self.rel_positions[0].shape[0]))
+        hdf5_group.create_dataset(name=ChannelEnum.REL_ATTITUDE.value,
+                                  shape=(0, self.rel_attitudes[0].shape[0]),
+                                  maxshape=(max_num_samples, self.rel_attitudes[0].shape[0]))
 
     @staticmethod
     def extend_dataset(dataset: h5py.Dataset, data: Union[np.array, List]):
@@ -82,7 +113,3 @@ class BaseDatasetGenerator(ABC):
             if isinstance(dataset, h5py.Dataset):
                 dataset.attrs["min"] = self.min
                 dataset.attrs["max"] = self.max
-
-    def reset_metadata(self):
-        self.min = None
-        self.max = None
