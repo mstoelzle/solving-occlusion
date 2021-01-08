@@ -2,7 +2,6 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 import msgpack
-import msgpack_numpy
 import pathlib
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
@@ -28,8 +27,7 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
         super().reset()
 
     def __enter__(self):
-        self.log = msgpack.unpack(open(self.config["elevation_map_msgpack_path"], "rb"),
-                                  object_hook=msgpack_numpy.decode)
+        self.log = msgpack.unpack(open(self.config["elevation_map_msgpack_path"], "rb"))
 
         super().__enter__()
 
@@ -54,7 +52,7 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
             rel_position = np.array([0, 0, 0])  # TODO
             rel_attitude = Rotation.from_euler('zyx', [0, 0, 0]).as_quat()
             occ_dem = np.array(occ_dem_msg["data"])
-            occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))))
+            occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))), order="A")
 
             print("\ntime", time)
 
