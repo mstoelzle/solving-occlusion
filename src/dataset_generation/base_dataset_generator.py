@@ -74,6 +74,8 @@ class BaseDatasetGenerator(ABC):
         self.occ_dems = []
         self.occ_masks = []
 
+        self.occ_data_ums = []
+
     @abstractmethod
     def run(self):
         pass
