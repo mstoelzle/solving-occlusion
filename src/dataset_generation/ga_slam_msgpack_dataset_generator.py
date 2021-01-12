@@ -5,11 +5,13 @@ import msgpack
 import pathlib
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
+import torch
 from typing import *
 import warnings
 
 from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
+from src.learning.loss.loss import psnr_from_mse_loss_fct, mse_loss_fct
 
 
 class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
@@ -41,9 +43,13 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
 
         self.total_num_samples = len(occ_dem_msgs)
 
+
+        prior_occ_dem = None
+
         progress_bar = Bar(f"Processing msgspack from {self.config['msgpack_path']}",
                            max=self.total_num_samples)
-        for sample_idx, (occ_dem_msg, occ_data_um_msg) in enumerate(zip(occ_dem_msgs, occ_data_um_msgs)):
+        sample_idx = 0
+        for occ_dem_msg, occ_data_um_msg in zip(occ_dem_msgs, occ_data_um_msgs):
             time = occ_dem_msg["time"]
             h, w = occ_dem_msg["height"], occ_dem_msg["width"]
 
@@ -58,8 +64,24 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
             occ_data_um = occ_data_um.reshape((-1, int(np.sqrt(occ_data_um.shape[0]))), order="F")
 
             if np.isnan(occ_dem).all():
+                # we skip because the DEM only contains occlusion (NaNs)
                 progress_bar.next()
                 continue
+
+            if prior_occ_dem is not None:
+                # we compute MSE and PSNR between the current occluded dem and the occluded dem from the prior timestamp
+                occ_dem_no_nan = np.nan_to_num(occ_dem, copy=True, nan=0.0)
+                prior_occ_dem_no_nan = np.nan_to_num(prior_occ_dem, copy=True, nan=0.0)
+                mse = mse_loss_fct(input=torch.tensor(occ_dem_no_nan),
+                                   target=torch.tensor(prior_occ_dem_no_nan))
+                psnr = psnr_from_mse_loss_fct(mse=mse,
+                                              data_min=np.min([occ_dem_no_nan, prior_occ_dem_no_nan]).item(),
+                                              data_max=np.max([occ_dem_no_nan, prior_occ_dem_no_nan]).item())
+
+                # we want to exclude dems which are too similar
+                if psnr > self.config.get("psnr_similarity_threshold", 50):
+                    progress_bar.next()
+                    continue
 
             self.res_grid.append(res_grid)
             self.rel_positions.append(rel_position)
@@ -84,6 +106,8 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
             self.visualize(sample_idx=sample_idx, res_grid=res_grid, rel_position=rel_position,
                            occ_dem=occ_dem)
 
+            prior_occ_dem = occ_dem
+            sample_idx += 1
             progress_bar.next()
 
         self.save_cache()
