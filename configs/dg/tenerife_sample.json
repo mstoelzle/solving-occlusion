@@ -3,7 +3,7 @@
     "cuda": false,
     "dataset_generation": {
         "type": "rock_ga_slam_msgpack",
-        "elevation_map_msgpack_path": "data/20210105-1211/elevation_map.msg",
+        "msgpack_path": "data/20210111-2139/20210111-2139.msg",
         "size": 75,
         "save_frequency": 10,
         "split": {"train": 0.8, "val":  0.1, "test":  0.1},

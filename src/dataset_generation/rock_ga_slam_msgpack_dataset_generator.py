@@ -27,7 +27,7 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
         super().reset()
 
     def __enter__(self):
-        self.log = msgpack.unpack(open(self.config["elevation_map_msgpack_path"], "rb"))
+        self.log = msgpack.unpack(open(self.config["msgpack_path"], "rb"))
 
         super().__enter__()
 
@@ -42,7 +42,7 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
 
         self.total_num_samples = len(occ_dem_msgs)
 
-        progress_bar = Bar(f"Reading msgspack from {self.config['elevation_map_msgpack_path']}",
+        progress_bar = Bar(f"Reading msgspack from {self.config['msgpack_path']}",
                            max=self.total_num_samples)
         for sample_idx, occ_dem_msg in enumerate(occ_dem_msgs):
             time = occ_dem_msg["time"]
