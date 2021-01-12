@@ -32,8 +32,9 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
         super().__enter__()
 
     def run(self):
-        occ_dem_msgs = self.log["/ga_slam.elevationMap"]
-        timestamps = self.log["/ga_slam.elevationMap.meta"]["timestamps"]
+        print("Found the following streams in msgpack: ", self.log.keys())
+        occ_dem_msgs = self.log["/ga_slam.elevationMapMean"]
+        timestamps = self.log["/ga_slam.elevationMapMean.meta"]["timestamps"]
 
         print("Found # msgs", len(occ_dem_msgs))
 
@@ -52,24 +53,16 @@ class RockGASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
             rel_position = np.array([0, 0, 0])  # TODO
             rel_attitude = Rotation.from_euler('zyx', [0, 0, 0]).as_quat()
             occ_dem = np.array(occ_dem_msg["data"])
-            occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))), order="A")
 
-            print("\ntime", time)
+            occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))), order="F")
 
-            print("\nocc_dem", occ_dem.shape)
+            if np.isnan(occ_dem).all():
+                continue
 
             self.res_grid.append(res_grid)
             self.rel_positions.append(rel_position)
             self.rel_attitudes.append(rel_attitude)
             self.occ_dems.append(occ_dem)
-
-            print("h", h, "w", w)
-
-            print("scale_x", occ_dem_msg["scale_x"])
-            print("scale_y", occ_dem_msg["scale_y"])
-
-            print("center_x", occ_dem_msg["center_x"])
-            print("center_y", occ_dem_msg["center_y"])
 
             if self.initialized_datasets is False:
                 super().create_base_datasets(self.hdf5_group, self.total_num_samples)
