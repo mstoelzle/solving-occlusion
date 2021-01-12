@@ -118,7 +118,7 @@ The dataset is stored in serialized [Rock pocolog logs](https://github.com/rock-
 We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Digital Elevation Maps (DEMs).
 Subsequently, the pocolog logs can be transformed to [Msgpacks](https://msgpack.org) using the following command:
 ```
-pocolog2msgpack -l ga_slam.0.log orbiter_preprocessing.0.log -o ga_slam.msg
+pocolog2msgpack -l ga_slam.0.log -o ga_slam.msg
 ```
 
 ## Important components
