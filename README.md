@@ -109,6 +109,18 @@ Subsequently, a learning experiment can be started by stating the path relative 
 python learning.py configs/{CONFIG_NAME}.json
 ```
 
+### Working with Tenerife Dataset
+We evaluate our methods on a dataset which was collected in June 2017 at the "Minas de San José" site in Tenerife using 
+the Heavy Duty Planetary Rover (HDPR) as a Lunar Analogue. This dataset consists of images from three stereo cameras, one of which on a pan tilt unit, 
+LiDAR and a Time of FLight (ToF) camera. It also includes an onboard Inertial Measurements Unit (IMU), an additional laser gyro for heading estimation
+and Global Navigation Satellite System (GNSS) antenna for ground-truth absolute positioning. 
+The dataset is stored in serialized [Rock pocolog logs](https://github.com/rock-core/tools-pocolog). 
+We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Digital Elevation Maps (DEMs).
+Subsequently, the pocolog logs can be transformed to [Msgpacks](https://msgpack.org) using the following command:
+```
+pocolog2msgpack -l ga_slam.0.log orbiter_preprocessing.0.log -o ga_slam.msg
+```
+
 ## Important components
 
 ### Task Path
@@ -129,7 +141,9 @@ The experiment contains all other objects introduced above. It manages device pl
 
 ## Citations
 <a id="1">[1]</a> Barnes, Connelly, et al. 
-"PatchMatch: A randomized correspondence algorithm for structural image editing." 
-ACM Trans. Graph. 28.3 (2009): 24.
+"PatchMatch: A randomized correspondence algorithm for structural image editing." ACM Trans. Graph. 28.3 (2009): 24.
+
+<a id="2">[2]</a> Geromichalos, Dimitrios, et al. "SLAM for autonomous planetary rovers with global localization." 
+Journal of Field Robotics 37.5 (2020): 830-847.
 
 
