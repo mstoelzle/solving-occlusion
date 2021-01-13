@@ -3,13 +3,13 @@
     "cuda": false,
     "dataset_generation": {
         "type": "rock_ga_slam_msgpack",
-        "msgpack_path": "data/20210111-2139/20210111-2139.msg",
+        "msgpack_path": "data/20210112-1910/ga_slam.msg",
         "save_frequency": 10,
         "size": 75,
         "psnr_similarity_threshold": 50,
         "split": {"train": 0.8, "val":  0.1, "test":  0.1},
         "visualization": {
-            "frequency": 1
+            "frequency": 10
         }
     },
     "remote": true,
