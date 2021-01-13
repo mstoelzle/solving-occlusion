@@ -55,6 +55,7 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
             occ_dem_msgs = chunk["/ga_slam.localElevationMapMean"]
             occ_data_um_msgs = chunk["/ga_slam.localElevationMapVariance"]
             gt_dem_msgs = chunk["/ga_slam.globalElevationMapMean"]
+            gt_data_um_msgs = chunk["/ga_slam.globalElevationMapVariance"]
 
             if progress_bar is None:
                 # we extrapolate the total maximum number of samples
@@ -66,7 +67,8 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
                 progress_bar = Bar(f"Processing msgspack from {self.config['msgpack_path']}",
                                    max=self.total_num_samples)
 
-            for occ_dem_msg, occ_data_um_msg, gt_dem_msg in zip(occ_dem_msgs, occ_data_um_msgs, gt_dem_msgs):
+            for msg in zip(occ_dem_msgs, occ_data_um_msgs, gt_dem_msgs, gt_data_um_msgs):
+                occ_dem_msg, occ_data_um_msg, gt_dem_msg, gt_data_um_msg = msg
                 time = occ_dem_msg["time"]
                 h, w = occ_dem_msg["height"], occ_dem_msg["width"]
 
@@ -82,6 +84,9 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
 
                 gt_dem = np.array(gt_dem_msg["data"])
                 gt_dem = gt_dem.reshape((-1, int(np.sqrt(gt_dem.shape[0]))), order="F")
+
+                gt_data_um = np.array(gt_data_um_msg["data"])
+                gt_data_um = gt_data_um.reshape((-1, int(np.sqrt(gt_data_um.shape[0]))), order="F")
 
                 if np.isnan(occ_dem).all():
                     # we skip because the DEM only contains occlusion (NaNs)
@@ -133,7 +138,7 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
                     self.save_cache()
 
                 self.visualize(sample_idx=sample_idx, res_grid=res_grid, rel_position=rel_position,
-                               occ_dem=occ_dem, gt_dem=gt_dem)
+                               occ_dem=occ_dem, gt_dem=gt_dem, occ_data_um=occ_data_um, gt_data_um=gt_data_um)
 
                 prior_occ_dem = occ_dem
                 sample_idx += 1

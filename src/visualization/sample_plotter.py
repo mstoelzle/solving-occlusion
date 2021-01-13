@@ -7,6 +7,7 @@ from src.enums import *
 
 def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
                          gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None,
+                         gt_data_um: np.array = None, occ_data_um: np.array = None,
                          robot_position_pixel: np.array = None, remote=False):
     if occ_dem is None and occ_mask is not None:
         occ_dem = gt_dem.copy()
@@ -21,19 +22,34 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
 
     dem_cmap = plt.get_cmap("viridis")
 
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=[2 * 6.4, 1 * 4.8])
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
 
-    axes[0].set_title("Occlusion")
+    axes[0, 0].set_title("Occluded DEM")
     # matshow plots x and y swapped
-    mat = axes[0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
+    mat = axes[0, 0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
                           vmax=dem_vmax, cmap=dem_cmap)
-    fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+    fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.045)
 
     if gt_dem is not None:
-        axes[1].set_title("Ground-truth")
+        axes[0, 1].set_title("Ground-truth DEM")
         # matshow plots x and y swapped
-        mat = axes[1].matshow(np.swapaxes(gt_dem, 0, 1), vmin=dem_vmin,
+        mat = axes[0, 1].matshow(np.swapaxes(gt_dem, 0, 1), vmin=dem_vmin,
                                  vmax=dem_vmax, cmap=dem_cmap)
+
+    um_cmap = plt.get_cmap("RdYlGn_r")
+
+    if occ_data_um is not None:
+        axes[1, 0].set_title("Occluded data uncertainty")
+        # matshow plots x and y swapped
+        mat = axes[1, 0].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
+        axes[1, 0].grid(False)
+
+    if gt_data_um is not None:
+        axes[1, 1].set_title("Ground-truth data uncertainty")
+        # matshow plots x and y swapped
+        mat = axes[1, 1].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
+        fig.colorbar(mat, ax=axes[1, :].ravel().tolist(), fraction=0.045)
+        axes[1, 1].grid(False)
 
     for i, ax in enumerate(axes.reshape(-1)):
         if robot_position_pixel is not None:

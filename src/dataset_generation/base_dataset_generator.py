@@ -135,7 +135,8 @@ class BaseDatasetGenerator(ABC):
                 dataset.attrs["max"] = self.max
 
     def visualize(self, sample_idx: int, res_grid: np.array, rel_position: np.array = None,
-                  gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None):
+                  gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None,
+                  gt_data_um: np.array = None, occ_data_um: np.array = None):
         if self.config.get("visualization", None) is not None:
             if self.config["visualization"] is True \
                     or sample_idx % self.config["visualization"].get("frequency", 100) == 0:
@@ -159,4 +160,5 @@ class BaseDatasetGenerator(ABC):
                     sample_dir.mkdir(exist_ok=True, parents=True)
                 draw_dataset_samples(sample_idx=sample_idx, logdir=sample_dir,
                                      gt_dem=gt_dem, occ_dem=occ_dem, occ_mask=occ_mask,
+                                     gt_data_um=gt_data_um, occ_data_um=occ_data_um,
                                      robot_position_pixel=robot_position_pixel, remote=self.remote)
