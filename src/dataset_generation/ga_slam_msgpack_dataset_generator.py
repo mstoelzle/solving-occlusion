@@ -50,7 +50,7 @@ class GASlamMsgpackDatasetGenerator(BaseDatasetGenerator):
         self.logger.info("Start loading first chunk of msgpack")
 
         for chunk_idx, chunk in enumerate(self.unpacker):
-            self.logger.info("Msgpack chunk", chunk_idx, "is loaded")
+            self.logger.info(f"Msgpack chunk {chunk_idx} is loaded")
 
             occ_dem_msgs = chunk["/ga_slam.localElevationMapMean"]
             occ_data_um_msgs = chunk["/ga_slam.localElevationMapVariance"]
