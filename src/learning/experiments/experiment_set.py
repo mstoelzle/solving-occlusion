@@ -28,7 +28,7 @@ class ExperimentSet:
         self.datadir = pathlib.Path("data")
         self.datadir.mkdir(parents=True, exist_ok=True)
 
-        self.logger = create_base_logger(self.logdir)
+        self.logger = create_base_logger(self.logdir, name="experiment_set")
 
         self.device = torch.device("cuda" if (self.config.get("cuda", True) and torch.cuda.is_available()) else "cpu")
 

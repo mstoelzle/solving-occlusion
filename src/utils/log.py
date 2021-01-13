@@ -6,11 +6,11 @@ import os
 import pathlib
 import psutil
 
-LOGGER_ROOT = "path_learning.experiment"
+LOGGER_ROOT = "solving_occlusion"
 
 
-def create_base_logger(logdir: pathlib.Path) -> logging.Logger:
-    logger = get_logger("")
+def create_base_logger(logdir: pathlib.Path, name: str = "") -> logging.Logger:
+    logger = get_logger(name)
     logger.setLevel(logging.INFO)
     fh = logging.FileHandler(logdir / "run.log")
     fmt_str = '{"time": "%(asctime)s", "logger_name": %(name)s", "level":"%(levelname)s", "message": "%(message)s"}'

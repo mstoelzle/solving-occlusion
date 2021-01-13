@@ -21,7 +21,7 @@ class BaseDatasetGenerator(ABC):
         self.remote = remote
 
         self.logdir = create_logdir(f"dataset_generation_{self.name}")
-        self.logger = create_base_logger(self.logdir)
+        self.logger = create_base_logger(self.logdir, name="dataset_generator")
 
         with open(str(self.logdir / "config.json"), "w") as fp:
             json.dump(self.config, fp, indent=4)
