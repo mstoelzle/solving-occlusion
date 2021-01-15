@@ -88,7 +88,7 @@ class UNet(BaseModel):
 
             x = encodings[0]
             for decoding_idx, decoder_layer in enumerate(self.decoder):
-                if decoding_idx + 1 < len(self.decoder):
+                if decoding_idx < len(self.decoder) - 1:
                     x = decoder_layer(x, encodings[decoding_idx + 1])
                 else:
                     x = decoder_layer(x)
