@@ -4,3 +4,6 @@
 [submodule "src/learning/models/baseline/py_patch_match"]
 	path = src/learning/models/baseline/py_patch_match
 	url = https://github.com/mstoelzle/PyPatchMatch
+[submodule "scripts/unet-plot"]
+	path = scripts/unet-plot
+	url = https://mstoelzle@github.com/mstoelzle/solving-occlusion-unet-plot
