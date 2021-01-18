@@ -7,3 +7,6 @@
 [submodule "scripts/unet-plot"]
 	path = scripts/unet-plot
 	url = https://mstoelzle@github.com/mstoelzle/solving-occlusion-unet-plot
+[submodule "src/traversability/esa-prl-perception-traversability"]
+	path = src/traversability/esa-prl-perception-traversability
+	url = https://mstoelzle@github.com/esa-prl/perception-traversability
