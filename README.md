@@ -5,7 +5,7 @@
 ### 1. Prerequisites
 This framework requires **Python 3.9.1**. The generation of synthetic datasets requires an Ubuntu environment. 
 
-**Note:** To use efficient neural network training, Cuda 10.2 needs to be installed and available.
+**Note:** To use efficient neural network training, Cuda 11 needs to be installed and available.
 
 It is recommended to use a package manager like Conda (https://docs.conda.io/en/latest/) to manage the Python version 
 and all required Python packages.
@@ -28,7 +28,7 @@ The required Python packages can be installed as follows (within the Conda envir
 pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
 ```
 
-#### 3.2 Build OpenCV from source:
+#### 3.2 Build OpenCV from source (not required for now):
 
 1. Install the pkg-config package
 for macOS: `brew install pkg-config` for Ubuntu: `sudo apt-get install pkg-config`.
@@ -86,6 +86,17 @@ If this baseline is specified for use in the config, the following installation 
 
 ```
 cd "${WORKSPACE}/solving-occlusion/src/learning/models/baseline/py_patch_match" && make
+```
+
+#### 3.5 Install Traversability module
+We first need to install the dependencies CMake, OpenCV and PCL. On macOS:
+```
+brew install cmake opencv pcl
+```
+
+Subsequently, we can install the Python wrapper for the rock `perception-traversability` component with:
+```
+pip install --user -e "${WORKSPACE}/solving-occlusion/src/traversability/perception-traversability-pybind"
 ```
 
 ### 4. Generating a dataset
