@@ -59,9 +59,9 @@ class TraversabilityAssessment:
                                                          obstacle_vicinity_kernel_size, obstacle_vicinity_iterations,
                                                          robot_size, dilation_iterations)
 
-            self.traversability.set_elevation_map(rec_dem)
+            self.traversability.set_elevation_map(rec_dem, rec_dem.shape[0], rec_dem.shape[1])
             rec_trav_risk_map = self.traversability.compute_traversability()
-            self.traversability.set_elevation_map(comp_dem)
+            self.traversability.set_elevation_map(comp_dem, comp_trav_risk_map.shape[0], comp_trav_risk_map.shape[1])
             comp_trav_risk_map = self.traversability.compute_traversability()
 
             output[ChannelEnum.REC_TRAV_RISK_MAP] = rec_trav_risk_map
