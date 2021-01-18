@@ -19,4 +19,5 @@ class ChannelEnum(MultiValueEnum):
     COMP_DATA_UM = "comp_data_um"
     MODEL_UM = "model_um"
     TOTAL_UM = "total_um"
-    TRAV_RISK_MAP = "trav_risk_map"
+    REC_TRAV_RISK_MAP = "rec_trav_risk_map"
+    COMP_TRAV_RISK_MAP = "comp_trav_risk_map"

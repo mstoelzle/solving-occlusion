@@ -38,6 +38,9 @@
                 "controller": {
                     "max_num_epochs": 0,
                     "max_num_better_results": 0
+                },
+                "traversability_assessment": {
+                    "active": true
                 }
             },
             "tasks": [

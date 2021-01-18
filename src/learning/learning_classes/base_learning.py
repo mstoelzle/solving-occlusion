@@ -18,6 +18,7 @@ from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.tasks import Task
+from src.traversability.traversability_assessment import TraversabilityAssessment
 from src.utils.digest import TensorboardDigest
 from src.utils.log import get_logger
 
@@ -156,6 +157,11 @@ class BaseLearning(ABC):
         test_data_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/data")
         test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/loss")
 
+        traversability_assessment = None
+        if self.task.config.get("traversability_assessment", {}).get("active", True):
+            traversability_config = self.task.config.get("traversability_assessment", {})
+            traversability_assessment = TraversabilityAssessment(**traversability_config)
+
         self.model.eval()
 
         if self.task.type == TaskTypeEnum.SUPERVISED_LEARNING:
@@ -174,6 +180,9 @@ class BaseLearning(ABC):
 
                 with profiler.record_function("model_inference"):
                     output = self.model(data)
+
+                if traversability_assessment is not None:
+                    output = traversability_assessment(output=output, data=data)
 
                 self.add_batch_data_to_hdf5_results(test_data_hdf5_group, data, start_idx,
                                                     dataloader_meta_info.length)
