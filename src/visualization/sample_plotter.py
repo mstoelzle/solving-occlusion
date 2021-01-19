@@ -259,12 +259,12 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
     if rec_trav_risk_map is not None:
         axes[1, 0].set_title("Rec. Traversability")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(rec_data_um, 0, 1), cmap=cmap)
+        mat = axes[1, 0].matshow(np.swapaxes(rec_trav_risk_map, 0, 1), cmap=cmap)
 
     if comp_trav_risk_map is not None:
         axes[1, 1].set_title("Comp. Traversability")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(comp_data_um, 0, 1), cmap=cmap)
+        mat = axes[1, 1].matshow(np.swapaxes(comp_trav_risk_map, 0, 1), cmap=cmap)
 
     for i, ax in enumerate(axes.reshape(-1)):
         if robot_position_pixel is not None:
