@@ -9,7 +9,7 @@ import torch
 from typing import *
 import warnings
 
-from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot
+from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, draw_traversability_plot
 from src.enums import *
 from src.utils.log import get_logger
 
@@ -199,7 +199,7 @@ class ResultsPlotter:
             if gt_dem is not None \
                     or rec_data_um is not None or model_um is not None:
                 draw_error_uncertainty_plot(idx, logdir,
-                                            gt_dem, rec_dem, comp_dem,
+                                            gt_dem=gt_dem, rec_dem=rec_dem, comp_dem=comp_dem,
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
                                             robot_position_pixel=robot_position_pixel, remote=self.remote,
@@ -212,6 +212,17 @@ class ResultsPlotter:
             if comp_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
                                     robot_position_pixel=robot_position_pixel, remote=self.remote)
+
+            if ChannelEnum.REC_TRAV_RISK_MAP.value in data_hdf5_group \
+                    and ChannelEnum.COMP_TRAV_RISK_MAP.value in data_hdf5_group:
+                rec_trav_risk_map = data_hdf5_group[ChannelEnum.REC_TRAV_RISK_MAP.value][idx, ...]
+                comp_trav_risk_map = data_hdf5_group[ChannelEnum.COMP_TRAV_RISK_MAP.value][idx, ...]
+                draw_traversability_plot(idx, logdir,
+                                         gt_dem=gt_dem, rec_dem=rec_dem, comp_dem=comp_dem,
+                                         rec_data_um=rec_data_um, comp_data_um=comp_data_um,
+                                         model_um=model_um, total_um=total_um,
+                                         rec_trav_risk_map=rec_trav_risk_map, comp_trav_risk_map=comp_trav_risk_map,
+                                         robot_position_pixel=robot_position_pixel, remote=self.remote)
 
             progress_bar.next()
         progress_bar.finish()

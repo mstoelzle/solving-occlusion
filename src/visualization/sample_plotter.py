@@ -27,7 +27,7 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
     axes[0, 0].set_title("Occluded DEM")
     # matshow plots x and y swapped
     mat = axes[0, 0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
-                          vmax=dem_vmax, cmap=dem_cmap)
+                             vmax=dem_vmax, cmap=dem_cmap)
     fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.045)
 
     if gt_dem is not None:
@@ -231,6 +231,52 @@ def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
 
     plt.draw()
     plt.savefig(str(logdir / f"{channel.value}_{sample_idx}.pdf"))
+    if remote is not True:
+        plt.show()
+    plt.close()
+
+
+def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
+                             gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
+                             rec_data_um: np.array = None, comp_data_um: np.array = None,
+                             model_um: np.array = None, total_um: np.array = None,
+                             rec_trav_risk_map: np.array = None, comp_trav_risk_map: np.array = None,
+                             robot_position_pixel: np.array = None, remote=False):
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1. * 10, 1. * 10])
+
+    cmap = plt.get_cmap("RdYlGn_r")
+
+    if rec_dem is not None:
+        axes[0, 0].set_title("Reconstruction")
+        # matshow plots x and y swapped
+        mat = axes[0, 0].matshow(np.swapaxes(rec_dem, 0, 1), cmap=cmap)
+
+    if comp_dem is not None:
+        axes[0, 1].set_title("Composition")
+        # matshow plots x and y swapped
+        mat = axes[0, 1].matshow(np.swapaxes(comp_dem, 0, 1), cmap=cmap)
+
+    if rec_trav_risk_map is not None:
+        axes[1, 0].set_title("Rec. Traversability")
+        # matshow plots x and y swapped
+        mat = axes[1, 0].matshow(np.swapaxes(rec_data_um, 0, 1), cmap=cmap)
+
+    if comp_trav_risk_map is not None:
+        axes[1, 1].set_title("Comp. Traversability")
+        # matshow plots x and y swapped
+        mat = axes[1, 1].matshow(np.swapaxes(comp_data_um, 0, 1), cmap=cmap)
+
+    for i, ax in enumerate(axes.reshape(-1)):
+        if robot_position_pixel is not None:
+            ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
+
+        fig.colorbar(mat, ax=ax, fraction=0.10)
+
+        # Hide grid lines
+        ax.grid(False)
+
+    plt.draw()
+    plt.savefig(str(logdir / f"traversability_{sample_idx}.pdf"))
     if remote is not True:
         plt.show()
     plt.close()
