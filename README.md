@@ -91,7 +91,7 @@ cd "${WORKSPACE}/solving-occlusion/src/learning/models/baseline/py_patch_match" 
 #### 3.5 Install Traversability module
 We first need to install the dependencies CMake, OpenCV and PCL. On macOS:
 ```
-brew install cmake opencv pcl
+brew install cmake opencv pcl eigen
 ```
 
 Subsequently, we can install the Python wrapper for the rock `perception-traversability` component with:
