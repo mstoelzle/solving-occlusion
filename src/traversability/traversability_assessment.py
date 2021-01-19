@@ -17,8 +17,10 @@ class TraversabilityAssessment:
                  data: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
         rec_dems = output[ChannelEnum.REC_DEM]
         comp_dems = output[ChannelEnum.COMP_DEM]
-        res_grid = output[ChannelEnum.RES_GRID]
+        res_grid = data[ChannelEnum.RES_GRID]
 
+        rec_trav_risk_maps = []
+        comp_trav_risk_maps = []
         for idx in range(rec_dems.size(0)):
             rec_dem = rec_dems[idx, ...].detach().cpu().numpy()
             comp_dem = comp_dems[idx, ...].detach().cpu().numpy()
@@ -59,12 +61,24 @@ class TraversabilityAssessment:
                                                          obstacle_vicinity_kernel_size, obstacle_vicinity_iterations,
                                                          robot_size, dilation_iterations)
 
-            self.traversability.set_elevation_map(rec_dem, rec_dem.shape[0], rec_dem.shape[1])
-            rec_trav_risk_map = self.traversability.compute_traversability()
-            self.traversability.set_elevation_map(comp_dem, comp_trav_risk_map.shape[0], comp_trav_risk_map.shape[1])
-            comp_trav_risk_map = self.traversability.compute_traversability()
+            print("newshape", rec_dem.reshape((-1), order='C').shape)
 
-            output[ChannelEnum.REC_TRAV_RISK_MAP] = rec_trav_risk_map
-            output[ChannelEnum.COMP_TRAV_RISK_MAP] = comp_trav_risk_map
+            # the perception-traversability module expects a std::vector in row-major format
+            # https://pybind11.readthedocs.io/en/stable/advanced/cast/overview.html
+            self.traversability.set_elevation_map(rec_dem.reshape((-1), order='C').tolist(),
+                                                  rec_dem.shape[0], rec_dem.shape[1])
+            rec_trav_risk_map = np.array(self.traversability.compute_traversability())
+
+            print("rec_trav_risk_map", rec_trav_risk_map)
+
+            self.traversability.set_elevation_map(comp_dem.reshape((-1), order='C').tolist(),
+                                                  comp_dem.shape[0], comp_dem.shape[1])
+            comp_trav_risk_map = np.array(self.traversability.compute_traversability())
+
+            rec_trav_risk_maps.append(torch.tensor(rec_trav_risk_map))
+            comp_trav_risk_maps.append(torch.tensor(comp_trav_risk_map))
+
+        output[ChannelEnum.REC_TRAV_RISK_MAP] = torch.stack(rec_trav_risk_maps)
+        output[ChannelEnum.COMP_TRAV_RISK_MAP] = torch.stack(comp_trav_risk_maps)
 
         return output
