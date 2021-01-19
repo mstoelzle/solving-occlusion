@@ -242,7 +242,7 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
                              model_um: np.array = None, total_um: np.array = None,
                              rec_trav_risk_map: np.array = None, comp_trav_risk_map: np.array = None,
                              robot_position_pixel: np.array = None, remote=False):
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1. * 10, 1. * 10])
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1.2 * 10, 1. * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
 
@@ -250,27 +250,29 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
         axes[0, 0].set_title("Reconstruction")
         # matshow plots x and y swapped
         mat = axes[0, 0].matshow(np.swapaxes(rec_dem, 0, 1), cmap=cmap)
+        fig.colorbar(mat, ax=axes[0, 0], fraction=0.08)
 
     if comp_dem is not None:
         axes[0, 1].set_title("Composition")
         # matshow plots x and y swapped
         mat = axes[0, 1].matshow(np.swapaxes(comp_dem, 0, 1), cmap=cmap)
+        fig.colorbar(mat, ax=axes[0, 1], fraction=0.08)
 
     if rec_trav_risk_map is not None:
         axes[1, 0].set_title("Rec. Traversability")
         # matshow plots x and y swapped
         mat = axes[1, 0].matshow(np.swapaxes(rec_trav_risk_map, 0, 1), cmap=cmap)
+        fig.colorbar(mat, ax=axes[1, 0], fraction=0.08)
 
     if comp_trav_risk_map is not None:
         axes[1, 1].set_title("Comp. Traversability")
         # matshow plots x and y swapped
         mat = axes[1, 1].matshow(np.swapaxes(comp_trav_risk_map, 0, 1), cmap=cmap)
+        fig.colorbar(mat, ax=axes[1, 1], fraction=0.08)
 
     for i, ax in enumerate(axes.reshape(-1)):
         if robot_position_pixel is not None:
             ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
-
-        fig.colorbar(mat, ax=ax, fraction=0.10)
 
         # Hide grid lines
         ax.grid(False)
