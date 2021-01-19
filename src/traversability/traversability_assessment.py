@@ -61,19 +61,15 @@ class TraversabilityAssessment:
                                                          obstacle_vicinity_kernel_size, obstacle_vicinity_iterations,
                                                          robot_size, dilation_iterations)
 
-            print("newshape", rec_dem.reshape((-1), order='C').shape)
-
             # the perception-traversability module expects a std::vector in row-major format
             # https://pybind11.readthedocs.io/en/stable/advanced/cast/overview.html
             self.traversability.set_elevation_map(rec_dem.reshape((-1), order='C').tolist(),
                                                   rec_dem.shape[0], rec_dem.shape[1])
-            rec_trav_risk_map = np.array(self.traversability.compute_traversability())
-
-            print("rec_trav_risk_map", rec_trav_risk_map)
+            rec_trav_risk_map = self.traversability.compute_traversability_eigen()
 
             self.traversability.set_elevation_map(comp_dem.reshape((-1), order='C').tolist(),
                                                   comp_dem.shape[0], comp_dem.shape[1])
-            comp_trav_risk_map = np.array(self.traversability.compute_traversability())
+            comp_trav_risk_map = self.traversability.compute_traversability_eigen()
 
             rec_trav_risk_maps.append(torch.tensor(rec_trav_risk_map))
             comp_trav_risk_maps.append(torch.tensor(comp_trav_risk_map))
