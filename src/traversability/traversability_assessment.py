@@ -41,13 +41,13 @@ class TraversabilityAssessment:
             # Kernel size to dilate obstacle second time [cells]
             obstacle_vicinity_kernel_size = int(self.config.get("obstacle_vicinity_kernel_size", 3))
             # in meters, needed for obstacle dilation
-            robot_size = self.config.get("robot_size", 0.6)
+            robot_size = self.config.get("robot_size", 0.1)
             # Obstacles the rover can tolerate when there is no sinkage [m]
             rover_obstacle_clearance = self.config.get("rover_obstacle_clearance", 0.2)
             # Slope the rover can travel in nominal case [rad]
-            rover_slope_gradeability = self.config.get("rover_slope_gradeability", 15/180*np.pi)
+            rover_slope_gradeability = self.config.get("rover_slope_gradeability", 15 / 180 * np.pi)
             # How many normal cell a slope map cell will contain
-            slope_map_scale = int(self.config.get("slope_map_scale", 3))
+            slope_map_scale = int(self.config.get("slope_map_scale", 1))
             # Final traversability map dilation iterations
             dilation_iterations = int(self.config.get("dilation_iterations", 2))
 
