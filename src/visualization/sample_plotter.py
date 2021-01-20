@@ -242,7 +242,7 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
                              model_um: np.array = None, total_um: np.array = None,
                              rec_trav_risk_map: np.array = None, comp_trav_risk_map: np.array = None,
                              robot_position_pixel: np.array = None, remote=False):
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1.2 * 10, 1. * 10])
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1.2 * 10, 1.1 * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
 
@@ -259,13 +259,13 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
         fig.colorbar(mat, ax=axes[0, 1], fraction=0.08)
 
     if rec_trav_risk_map is not None:
-        axes[1, 0].set_title("Rec. Traversability")
+        axes[1, 0].set_title("Reconstructed Traversability")
         # matshow plots x and y swapped
         mat = axes[1, 0].matshow(np.swapaxes(rec_trav_risk_map, 0, 1), cmap=cmap)
         fig.colorbar(mat, ax=axes[1, 0], fraction=0.08)
 
     if comp_trav_risk_map is not None:
-        axes[1, 1].set_title("Comp. Traversability")
+        axes[1, 1].set_title("Composed Traversability")
         # matshow plots x and y swapped
         mat = axes[1, 1].matshow(np.swapaxes(comp_trav_risk_map, 0, 1), cmap=cmap)
         fig.colorbar(mat, ax=axes[1, 1], fraction=0.08)
