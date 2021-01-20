@@ -10,6 +10,7 @@ class TraversabilityAssessment:
 
         from traversability_pybind import Traversability
         self.traversability = Traversability()
+        self.traversability.rotate_local2global = False
 
         # self.traversability.configure_traversability()
 
