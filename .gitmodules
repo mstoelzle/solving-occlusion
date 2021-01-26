@@ -12,4 +12,4 @@
 	url = https://mstoelzle@github.com/esa-prl/perception-traversability-pybind
 [submodule "src/dataset_generation/pocolog-pybind"]
 	path = src/dataset_generation/pocolog-pybind
-	url = https://github.com/esa-prl/tools-pocolog_pybind
+	url = https://github.com/esa-prl/tools-pocolog-pybind
