@@ -125,7 +125,6 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                     pass
 
                 start_x = 0
-                start_y = 0
                 for i in range(num_subgrids_x):
                     stop_x = start_x + target_size_x
                     start_y = 0
