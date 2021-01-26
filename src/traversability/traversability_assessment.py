@@ -12,8 +12,6 @@ class TraversabilityAssessment:
         self.traversability = Traversability()
         self.traversability.use_global_path_planner_convention = False
 
-        # self.traversability.configure_traversability()
-
     def __call__(self, output: dict[ChannelEnum, torch.Tensor],
                  data: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
         rec_dems = output[ChannelEnum.REC_DEM]
