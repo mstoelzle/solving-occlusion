@@ -1,0 +1,23 @@
+{
+    "name": "anymal_rosbag_obstacles",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anymal_rosbag",
+        "rosbag_paths": [
+            "../anymal-rosbags/obstacles/2021-01-06-14-19-19.bag",
+            "../anymal-rosbags/obstacles/2021-01-06-14-30-21.bag",
+            "../anymal-rosbags/obstacles/2021-01-06-14-56-31.bag",
+            "../anymal-rosbags/obstacles/2021-01-06-15-08-39.bag",
+            "../anymal-rosbags/obstacles/2021-01-06-15-12-23.bag",
+            "../anymal-rosbags/obstacles/2021-01-06-15-33-06.bag"
+        ],
+        "size": 80,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 50
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
