@@ -24,7 +24,7 @@
                     "datasets": [
                         {
                             "type": "hdf5",
-                            "path": "data/2021-01-27-15-01-28_dataset_generation_anymal_rosbag_obstacles_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "path": "data/2021-01-27-22-47-04_dataset_generation_anymal_rosbag_obstacles_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                             "size": [64, 64],
                             "sampling_weights": {"train":  1, "val":  1, "test":  1},
                             "self_supervision": true,
