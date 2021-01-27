@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from itertools import chain
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
@@ -17,14 +18,14 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
 
         import rosbag
         self.rosbag_module = rosbag
-        self.rosbag_path = pathlib.Path(self.config["rosbag_path"])
+        self.rosbag_paths = self.config.get("rosbag_paths", [])
         self.rosbag_topics = ['/elevation_mapping/elevation_map_recordable']
 
         self.split_config = self.config.get("split")
         assert list(self.split_config.keys()) == ["train", "val", "test"]
         self.split_msg_indices = {}
 
-        self.bag = None
+        self.bags = []
         self.reset()
 
     def reset(self):
@@ -34,130 +35,141 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         self.purpose_max_num_samples = {}
 
     def __enter__(self):
-        self.bag = self.rosbag_module.Bag(str(self.rosbag_path), 'r')
+        for rosbag_path in self.rosbag_paths:
+            self.bags.append(self.rosbag_module.Bag(rosbag_path, 'r'))
 
         super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.bag.close()
+        for bag in self.bags:
+            bag.close()
+
+        self.bags = []
 
         super().__exit__(exc_type, exc_val, exc_tb)
 
     def run(self):
         progress_bar = None
-        for msg_idx, (topic, msg, t) in enumerate(self.bag.read_messages(topics=self.rosbag_topics)):
-            for layer_idx in range(len(msg.layers)):
-                info = msg.info
-                layer = msg.layers[layer_idx]
-                layer_data = msg.data[layer_idx]
 
-                length_x = info.length_x
-                length_y = info.length_y
-                resolution = info.resolution
-                res_grid = np.array([resolution, resolution])
-                if resolution == 0.0:
-                    warnings.warn("We skip DEMs with resolutions = 0.0")
-                    continue
+        total_num_messages = 0
+        for bag in self.bags:
+            total_num_messages += bag.get_message_count(topic_filters=self.rosbag_topics)
 
-                pose = info.pose
-                position = np.array([pose.position.x, pose.position.y, pose.position.z])
-                orientation = np.array([pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w])
+        print("total num messages", total_num_messages)
 
-                layout = layer_data.layout
-                dims = layout.dim
+        for bag in self.bags:
+            for msg_idx, (topic, msg, t) in enumerate(bag.read_messages(topics=self.rosbag_topics)):
+                for layer_idx in range(len(msg.layers)):
+                    info = msg.info
+                    layer = msg.layers[layer_idx]
+                    layer_data = msg.data[layer_idx]
 
-                array = np.array(layer_data.data)
-                if dims[0].label == "column_index" and dims[1].label == "row_index":
-                    # column major
-                    size_x = dims[1].size
-                    size_y = dims[0].size
-                    grid_map = array.reshape((size_x, size_y), order='F')
-                elif dims[0].label == "row_index" and dims[1].label == "column_index":
-                    # row major
-                    size_x = dims[0].size
-                    size_y = dims[1].size
-                    grid_map = array.reshape((size_x, size_y), order='C')
-                else:
-                    raise ValueError
+                    length_x = info.length_x
+                    length_y = info.length_y
+                    resolution = info.resolution
+                    res_grid = np.array([resolution, resolution])
+                    if resolution == 0.0:
+                        warnings.warn("We skip DEMs with resolutions = 0.0")
+                        continue
 
-                self.update_dataset_range(grid_map[~np.isnan(grid_map)])
+                    pose = info.pose
+                    position = np.array([pose.position.x, pose.position.y, pose.position.z])
+                    orientation = np.array([pose.orientation.x, pose.orientation.y,
+                                            pose.orientation.z, pose.orientation.w])
 
-                target_size_x = self.config.get("size", grid_map.shape[0])
-                target_size_y = self.config.get("size", grid_map.shape[1])
-                num_subgrids_x = int(np.floor(grid_map.shape[0] / target_size_x))
-                num_subgrids_y = int(np.floor(grid_map.shape[1] / target_size_y))
+                    layout = layer_data.layout
+                    dims = layout.dim
 
-                assert num_subgrids_x >= 1 and num_subgrids_y >= 1
+                    array = np.array(layer_data.data)
+                    if dims[0].label == "column_index" and dims[1].label == "row_index":
+                        # column major
+                        size_x = dims[1].size
+                        size_y = dims[0].size
+                        grid_map = array.reshape((size_x, size_y), order='F')
+                    elif dims[0].label == "row_index" and dims[1].label == "column_index":
+                        # row major
+                        size_x = dims[0].size
+                        size_y = dims[1].size
+                        grid_map = array.reshape((size_x, size_y), order='C')
+                    else:
+                        raise ValueError
 
-                if self.total_num_samples is None:
-                    total_num_messages = self.bag.get_message_count(topic_filters=self.rosbag_topics)
+                    self.update_dataset_range(grid_map[~np.isnan(grid_map)])
 
-                    total_split = 0
-                    for purpose, purpose_split in self.split_config.items():
-                        total_split += purpose_split
-                    start_msg_idx = 0
-                    for purpose, purpose_split in self.split_config.items():
-                        self.split_msg_indices[purpose] = start_msg_idx
-                        purpose_num_msgs = int(purpose_split / total_split * total_num_messages)
-                        self.purpose_max_num_samples[purpose] = purpose_num_msgs * num_subgrids_x * num_subgrids_y + 1
-                        start_msg_idx += purpose_num_msgs
+                    target_size_x = self.config.get("size", grid_map.shape[0])
+                    target_size_y = self.config.get("size", grid_map.shape[1])
+                    num_subgrids_x = int(np.floor(grid_map.shape[0] / target_size_x))
+                    num_subgrids_y = int(np.floor(grid_map.shape[1] / target_size_y))
 
-                    self.total_num_samples = total_num_messages * num_subgrids_x * num_subgrids_y
+                    assert num_subgrids_x >= 1 and num_subgrids_y >= 1
 
-                    progress_bar = Bar(f"Reading anymal bag", max=self.total_num_samples)
+                    if self.total_num_samples is None:
+                        total_split = 0
+                        for purpose, purpose_split in self.split_config.items():
+                            total_split += purpose_split
+                        start_msg_idx = 0
+                        for purpose, purpose_split in self.split_config.items():
+                            self.split_msg_indices[purpose] = start_msg_idx
+                            purpose_num_msgs = int(purpose_split / total_split * total_num_messages)
+                            self.purpose_max_num_samples[purpose] = purpose_num_msgs*num_subgrids_x*num_subgrids_y + 1
+                            start_msg_idx += purpose_num_msgs
 
-                if self.purpose is None and msg_idx >= self.split_msg_indices["train"]:
-                    self.purpose = "train"
-                    self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                elif self.purpose == "train" and msg_idx >= self.split_msg_indices["val"]:
-                    self.save_cache()
-                    self.write_metadata(self.hdf5_group)
-                    self.reset_metadata()
-                    self.purpose = "val"
-                    self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                    self.initialized_datasets = False
-                elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
-                    self.save_cache()
-                    self.write_metadata(self.hdf5_group)
-                    self.reset_metadata()
-                    self.purpose = "test"
-                    self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                    self.initialized_datasets = False
-                else:
-                    pass
+                        self.total_num_samples = total_num_messages * num_subgrids_x * num_subgrids_y
 
-                start_x = 0
-                for i in range(num_subgrids_x):
-                    stop_x = start_x + target_size_x
-                    start_y = 0
-                    for j in range(num_subgrids_y):
-                        stop_y = start_y + target_size_y
+                        progress_bar = Bar(f"Reading anymal bag", max=self.total_num_samples)
 
-                        subgrid = grid_map[start_x:stop_x, start_y:stop_y]
+                    if self.purpose is None and msg_idx >= self.split_msg_indices["train"]:
+                        self.purpose = "train"
+                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+                    elif self.purpose == "train" and msg_idx >= self.split_msg_indices["val"]:
+                        self.save_cache()
+                        self.write_metadata(self.hdf5_group)
+                        self.reset_metadata()
+                        self.purpose = "val"
+                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+                        self.initialized_datasets = False
+                    elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
+                        self.save_cache()
+                        self.write_metadata(self.hdf5_group)
+                        self.reset_metadata()
+                        self.purpose = "test"
+                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+                        self.initialized_datasets = False
+                    else:
+                        pass
 
-                        if np.isnan(subgrid).sum() > (target_size_x * target_size_y / 2):
-                            # we do not want to include the subgrid in the dataset if its occluded to more than 50%
+                    start_x = 0
+                    for i in range(num_subgrids_x):
+                        stop_x = start_x + target_size_x
+                        start_y = 0
+                        for j in range(num_subgrids_y):
+                            stop_y = start_y + target_size_y
+
+                            subgrid = grid_map[start_x:stop_x, start_y:stop_y]
+
+                            if np.isnan(subgrid).sum() > (target_size_x * target_size_y / 2):
+                                # we do not want to include the subgrid in the dataset if its occluded to more than 50%
+                                progress_bar.next()
+                                start_y = stop_y
+                                continue
+
+                            subgrid_delta_x = resolution * (-grid_map.shape[0]/2 + start_x + target_size_x / 2)
+                            subgrid_delta_y = resolution * (-grid_map.shape[1]/2 + start_y + target_size_y / 2)
+                            rel_position = np.array([position[0] + subgrid_delta_x,
+                                                     position[1] + subgrid_delta_y,
+                                                     position[2]])
+                            rel_attitude = orientation
+
+                            self.process_item(res_grid, rel_position, rel_attitude, subgrid)
+
+                            self.visualize(sample_idx=self.sample_idx, res_grid=res_grid, rel_position=rel_position,
+                                           occ_dem=subgrid)
+
+                            self.sample_idx += 1
                             progress_bar.next()
                             start_y = stop_y
-                            continue
 
-                        subgrid_delta_x = resolution * (-grid_map.shape[0]/2 + start_x + target_size_x / 2)
-                        subgrid_delta_y = resolution * (-grid_map.shape[1]/2 + start_y + target_size_y / 2)
-                        rel_position = np.array([position[0] + subgrid_delta_x,
-                                                 position[1] + subgrid_delta_y,
-                                                 position[2]])
-                        rel_attitude = orientation
-
-                        self.process_item(res_grid, rel_position, rel_attitude, subgrid)
-
-                        self.visualize(sample_idx=self.sample_idx, res_grid=res_grid, rel_position=rel_position,
-                                       occ_dem=subgrid)
-
-                        self.sample_idx += 1
-                        progress_bar.next()
-                        start_y = stop_y
-
-                    start_x = stop_x
+                        start_x = stop_x
 
         self.save_cache()
         self.write_metadata(self.hdf5_group)
