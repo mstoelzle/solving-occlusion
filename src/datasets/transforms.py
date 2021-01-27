@@ -62,8 +62,8 @@ class Transformer:
         lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1].numpy()
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
-        dist_x = off_x - robot_position[0]
-        dist_y = off_y - robot_position[1]
+        dist_x = off_x - robot_position[0].numpy()
+        dist_y = off_y - robot_position[1].numpy()
         dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
 
         stdev = transform_config["stdev"]
@@ -230,8 +230,8 @@ class Transformer:
         lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1].numpy()
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
-        dist_x = off_x - robot_position[0]
-        dist_y = off_y - robot_position[1]
+        dist_x = off_x - robot_position[0].numpy()
+        dist_y = off_y - robot_position[1].numpy()
         dist_p2_norm = np.sqrt(np.square(dist_x) + np.square(dist_y))
 
         stdev = transform_config["stdev"]
