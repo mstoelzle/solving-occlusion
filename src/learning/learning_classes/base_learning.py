@@ -158,7 +158,7 @@ class BaseLearning(ABC):
         test_loss_hdf5_group = self.results_hdf5_file.create_group(f"/{hdf5_group_prefix}/loss")
 
         traversability_assessment = None
-        if self.task.config.get("traversability_assessment", {}).get("active", True):
+        if self.task.config.get("traversability_assessment", {}).get("active", False):
             traversability_config = self.task.config.get("traversability_assessment", {})
             traversability_assessment = TraversabilityAssessment(**traversability_config)
 
