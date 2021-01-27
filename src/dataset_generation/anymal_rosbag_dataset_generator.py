@@ -12,7 +12,7 @@ from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
 
 
-class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
+class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
