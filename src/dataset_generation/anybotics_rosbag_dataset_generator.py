@@ -55,10 +55,10 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
         for bag in self.bags:
             total_num_messages += bag.get_message_count(topic_filters=self.rosbag_topics)
 
-        print("total num messages", total_num_messages)
-
+        msg_idx = -1
         for bag in self.bags:
-            for msg_idx, (topic, msg, t) in enumerate(bag.read_messages(topics=self.rosbag_topics)):
+            for topic, msg, t in bag.read_messages(topics=self.rosbag_topics):
+                msg_idx += 1
                 for layer_idx in range(len(msg.layers)):
                     info = msg.info
                     layer = msg.layers[layer_idx]
