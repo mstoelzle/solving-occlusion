@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+from typing import *
 
 from src.enums import *
 
@@ -12,8 +12,8 @@ class TraversabilityAssessment:
         self.traversability = Traversability()
         self.traversability.use_global_path_planner_convention = False
 
-    def __call__(self, output: dict[ChannelEnum, torch.Tensor],
-                 data: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
+    def __call__(self, output: Dict[ChannelEnum, torch.Tensor],
+                 data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         rec_dems = output[ChannelEnum.REC_DEM]
         comp_dems = output[ChannelEnum.COMP_DEM]
         res_grid = data[ChannelEnum.RES_GRID]
