@@ -58,8 +58,8 @@ class Transformer:
         sample_grid = data[ChannelEnum.OCC_DEM]
 
         # distance of every pixel from the robot
-        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0]
-        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[0]
+        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0].numpy()
+        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1].numpy()
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
         dist_x = off_x - robot_position[0]
@@ -226,8 +226,8 @@ class Transformer:
         sample_grid = data[ChannelEnum.OCC_DATA_UM]
 
         # distance of every pixel from the robot
-        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0]
-        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1]
+        lin_x = np.arange(start=-sample_grid.shape[0] / 2, stop=sample_grid.shape[0] / 2, step=1) * res_grid[0].numpy()
+        lin_y = np.arange(start=-sample_grid.shape[1] / 2, stop=sample_grid.shape[1] / 2, step=1) * res_grid[1].numpy()
         off_y, off_x = np.meshgrid(lin_x, lin_y)
 
         dist_x = off_x - robot_position[0]
