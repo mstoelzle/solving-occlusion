@@ -85,7 +85,9 @@ class AnyboticsRosbagDatasetGenerator(BaseDatasetGenerator):
                 target_size_x = self.config.get("size", grid_map.shape[0])
                 target_size_y = self.config.get("size", grid_map.shape[1])
                 num_subgrids_x = int(np.floor(grid_map.shape[0] / target_size_x))
-                num_subgrids_y = int(np.floor(grid_map.shape[0] / target_size_y))
+                num_subgrids_y = int(np.floor(grid_map.shape[1] / target_size_y))
+
+                assert num_subgrids_x >= 1 and num_subgrids_y >= 1
 
                 if self.total_num_samples is None:
                     total_num_messages = self.bag.get_message_count(topic_filters=self.rosbag_topics)
