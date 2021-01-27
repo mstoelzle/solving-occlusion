@@ -3,7 +3,7 @@
     "cuda": false,
     "dataset_generation": {
         "type": "anymal_rosbag",
-        "rosbag_path": "data/anymal_stairs_rosbag/2021-01-20-15-16-53.bag",
+        "rosbag_path": "../anymal-rosbags/stairs/2021-01-20-15-16-53.bag",
         "size": 75,
         "save_frequency": 10,
         "split": {"train": 0.8, "val":  0.1, "test":  0.1},
