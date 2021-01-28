@@ -1,9 +1,9 @@
 {
-    "name": "synthetic_standard_stairs_random_boxes_dataset_generation",
+    "name": "synthetic_random_boxes_dataset_generation",
     "cuda": false,
     "dataset_generation": {
         "type": "synthetic",
-        "terrain_types": ["STANDARD_STAIRS", "RANDOM_BOXES"],
+        "terrain_types": ["RANDOM_BOXES"],
         "elevation_map": {
             "resolution": 0.04,
             "size": 64,
@@ -15,8 +15,8 @@
             "yaw": {"min":  0, "max":  360}
         },
         "num_train_samples": 25000,
-        "num_val_samples": 200,
-        "num_test_samples": 200,
+        "num_val_samples": 500,
+        "num_test_samples": 500,
         "save_frequency": 10,
         "visualization": {"frequency": 500}
     },
