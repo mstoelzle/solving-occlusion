@@ -448,7 +448,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  25}
+        "visualization": {"sample_frequency":  25, "indiv_vranges": true}
     },
     "logging": {"upload": false},
     "remote": true,
