@@ -79,7 +79,7 @@ class BaseDataset(ABC):
             output[ChannelEnum.REL_POSITION] = params[1:4]
 
             yaw = params[4]
-            output[ChannelEnum.REL_ATTITUDE] = Rotation.from_euler("z", yaw).as_quat()
+            output[ChannelEnum.REL_ATTITUDE] = torch.tensor(Rotation.from_euler("z", yaw).as_quat())
 
             del output[ChannelEnum.PARAMS]
 
