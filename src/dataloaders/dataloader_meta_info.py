@@ -24,7 +24,8 @@ class DataloaderMetaInfo:
             self.max = info["max"]
 
     def infer_meta_info(self, dataloader: DataLoader):
-        logger.info(f"We need to infer the min and max values of the dataset manually")
+        logger.info(f"We need to infer the min and max values of the dataset manually for dataset in path "
+                    f"{dataloader.dataset.dataset_path}")
 
         length = 0
         min = np.Inf
