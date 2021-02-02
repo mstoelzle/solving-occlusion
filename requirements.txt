@@ -18,7 +18,7 @@ pytorch-msssim==0.2.1
 pyyaml==5.4.1
 rospkg==1.2.9
 seaborn==0.11.1
-scipy==1.6.0
+scipy==1.5.4
 tensorboard==2.4.1
 tifffile==2021.1.14
 torch==1.7.1
