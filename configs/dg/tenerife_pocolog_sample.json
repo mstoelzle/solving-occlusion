@@ -3,7 +3,7 @@
     "cuda": false,
     "dataset_generation": {
         "type": "rock_ga_slam_pocolog",
-        "pocolog_paths": ["../rock-logs/20210126-0820/ga_slam.log"],
+        "pocolog_paths": ["/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.0.log"],
         "save_frequency": 10,
         "size": 50,
         "psnr_similarity_threshold": 50,
