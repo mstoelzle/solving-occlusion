@@ -1,0 +1,17 @@
+{
+    "name": "tenerife_pocolog_sample",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "rock_ga_slam_pocolog",
+        "pocolog_paths": ["../rock-logs/20210126-0820/ga_slam.log"],
+        "save_frequency": 10,
+        "size": 50,
+        "psnr_similarity_threshold": 50,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 10
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
