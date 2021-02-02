@@ -2,7 +2,7 @@
     "name": "tenerife_sample",
     "cuda": false,
     "dataset_generation": {
-        "type": "rock_ga_slam_msgpack",
+        "type": "rock_ga_slam_pocolog",
         "msgpack_path": "../rock-logs/20210126-0820/ga_slam.msg",
         "save_frequency": 10,
         "size": 50,
