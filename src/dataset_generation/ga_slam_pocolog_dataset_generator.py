@@ -1,3 +1,4 @@
+from ctypes import *
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,14 +76,29 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
             print("first_sample_time", stream.get_first_sample_time())
             print("last_sample_time", stream.get_last_sample_time())
 
+            type = stream.get_type()
+            print("type", type.get_name())
+
             for t in range(min(stream.get_size(), 1000)):
                 print("stream name", stream.get_name(), "t", t, "off", stream.get_size())
+
                 # sample_data = np.array([], dtype=np.uint8())
                 # sample_data = self.pocolog_pybind.std.VectorUInt8T()
-                sample_data = [0, 0]
-                print("sample_data before", sample_data, sys.getsizeof(sample_data))
-                print(stream.get_sample_data(sample_data, int(t)))
-                print("sample_data after", sample_data, sys.getsizeof(sample_data))
+                # value_buffer = [0, 0]
+                # print("sample_data before", value_buffer, sys.getsizeof(value_buffer))
+                # print(stream.get_sample_data(value_buffer, int(t)))
+                # print("sample_data after", value_buffer, sys.getsizeof(value_buffer))
+
+                # value = self.pocolog_pybind.typelib.Value(pointer(value_buffer), type)
+                # self.pocolog_pybind.typelib.init(value)
+                # self.pocolog_pybind.typelib.load(value, value_buffer.data(), value_buffer.size())
+
+                value = self.pocolog_pybind.pocolog.get_sample(stream, t)
+                print("value object", value)
+                self.pocolog_pybind.typelib.type_display(value.get_type(), "")
+
+                time_value = self.pocolog_pybind.typelib.value_get_field(value, "time")
+                print("get time", time_value)
 
         exit()
 
