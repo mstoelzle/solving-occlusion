@@ -2,12 +2,13 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 import msgpack
+import os
 import pathlib
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
+import sys
 import torch
 from typing import *
-import os
 import warnings
 
 from .base_dataset_generator import BaseDatasetGenerator
@@ -28,7 +29,10 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         import pocolog_pybind
         self.pocolog_pybind = pocolog_pybind
 
-        self.multi_file_index = pocolog_pybind.PocologMultiFileIndex()
+        # print(pocolog_pybind.convert(self.config.get("pocolog_paths", []), "/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.1.msgpack", "/ga_slam.localElevationMapMean", 0, 10, 3))
+        # exit(0)
+
+        self.multi_file_index = pocolog_pybind.pocolog.MultiFileIndex()
 
     def reset(self):
         super().reset()
@@ -45,7 +49,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         self.streams = {}
         self.num_messages = float('inf')
         for stream in streams:
-            if type(stream) == self.pocolog_pybind.PocologInputDataStream:
+            if type(stream) == self.pocolog_pybind.pocolog.InputDataStream:
                 # we can only deal with InputDataStreams
                 self.streams[stream.get_name()] = stream
 
@@ -74,10 +78,11 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
             for t in range(min(stream.get_size(), 1000)):
                 print("stream name", stream.get_name(), "t", t, "off", stream.get_size())
                 # sample_data = np.array([], dtype=np.uint8())
-                sample_data = []
-                print("sample_data before", sample_data)
-                print(stream.get_sample(sample_data, t))
-                print("sample_data after", sample_data)
+                # sample_data = self.pocolog_pybind.std.VectorUInt8T()
+                sample_data = [0, 0]
+                print("sample_data before", sample_data, sys.getsizeof(sample_data))
+                print(stream.get_sample_data(sample_data, int(t)))
+                print("sample_data after", sample_data, sys.getsizeof(sample_data))
 
         exit()
 
