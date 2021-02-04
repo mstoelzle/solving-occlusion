@@ -28,13 +28,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         import pocolog_pybind
         self.pocolog_pybind = pocolog_pybind
 
-        self.multi_file_index = pocolog_pybind.MultiFileIndex()
-
-        # from pocolog_pybind import PocologIterator
-        # pocolog_iterator = PocologIterator(self.config.get("pocolog_paths", []))
-        # multi_index = pocolog_iterator.get_multi_file_index()
-        # print(type(multi_index))
-        # print(multi_index.get_size())
+        self.multi_file_index = pocolog_pybind.PocologMultiFileIndex()
 
     def reset(self):
         super().reset()
@@ -51,7 +45,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         self.streams = {}
         self.num_messages = float('inf')
         for stream in streams:
-            if type(stream) == self.pocolog_pybind.InputDataStream:
+            if type(stream) == self.pocolog_pybind.PocologInputDataStream:
                 # we can only deal with InputDataStreams
                 self.streams[stream.get_name()] = stream
 
@@ -82,7 +76,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                 # sample_data = np.array([], dtype=np.uint8())
                 sample_data = []
                 print("sample_data before", sample_data)
-                print(stream.get_sample_data(sample_data, t))
+                print(stream.get_sample(sample_data, t))
                 print("sample_data after", sample_data)
 
         exit()
