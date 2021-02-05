@@ -68,56 +68,26 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
         print("num_messages", self.num_messages)
 
-        for name, stream in self.streams.items():
-            print("stream", stream)
-            print("size", stream.get_size())
-            print("name", stream.get_name())
-            print("type_name", stream.get_type_name())
-            print("first_sample_time", stream.get_first_sample_time())
-            print("last_sample_time", stream.get_last_sample_time())
-
-            type = stream.get_type()
-            print("type", type.get_name())
-
-            for t in range(min(stream.get_size(), 1000)):
-                print("stream name", stream.get_name(), "t", t, "off", stream.get_size())
-
-                # sample_data = np.array([], dtype=np.uint8())
-                # sample_data = self.pocolog_pybind.std.VectorUInt8T()
-                # value_buffer = [0, 0]
-                # print("sample_data before", value_buffer, sys.getsizeof(value_buffer))
-                # print(stream.get_sample_data(value_buffer, int(t)))
-                # print("sample_data after", value_buffer, sys.getsizeof(value_buffer))
-
-                # value = self.pocolog_pybind.typelib.Value(pointer(value_buffer), type)
-                # self.pocolog_pybind.typelib.init(value)
-                # self.pocolog_pybind.typelib.load(value, value_buffer.data(), value_buffer.size())
-
-                value = self.pocolog_pybind.pocolog.get_sample(stream, t)
-                print("value object", value)
-                self.pocolog_pybind.typelib.type_display(value.get_type(), "")
-
-                time_value = self.pocolog_pybind.typelib.value_get_field(value, "time")
-                print("get time", time_value)
-
-        exit()
-
         occ_dem_stream = self.streams["/ga_slam.localElevationMapMean"]
         occ_data_um_stream = self.streams["/ga_slam.localElevationMapVariance"]
         gt_dem_stream = self.streams["/ga_slam.globalElevationMapMean"]
         gt_data_um_stream = self.streams["/ga_slam.globalElevationMapVariance"]
 
-        for msg_idx in enumerate(self.num_messages):
-            occ_dem = np.array()
+        for msg_idx in range(100):
+            occ_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
+            occ_dem = np.array(occ_dem_compound["data"].cast())
             occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))), order="F")
 
-            occ_data_um = np.array(occ_data_um_msg["data"])
+            occ_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
+            occ_data_um = np.array(occ_data_um_compound["data"].cast())
             occ_data_um = occ_data_um.reshape((-1, int(np.sqrt(occ_data_um.shape[0]))), order="F")
 
-            gt_dem = np.array(gt_dem_msg["data"])
+            gt_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
+            gt_dem = np.array(gt_dem_compound["data"].cast())
             gt_dem = gt_dem.reshape((-1, int(np.sqrt(gt_dem.shape[0]))), order="F")
 
-            gt_data_um = np.array(gt_data_um_msg["data"])
+            gt_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
+            gt_data_um = np.array(gt_data_um_compound["data"].cast())
             gt_data_um = gt_data_um.reshape((-1, int(np.sqrt(gt_data_um.shape[0]))), order="F")
 
             res_grid = np.array([0.05, 0.05])
@@ -138,7 +108,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
             if progress_bar is None:
                 # multiply with the number of subgrids
-                self.total_num_samples = num_messages * num_subgrids_x * num_subgrids_y  
+                self.total_num_samples = self.num_messages * num_subgrids_x * num_subgrids_y  
 
                 progress_bar = Bar(f"Processing pocolog from {self.config['pocolog_paths']}",
                                     max=self.total_num_samples)
