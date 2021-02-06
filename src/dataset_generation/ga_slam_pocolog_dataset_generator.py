@@ -30,9 +30,6 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         import pocolog_pybind
         self.pocolog_pybind = pocolog_pybind
 
-        # print(pocolog_pybind.convert(self.config.get("pocolog_paths", []), "/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.1.msgpack", "/ga_slam.localElevationMapMean", 0, 10, 3))
-        # exit(0)
-
         self.multi_file_index = pocolog_pybind.pocolog.MultiFileIndex()
 
     def reset(self):
@@ -69,19 +66,19 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         gt_data_um_stream = self.streams["/ga_slam.globalElevationMapVariance"]
 
         for msg_idx in range(self.num_messages):
-            occ_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            occ_dem_compound = occ_dem_stream.get_sample(msg_idx).cast(recursive=True)
             occ_dem = np.array(occ_dem_compound["data"])
             occ_dem = occ_dem.reshape((occ_dem_compound["height"], occ_dem_compound["width"]), order="F")
 
-            occ_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            occ_data_um_compound = occ_data_um_stream.get_sample(msg_idx).cast(recursive=True)
             occ_data_um = np.array(occ_data_um_compound["data"])
             occ_data_um = occ_data_um.reshape((occ_data_um_compound["height"], occ_data_um_compound["width"]), order="F")
 
-            gt_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            gt_dem_compound = gt_dem_stream.get_sample(msg_idx).cast(recursive=True)
             gt_dem = np.array(gt_dem_compound["data"])
             gt_dem = gt_dem.reshape((gt_dem_compound["height"], gt_dem_compound["width"]), order="F")
 
-            gt_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            gt_data_um_compound = gt_data_um_stream.get_sample(msg_idx).cast(recursive=True)
             gt_data_um = np.array(gt_data_um_compound["data"])
             gt_data_um = gt_data_um.reshape((gt_data_um_compound["height"], gt_data_um_compound["width"]), order="F")
 
