@@ -45,15 +45,10 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         super().__enter__()
 
         self.multi_file_index.create_index(self.config.get("pocolog_paths", []))
-        streams = self.multi_file_index.get_all_streams()
+        self.streams = self.multi_file_index.get_all_streams()
         
-        self.streams = {}
         self.num_messages = float('inf')
-        for stream in streams:
-            if type(stream) == self.pocolog_pybind.pocolog.InputDataStream:
-                # we can only deal with InputDataStreams
-                self.streams[stream.get_name()] = stream
-
+        for key, stream in self.streams.items():
                 if stream.get_name() in ["/ga_slam.localElevationMapMean", 
                                          "/ga_slam.localElevationMapVariance",
                                          "/ga_slam.globalElevationMapMean"]:
