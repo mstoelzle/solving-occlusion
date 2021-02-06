@@ -49,10 +49,10 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         
         self.num_messages = float('inf')
         for key, stream in self.streams.items():
-                if stream.get_name() in ["/ga_slam.localElevationMapMean", 
-                                         "/ga_slam.localElevationMapVariance",
-                                         "/ga_slam.globalElevationMapMean"]:
-                    self.num_messages = min(self.num_messages, stream.get_size())
+            if stream.get_name() in ["/ga_slam.localElevationMapMean", 
+                                        "/ga_slam.localElevationMapVariance",
+                                        "/ga_slam.globalElevationMapMean"]:
+                self.num_messages = min(self.num_messages, stream.get_size())
 
     def run(self):
         self.hdf5_group = self.hdf5_file  # TODO: split into train, val and test set
@@ -68,22 +68,22 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         gt_dem_stream = self.streams["/ga_slam.globalElevationMapMean"]
         gt_data_um_stream = self.streams["/ga_slam.globalElevationMapVariance"]
 
-        for msg_idx in range(100):
-            occ_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
-            occ_dem = np.array(occ_dem_compound["data"].cast())
-            occ_dem = occ_dem.reshape((-1, int(np.sqrt(occ_dem.shape[0]))), order="F")
+        for msg_idx in range(self.num_messages):
+            occ_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            occ_dem = np.array(occ_dem_compound["data"])
+            occ_dem = occ_dem.reshape((occ_dem_compound["height"], occ_dem_compound["width"]), order="F")
 
-            occ_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
-            occ_data_um = np.array(occ_data_um_compound["data"].cast())
-            occ_data_um = occ_data_um.reshape((-1, int(np.sqrt(occ_data_um.shape[0]))), order="F")
+            occ_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            occ_data_um = np.array(occ_data_um_compound["data"])
+            occ_data_um = occ_data_um.reshape((occ_data_um_compound["height"], occ_data_um_compound["width"]), order="F")
 
-            gt_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
-            gt_dem = np.array(gt_dem_compound["data"].cast())
-            gt_dem = gt_dem.reshape((-1, int(np.sqrt(gt_dem.shape[0]))), order="F")
+            gt_dem_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            gt_dem = np.array(gt_dem_compound["data"])
+            gt_dem = gt_dem.reshape((gt_dem_compound["height"], gt_dem_compound["width"]), order="F")
 
-            gt_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx)
-            gt_data_um = np.array(gt_data_um_compound["data"].cast())
-            gt_data_um = gt_data_um.reshape((-1, int(np.sqrt(gt_data_um.shape[0]))), order="F")
+            gt_data_um_compound = self.pocolog_pybind.pocolog.get_sample(occ_dem_stream, msg_idx).cast(recursive=True)
+            gt_data_um = np.array(gt_data_um_compound["data"])
+            gt_data_um = gt_data_um.reshape((gt_data_um_compound["height"], gt_data_um_compound["width"]), order="F")
 
             res_grid = np.array([0.05, 0.05])
             rel_position_z = occ_dem[int(occ_dem.shape[0] // 2), int(occ_dem.shape[1] // 2)]
