@@ -55,7 +55,8 @@
                     "feature_extractor": true,
                     "data_uncertainty_estimation": {
                         "method": "ADF",
-                        "min_variance": 0.0001
+                        "min_variance": 0.0001,
+                        "NaN_replacement": 10000
                     }
                 },
                 "optimizer": {

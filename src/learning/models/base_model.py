@@ -150,7 +150,8 @@ class BaseModel(ABC, nn.Module):
                                                                                          batch=True)
 
             if in_channel == ChannelEnum.OCC_DEM:
-                channel_data = self.preprocess_occluded_map(channel_data)
+                channel_data = self.preprocess_occluded_map(channel_data,
+                                                            NaN_replacement=self.config.get("NaN_replacement", 0))
             elif in_channel == ChannelEnum.OCC_MASK:
                 channel_data = ~channel_data
 
@@ -166,7 +167,13 @@ class BaseModel(ABC, nn.Module):
             if self.adf:
                 if in_channel == ChannelEnum.OCC_DEM:
                     occ_data_um = data[ChannelEnum.OCC_DATA_UM]
-                    occ_data_um = self.preprocess_occluded_map(occ_data_um)
+
+                    if "NaN_replacement" in self.config.get("data_uncertainty_estimation", {}):
+                        NaN_replacement = self.config["data_uncertainty_estimation"]["NaN_replacement"]
+                    else:
+                        NaN_replacement = self.config.get("NaN_replacement", 0.0)
+
+                    occ_data_um = self.preprocess_occluded_map(occ_data_um, NaN_replacement=NaN_replacement)
                     var[:, channel_idx, ...] = occ_data_um
 
         if self.adf:
@@ -174,10 +181,8 @@ class BaseModel(ABC, nn.Module):
 
         return input, norm_consts
 
-    def preprocess_occluded_map(self, occ_dem: torch.Tensor) -> torch.Tensor:
+    def preprocess_occluded_map(self, occ_dem: torch.Tensor, NaN_replacement: float = 0.0) -> torch.Tensor:
         poem = occ_dem.clone()
-
-        NaN_replacement = self.config.get("NaN_replacement", 0)
 
         # replace NaNs signifying occluded areas with arbitrary high or low number
         # poem[occ_dem != occ_dem] = -10000
