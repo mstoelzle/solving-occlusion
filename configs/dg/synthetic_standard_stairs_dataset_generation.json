@@ -15,11 +15,11 @@
             "yaw": {"min":  0, "max":  360}
         },
         "num_train_samples": 25000,
-        "num_val_samples": 500,
-        "num_test_samples": 500,
+        "num_val_samples": 2500,
+        "num_test_samples": 2500,
         "save_frequency": 10,
         "visualization": {
-            "frequency": 1000
+            "frequency": 500
         }
     },
     "remote": true,
