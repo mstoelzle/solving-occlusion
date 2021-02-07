@@ -79,7 +79,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  10}
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true}
     },
     "logging": {
         "upload": false
