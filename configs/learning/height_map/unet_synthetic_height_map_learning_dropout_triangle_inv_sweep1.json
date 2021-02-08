@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning_dropout_triangle",
+    "name": "unet_synthetic_height_map_learning_dropout_triangle_inv_sweep1",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -44,7 +44,7 @@
                     "feature_extractor": true,
                     "model_uncertainty_estimation": {
                         "method": "monte_carlo_dropout",
-                        "probability": [0.005, 0.05, 0.2],
+                        "probability": [0.01, 0.05, 0.1],
                         "num_solutions": 10,
                         "use_mean_as_rec": false
                     },
@@ -56,16 +56,26 @@
                     "weight_decay": 0.001
                 },
                 "controller": {
-                    "max_num_epochs": 100,
-                    "max_num_better_results": 35
+                    "max_num_epochs": 10,
+                    "max_num_better_results": 5
                 },
                 "dataloaders": {"labeled_dataloader":  "target"},
-                "domains": {"target": {}}
+                "domains": {"target": {}},
+                "task_type": "supervised-learning",
+                "model_to_train": "untrained"
             },
             "tasks": [
                 {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained"
+                    "model": {"model_uncertainty_estimation": {"probability": [0.05, 0.05, 0.05]}}
+                },
+                {
+                    "model": {"model_uncertainty_estimation": {"probability": [0.075, 0.05, 0.025]}}
+                },
+                {
+                    "model": {"model_uncertainty_estimation": {"probability": [0.1, 0.05, 0.01]}}
+                },
+                {
+                    "model": {"model_uncertainty_estimation": {"probability": [0.2, 0.05, 0.005]}}
                 }
             ]
         },
