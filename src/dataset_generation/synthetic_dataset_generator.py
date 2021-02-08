@@ -257,6 +257,12 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
 
         return occ_mask
 
+    def save_cache(self):
+        self.extend_dataset(self.hdf5_group[ChannelEnum.GT_DEM.value], self.gt_dems)
+        self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_MASK.value], self.occ_masks)
+
+        super().save_cache()
+
     @staticmethod
     def body_to_world_coordinates(body_coordinates: np.array, body_position: Position,
                                   additional_yaw: float = 0) -> np.array:
