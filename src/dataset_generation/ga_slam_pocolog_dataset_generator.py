@@ -137,13 +137,6 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                         progress_bar.next()
                         continue
 
-                    if np.isnan(gt_dem_subgrid).all():
-                        # we skip because the DEM only contains missing values (NaNs)
-                        pass
-                        # start_y = stop_y
-                        # progress_bar.next()
-                        # continue
-
                     if np.isnan(occ_dem_subgrid).sum() > (target_size_x * target_size_y / 2):
                         # we do not want to include the subgrid in the dataset if its occluded to more than 50%
                         start_y = stop_y
