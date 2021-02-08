@@ -68,10 +68,9 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         for msg_idx in range(self.num_messages):
             occ_dem_compound = occ_dem_stream.get_sample(msg_idx)
             occ_dem_dict = occ_dem_compound.cast(recursive=True)
-            occ_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
-
             occ_dem = np.array(occ_dem_dict["data"])
             occ_dem = occ_dem.reshape((occ_dem_dict["height"], occ_dem_dict["width"]), order="F")
+            occ_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
 
             occ_data_um_compound = occ_data_um_stream.get_sample(msg_idx)
             occ_data_um_dict = occ_data_um_compound.cast(recursive=True)
