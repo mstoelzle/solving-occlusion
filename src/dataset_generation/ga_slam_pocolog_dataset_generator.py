@@ -66,21 +66,30 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
         gt_data_um_stream = self.streams["/ga_slam.globalElevationMapVariance"]
 
         for msg_idx in range(self.num_messages):
-            occ_dem_compound = occ_dem_stream.get_sample(msg_idx).cast(recursive=True)
-            occ_dem = np.array(occ_dem_compound["data"])
-            occ_dem = occ_dem.reshape((occ_dem_compound["height"], occ_dem_compound["width"]), order="F")
+            occ_dem_compound = occ_dem_stream.get_sample(msg_idx)
+            occ_dem_dict = occ_dem_compound.cast(recursive=True)
+            occ_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
 
-            occ_data_um_compound = occ_data_um_stream.get_sample(msg_idx).cast(recursive=True)
-            occ_data_um = np.array(occ_data_um_compound["data"])
-            occ_data_um = occ_data_um.reshape((occ_data_um_compound["height"], occ_data_um_compound["width"]), order="F")
+            occ_dem = np.array(occ_dem_dict["data"])
+            occ_dem = occ_dem.reshape((occ_dem_dict["height"], occ_dem_dict["width"]), order="F")
 
-            gt_dem_compound = gt_dem_stream.get_sample(msg_idx).cast(recursive=True)
-            gt_dem = np.array(gt_dem_compound["data"])
-            gt_dem = gt_dem.reshape((gt_dem_compound["height"], gt_dem_compound["width"]), order="F")
+            occ_data_um_compound = occ_data_um_stream.get_sample(msg_idx)
+            occ_data_um_dict = occ_data_um_compound.cast(recursive=True)
+            occ_data_um = np.array(occ_data_um_dict["data"])
+            occ_data_um = occ_data_um.reshape((occ_data_um_dict["height"], occ_data_um_dict["width"]), order="F")
+            occ_data_um_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
 
-            gt_data_um_compound = gt_data_um_stream.get_sample(msg_idx).cast(recursive=True)
-            gt_data_um = np.array(gt_data_um_compound["data"])
-            gt_data_um = gt_data_um.reshape((gt_data_um_compound["height"], gt_data_um_compound["width"]), order="F")
+            gt_dem_compound = gt_dem_stream.get_sample(msg_idx)
+            gt_dem_dict = gt_dem_compound.cast(recursive=True)
+            gt_dem = np.array(gt_dem_dict["data"])
+            gt_dem = gt_dem.reshape((gt_dem_dict["height"], gt_dem_dict["width"]), order="F")
+            gt_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
+
+            gt_data_um_compound = gt_data_um_stream.get_sample(msg_idx)
+            gt_data_um_dict = gt_data_um_compound.cast(recursive=True)
+            gt_data_um = np.array(gt_data_um_dict["data"])
+            gt_data_um = gt_data_um.reshape((gt_data_um_dict["height"], gt_data_um_dict["width"]), order="F")
+            gt_data_um_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
 
             res_grid = np.array([0.05, 0.05])
             rel_position_z = occ_dem[int(occ_dem.shape[0] // 2), int(occ_dem.shape[1] // 2)]
@@ -102,8 +111,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                 # multiply with the number of subgrids
                 self.total_num_samples = self.num_messages * num_subgrids_x * num_subgrids_y  
 
-                progress_bar = Bar(f"Processing pocolog from {self.config['pocolog_paths']}",
-                                    max=self.total_num_samples)
+                progress_bar = Bar(f"Processing pocolog", max=self.total_num_samples)
 
             start_x = 0
             for i in range(num_subgrids_x):
