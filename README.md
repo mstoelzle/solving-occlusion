@@ -121,6 +121,8 @@ python learning.py configs/{CONFIG_NAME}.json
 ```
 
 ### Working with the Tenerife Dataset
+**TODO**: Update this section
+
 We evaluate our methods on a dataset which was collected in June 2017 at the "Minas de San José" site in Tenerife using 
 the Heavy Duty Planetary Rover (HDPR) as a Lunar Analogue. This dataset consists of images from three stereo cameras, one of which on a pan tilt unit, 
 LiDAR and a Time of FLight (ToF) camera. It also includes an onboard Inertial Measurements Unit (IMU), an additional laser gyro for heading estimation
