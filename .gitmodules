@@ -10,3 +10,6 @@
 [submodule "src/traversability/perception-traversability-pybind"]
 	path = src/traversability/perception-traversability-pybind
 	url = https://mstoelzle@github.com/esa-prl/perception-traversability-pybind
+[submodule "src/ray_casting/grid-map-raycasting"]
+	path = src/ray_casting/grid-map-raycasting
+	url = https://github.com/mstoelzle/grid-map-raycasting
