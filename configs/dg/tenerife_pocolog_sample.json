@@ -3,9 +3,13 @@
     "cuda": false,
     "dataset_generation": {
         "type": "rock_ga_slam_pocolog",
-        "pocolog_paths": ["/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.0.log"],
+        "pocolog_paths": {
+            "train": ["/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.0.log", "/home/user/rock/bundles/hdpr/logs/20210208-2216/ga_slam.0.log"],
+            "val": ["/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.0.log"],
+            "test": ["/home/user/rock/bundles/hdpr/logs/20210126-0820/ga_slam.0.log"]
+        },
         "save_frequency": 10,
-        "size": 50,
+        "size": 75,
         "psnr_similarity_threshold": 50,
         "split": {"train": 0.8, "val":  0.1, "test":  0.1},
         "visualization": {
