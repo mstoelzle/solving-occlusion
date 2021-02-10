@@ -8,6 +8,8 @@ class TraversabilityAssessment:
     def __init__(self, **config: dict):
         self.config = config
 
+        # Attention: this requires the installation of the perception-traversability_pybind component:
+        # pip install git+git://github.com/esa-prl/perception-traversability-pybind.git
         from traversability_pybind import Traversability
         self.traversability = Traversability()
         self.traversability.use_global_path_planner_convention = False

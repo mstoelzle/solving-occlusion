@@ -96,7 +96,7 @@ brew install cmake opencv pcl eigen
 
 Subsequently, we can install the Python wrapper for the rock `perception-traversability` component with:
 ```
-pip install --user -e "${WORKSPACE}/solving-occlusion/src/traversability/perception-traversability-pybind"
+pip install git+git://github.com/esa-prl/perception-traversability-pybind.git
 ```
 
 ### 4. Generating a dataset
