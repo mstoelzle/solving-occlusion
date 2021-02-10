@@ -13,7 +13,7 @@ Pillow>=8.0.1, <9.0
 progress==1.5
 psutil==5.8.0
 pybind11==2.6.2
-pycryptodomex==3.9.9
+pycryptodomex==3.10.1
 pytorch-msssim==0.2.1
 pyyaml==5.4.1
 rospkg==1.2.10
