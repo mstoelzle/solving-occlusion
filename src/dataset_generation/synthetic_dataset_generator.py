@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
+import os
+from pathlib import Path
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
 
@@ -38,6 +40,16 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         from height_map_generator import HeightMapGenerator
         self.elevation_map_generator = HeightMapGenerator()
         self.elevation_map_generator.set_seed(self.seed)
+
+        import grid_map_raycasting
+        self.grid_map_raycasting = grid_map_raycasting
+
+        # Path to raisim install (e.g. $LOCAL_INSTALL) as saved in the environment variable $RAISIM_INSTALL
+        # run this in your terminal: export RAISIM_INSTALL=$LOCAL_INSTALL
+        raisim_install_path = Path(os.getenv("RAISIM_INSTALL"))
+        # We need to set the path to the raisim license file
+        # It is usually placed in the rsc folder of the raisim installation
+        grid_map_raycasting.setRaisimLicenseFile(str(raisim_install_path / "rsc" / "activation.raisim"))
 
         # get the terrain parameter size
         self.terrain_param_sizes = self.elevation_map_generator.get_param_sizes()
@@ -191,69 +203,19 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         """
 
         elevation_map = robot.elevation_map.gt_dem
-        occ_mask = np.zeros(shape=elevation_map.shape, dtype=np.bool)
+        robot_position = robot.robot_position
 
-        center_i = int(elevation_map.shape[0] / 2)
-        center_j = int(elevation_map.shape[1] / 2)
-
-        robot_relative_position = np.array([[robot.robot_position.x, robot.robot_position.y]])
-        robot_world_position = self.body_to_world_coordinates(robot_relative_position,
-                                                              body_position=robot.elevation_map.terrain_origin_offset)
-        robot_elevation_scan = np.zeros(shape=(1,))
-        self.elevation_map_generator.get_height_scan(robot_world_position, robot_elevation_scan)
-        robot_planar_elevation = robot_elevation_scan.item()
+        u = int(elevation_map.shape[0] // 2 + robot_position.x / self.terrain_resolution[0])
+        v = int(elevation_map.shape[1] // 2 + robot_position.y / self.terrain_resolution[1])
+        robot_planar_elevation = elevation_map[u, v]
 
         camera_elevation = robot_planar_elevation + robot.height_viewpoint
         robot.robot_position.z = camera_elevation
 
-        for i in range(elevation_map.shape[0]):
-            for j in range(elevation_map.shape[1]):
-                # relative vector from ray-casted pixel to robot camera
-                relative_x = (i - center_i) * self.terrain_resolution - robot.robot_position.x
-                relative_y = (j - center_j) * self.terrain_resolution - robot.robot_position.y
-                relative_z = elevation_map[i][j] - camera_elevation
+        vantage_point = np.array([robot_position.x, robot_position.y, robot_position.z], dtype=np.double)
+        grid_resolution = np.array([self.terrain_resolution, self.terrain_resolution], dtype=np.double)
 
-                # print("relative position", relative_x, relative_y, relative_z)
-
-                # roll angle to target cell
-                theta = np.arctan2(relative_z, np.sqrt(relative_x ** 2 + relative_y ** 2))
-                # yaw angle to target cell
-                psi = np.arctan2(relative_y, relative_x)
-
-                # print("psi", psi / np.pi * 180)
-
-                ray_x = np.arange(start=0, stop=0.99 * np.sqrt(relative_x ** 2 + relative_y ** 2),
-                                  step=self.terrain_resolution)
-
-                ray_z = camera_elevation + np.tan(theta) * ray_x
-                ray = np.stack((ray_x, ray_z), axis=1)
-
-                ray_cast_input_1d = np.zeros([ray_x.shape[0], 2])
-                ray_cast_input_1d[:, 0] = ray_x
-
-                ray_trace_in_elevation_map = self.body_to_world_coordinates(ray_cast_input_1d,
-                                                                            Position(x=0, y=0, yaw=-psi))
-                ray_trace_in_elevation_map = ray_trace_in_elevation_map + np.array([[robot.robot_position.x,
-                                                                                     robot.robot_position.y]])
-                ray_trace_world = self.body_to_world_coordinates(ray_trace_in_elevation_map,
-                                                                 robot.elevation_map.terrain_origin_offset)
-
-                ray_cast_world_scan = np.zeros([ray_x.shape[0], 3])
-                ray_cast_world_scan[:, 0:2] = ray_trace_world
-                scan = np.zeros([ray_x.shape[0]])
-                self.elevation_map_generator.get_height_scan(ray_trace_world, scan)
-                ray_cast_world_scan[:, 2] = scan
-
-                occlusion_condition = ray_cast_world_scan[:, 2] <= ray[:, 1]
-
-                if np.sum(occlusion_condition) < ray_cast_world_scan.shape[0]:
-                    occ_mask[i][j] = 1
-
-                    # fig = plt.figure()
-                    # ax = fig.add_subplot(111, projection='3d')
-                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray_cast_world_scan[:, 2])
-                    # ax.scatter(ray_trace_world[:, 0], ray_trace_world[:, 1], ray[:, 1])
-                    # plt.show()
+        occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, elevation_map, grid_resolution)
 
         return occ_mask
 
