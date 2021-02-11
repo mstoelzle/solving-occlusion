@@ -100,7 +100,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.elevation_map_generator.generate_new_terrain(terrain_id, terrain_param)
 
                 # allocate the memory for the elevation map
-                elevation_map = np.zeros((self.terrain_height, self.terrain_width))
+                gt_dem = np.zeros((self.terrain_height, self.terrain_width))
 
                 # TODO: maybe we need to sample the center x and center y positions
                 # TODO: activate rotation of terrain origin again
@@ -113,7 +113,7 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                                                             terrain_origin_offset.yaw,
                                                             self.terrain_height, self.terrain_width,
                                                             self.terrain_resolution,
-                                                            elevation_map)
+                                                            gt_dem)
 
                 height_viewpoint_config = self.config["elevation_map"]["height_viewpoint"]
                 if type(height_viewpoint_config) is float:
@@ -153,20 +153,24 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     else:
                         raise NotImplementedError
 
-                # print("robot position rel", robot_x, robot_y)
-
                 robot_position = Position(x=robot_x, y=robot_y, yaw=robot_yaw)
                 elevation_map_object = ElevationMap(terrain_origin_offset=terrain_origin_offset,
-                                                    gt_dem=elevation_map,
+                                                    gt_dem=gt_dem,
                                                     occ_dem=None)
                 robot = Robot(robot_position=robot_position, height_viewpoint=height_viewpoint,
                               elevation_map=elevation_map_object)
 
-                res_grid = np.array([self.terrain_resolution, self.terrain_resolution])
+                # get elevation of robot position
+                u = int(gt_dem.shape[0] / 2 + robot_position.x / self.terrain_resolution)
+                v = int(gt_dem.shape[1] / 2 + robot_position.y / self.terrain_resolution)
+                robot_position.z = gt_dem[u, v] + robot.height_viewpoint
+
+                res_grid = np.array([self.terrain_resolution, self.terrain_resolution], dtype=np.double)
                 rel_position = np.array([robot_position.x, robot_position.y, robot_position.z])
                 rel_attitude = Rotation.from_euler("z", robot_position.yaw).as_quat()
 
-                occ_mask = self.raycast_occlusion(robot)
+                vantage_point = np.array([robot_position.x, robot_position.y, robot_position.z], dtype=np.double)
+                occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, gt_dem, res_grid)
 
                 if np.sum(occ_mask) == 0:
                     # we skip the elevation map if we do not find any occlusion
@@ -177,9 +181,9 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                 self.res_grid.append(res_grid)
                 self.rel_positions.append(rel_position)
                 self.rel_attitudes.append(rel_attitude)
-                self.gt_dems.append(elevation_map)
+                self.gt_dems.append(gt_dem)
                 self.occ_masks.append(occ_mask)
-                self.update_dataset_range(elevation_map)
+                self.update_dataset_range(gt_dem)
 
                 if self.initialized_datasets is False:
                     self.create_base_datasets(self.hdf5_group, num_samples)
@@ -188,53 +192,15 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                     self.save_cache()
 
                 self.visualize(sample_idx=sample_idx, res_grid=res_grid, rel_position=rel_position,
-                               gt_dem=elevation_map, occ_mask=occ_mask)
+                               gt_dem=gt_dem, occ_mask=occ_mask)
 
                 progress_bar.next()
             progress_bar.finish()
             self.write_metadata(self.hdf5_group)
             self.reset()
 
-
-    def raycast_occlusion(self, robot: Robot) -> np.array:
-        """
-        Trace occlusion starting from (0,0) to each cell
-        If the ray to a cell is occluded, we insert a NaN for that cell
-        """
-
-        elevation_map = robot.elevation_map.gt_dem
-        robot_position = robot.robot_position
-
-        u = int(elevation_map.shape[0] // 2 + robot_position.x / self.terrain_resolution[0])
-        v = int(elevation_map.shape[1] // 2 + robot_position.y / self.terrain_resolution[1])
-        robot_planar_elevation = elevation_map[u, v]
-
-        camera_elevation = robot_planar_elevation + robot.height_viewpoint
-        robot.robot_position.z = camera_elevation
-
-        vantage_point = np.array([robot_position.x, robot_position.y, robot_position.z], dtype=np.double)
-        grid_resolution = np.array([self.terrain_resolution, self.terrain_resolution], dtype=np.double)
-
-        occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, elevation_map, grid_resolution)
-
-        return occ_mask
-
     def save_cache(self):
         self.extend_dataset(self.hdf5_group[ChannelEnum.GT_DEM.value], self.gt_dems)
         self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_MASK.value], self.occ_masks)
 
         super().save_cache()
-
-    @staticmethod
-    def body_to_world_coordinates(body_coordinates: np.array, body_position: Position,
-                                  additional_yaw: float = 0) -> np.array:
-        # robot_coordinates: Nx2 array
-        world_coordinates = np.copy(body_coordinates)
-
-        yaw = body_position.yaw + additional_yaw
-        world_coordinates[:, 0] = (body_coordinates[:, 0] - body_position.x) * np.cos(yaw) \
-                                  + (body_coordinates[:, 1] - body_position.y) * np.sin(yaw)
-        world_coordinates[:, 1] = -(body_coordinates[:, 0] - body_position.x) * np.sin(yaw) \
-                                  + (body_coordinates[:, 1] - body_position.y) * np.cos(yaw)
-
-        return world_coordinates

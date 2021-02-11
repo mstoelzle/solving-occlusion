@@ -19,7 +19,7 @@
         "num_test_samples": 2500,
         "save_frequency": 10,
         "visualization": {
-            "frequency": 500
+            "frequency": 10
         }
     },
     "remote": true,
