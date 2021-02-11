@@ -26,28 +26,26 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
 
     axes[0, 0].set_title("Occluded DEM")
     # matshow plots x and y swapped
-    mat = axes[0, 0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
-                             vmax=dem_vmax, cmap=dem_cmap)
+    mat = axes[0, 0].matshow(occ_dem, vmin=dem_vmin, vmax=dem_vmax, cmap=dem_cmap)
     fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.045)
 
     if gt_dem is not None:
         axes[0, 1].set_title("Ground-truth DEM")
         # matshow plots x and y swapped
-        mat = axes[0, 1].matshow(np.swapaxes(gt_dem, 0, 1), vmin=dem_vmin,
-                                 vmax=dem_vmax, cmap=dem_cmap)
+        mat = axes[0, 1].matshow(gt_dem, vmin=dem_vmin, vmax=dem_vmax, cmap=dem_cmap)
 
     um_cmap = plt.get_cmap("RdYlGn_r")
 
     if occ_data_um is not None:
         axes[1, 0].set_title("Occluded data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
+        mat = axes[1, 0].matshow(occ_data_um, vmin=0, vmax=4, cmap=um_cmap)
         axes[1, 0].grid(False)
 
     if gt_data_um is not None:
         axes[1, 1].set_title("Ground-truth data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
+        mat = axes[1, 1].matshow(occ_data_um, vmin=0, vmax=4, cmap=um_cmap)
         fig.colorbar(mat, ax=axes[1, :].ravel().tolist(), fraction=0.045)
         axes[1, 1].grid(False)
 
@@ -115,7 +113,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 
         axes[0, 0].set_title("Reconstruction error")
         # matshow plots x and y swapped
-        mat = axes[0, 0].matshow(np.swapaxes(rec_abs_error, 0, 1), cmap=cmap,
+        mat = axes[0, 0].matshow(rec_abs_error, cmap=cmap,
                                  vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[0, 0], fraction=0.10)
@@ -125,8 +123,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 
         axes[0, 1].set_title("Composition error")
         # matshow plots x and y swapped
-        mat = axes[0, 1].matshow(np.swapaxes(comp_abs_error, 0, 1), cmap=cmap,
-                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        mat = axes[0, 1].matshow(comp_abs_error, cmap=cmap, vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[0, 1], fraction=0.10)
         if robot_position_pixel is not None:
@@ -147,8 +144,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
     if rec_data_um is not None:
         axes[1, 0].set_title("Reconstructed data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(rec_data_um, 0, 1), cmap=cmap,
-                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        mat = axes[1, 0].matshow(rec_data_um, cmap=cmap, vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 0], fraction=0.10)
         if robot_position_pixel is not None:
@@ -158,8 +154,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
     if comp_data_um is not None:
         axes[1, 1].set_title("Composed data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(comp_data_um, 0, 1), cmap=cmap,
-                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        mat = axes[1, 1].matshow(comp_data_um, cmap=cmap, vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[1, 1], fraction=0.10)
         if robot_position_pixel is not None:
@@ -169,8 +164,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
     if model_um is not None:
         axes[2, 0].set_title("Model uncertainty")
         # matshow plots x and y swapped
-        mat = axes[2, 0].matshow(np.swapaxes(model_um, 0, 1), cmap=cmap,
-                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        mat = axes[2, 0].matshow(model_um, cmap=cmap, vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[2, 0], fraction=0.10)
         if robot_position_pixel is not None:
@@ -180,8 +174,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
     if total_um is not None:
         axes[2, 1].set_title("Total uncertainty")
         # matshow plots x and y swapped
-        mat = axes[2, 1].matshow(np.swapaxes(total_um, 0, 1), cmap=cmap,
-                                 vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
+        mat = axes[2, 1].matshow(total_um, cmap=cmap, vmin=error_uncertainty_vmin, vmax=error_uncertainty_vmax)
         if indiv_vranges:
             fig.colorbar(mat, ax=axes[2, 1], fraction=0.10)
         if robot_position_pixel is not None:
@@ -221,8 +214,7 @@ def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
     solution_idx = 0
     for i in range(grid_size):
         for j in range(grid_size):
-            mat = axes[i, j].matshow(np.swapaxes(dems[solution_idx, ...], 0, 1),
-                                     cmap=dems_cmap, vmin=dems_vmin, vmax=dems_vmax)
+            mat = axes[i, j].matshow(dems[solution_idx, ...], cmap=dems_cmap, vmin=dems_vmin, vmax=dems_vmax)
             axes[i, j].grid(False)
 
             solution_idx += 1
@@ -249,25 +241,25 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
     if rec_dem is not None:
         axes[0, 0].set_title("Reconstruction")
         # matshow plots x and y swapped
-        mat = axes[0, 0].matshow(np.swapaxes(rec_dem, 0, 1), cmap=cmap)
+        mat = axes[0, 0].matshow(rec_dem, cmap=cmap)
         fig.colorbar(mat, ax=axes[0, 0], fraction=0.08)
 
     if comp_dem is not None:
         axes[0, 1].set_title("Composition")
         # matshow plots x and y swapped
-        mat = axes[0, 1].matshow(np.swapaxes(comp_dem, 0, 1), cmap=cmap)
+        mat = axes[0, 1].matshow(comp_dem, cmap=cmap)
         fig.colorbar(mat, ax=axes[0, 1], fraction=0.08)
 
     if rec_trav_risk_map is not None:
         axes[1, 0].set_title("Reconstructed Traversability")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(rec_trav_risk_map, 0, 1), cmap=cmap)
+        mat = axes[1, 0].matshow(rec_trav_risk_map, cmap=cmap)
         fig.colorbar(mat, ax=axes[1, 0], fraction=0.08)
 
     if comp_trav_risk_map is not None:
         axes[1, 1].set_title("Composed Traversability")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(comp_trav_risk_map, 0, 1), cmap=cmap)
+        mat = axes[1, 1].matshow(comp_trav_risk_map, cmap=cmap)
         fig.colorbar(mat, ax=axes[1, 1], fraction=0.08)
 
     for i, ax in enumerate(axes.reshape(-1)):

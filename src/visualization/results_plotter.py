@@ -121,20 +121,16 @@ class ResultsPlotter:
             if gt_dem is not None:
                 axes[0, 0].set_title("Ground-truth")
                 # matshow plots x and y swapped
-                mat = axes[0, 0].matshow(np.swapaxes(gt_dem, 0, 1), vmin=elevation_vmin,
-                                         vmax=elevation_vmax, cmap=elevation_cmap)
+                mat = axes[0, 0].matshow(gt_dem, vmin=elevation_vmin, vmax=elevation_vmax, cmap=elevation_cmap)
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
-            mat = axes[0, 1].matshow(np.swapaxes(rec_dem, 0, 1), vmin=elevation_vmin,
-                                     vmax=elevation_vmax, cmap=elevation_cmap)
+            mat = axes[0, 1].matshow(rec_dem, vmin=elevation_vmin, vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
-            mat = axes[1, 0].matshow(np.swapaxes(comp_dem, 0, 1), vmin=elevation_vmin,
-                                     vmax=elevation_vmax, cmap=elevation_cmap)
+            mat = axes[1, 0].matshow(comp_dem, vmin=elevation_vmin, vmax=elevation_vmax, cmap=elevation_cmap)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
-            mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=elevation_vmin,
-                                     vmax=elevation_vmax, cmap=elevation_cmap)
+            mat = axes[1, 1].matshow(occluded_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax, cmap=elevation_cmap)
             fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
             for i, ax in enumerate(axes.reshape(-1)):
