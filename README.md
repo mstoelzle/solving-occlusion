@@ -22,6 +22,17 @@ git submodule update --init --recursive
 ```
 
 ### 3. Installation:
+#### 3.0 Install C++ dependencies
+Please install the following C++ dependencies to use this repo:
+On macOS this can be done with:
+```bash
+brew install cmake pybind11 eigen
+```
+or on Ubuntu with:
+```bash
+sudo apt install cmake python-pybind11 libeigen3-dev
+```
+
 #### 3.1 Install all required PIP packages
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
 ```
@@ -77,15 +88,6 @@ sudo apt-get install libopencv-dev
 Finally, install the `terrain_data_generator` package:
 ```
 pip install --user -e "${WORKSPACE}/solving-occlusion/src/dataset_generation/synthetic_terrain_data_generator"
-```
-
-### 3.4 Install grid-map-raycasting
-We use the [grid-map-raycasting](https://github.com/mstoelzle/grid-map-raycasting) component to perform generate 
-occlusion masks both for the synthetic dataset and self-supervised learning.
-Please refer to the [README](https://github.com/mstoelzle/grid-map-raycasting) for installation instructions. Please not the dependency on [raisimLib](https://raisim.com).
-After installing raisimLib and all other dependencies, the component can be installed:
-```
-pip install --user git+git://github.com/mstoelzle/grid-map-raycasting
 ```
 
 #### 3.4 Install PyPatchMatch

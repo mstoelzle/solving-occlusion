@@ -23,3 +23,5 @@ tensorboard==2.4.1
 tifffile==2021.2.1
 torch==1.7.1
 torchvision==0.8.2
+
+git+git://github.com/mstoelzle/grid-map-raycasting

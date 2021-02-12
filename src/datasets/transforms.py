@@ -245,6 +245,8 @@ class Transformer:
         gt_dem = data[ChannelEnum.GT_DEM]
         res_grid = data[ChannelEnum.RES_GRID]
 
+        vantage_point_u = 0
+        vantage_point_v = 0
         vantage_point_elevation = np.NaN
         while np.isnan(vantage_point_elevation):
             # we only accept coordinates where we have elevation information
