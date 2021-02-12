@@ -1,4 +1,6 @@
 import numpy as np
+import os
+from pathlib import Path
 import scipy
 import torch
 from torch.nn import functional as F
@@ -19,6 +21,19 @@ class Transformer:
             self.deterministic = False
 
         self.rng = np.random.RandomState(seed=1)
+
+        try:
+            import grid_map_raycasting
+            self.grid_map_raycasting = grid_map_raycasting
+
+            # We need to set the path to the raisim license file
+            # It is usually placed in the rsc folder of the raisim installation
+            # Path to raisim install (e.g. $LOCAL_INSTALL) as saved in the environment variable $RAISIM_INSTALL
+            # run this in your terminal: export RAISIM_INSTALL=$LOCAL_INSTALL
+            grid_map_raycasting.setRaisimLicenseFile(str(Path(os.getenv("RAISIM_INSTALL"))/"rsc"/"activation.raisim"))
+        except ImportError:
+            self.grid_map_raycasting = None
+
 
     def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
@@ -215,6 +230,48 @@ class Transformer:
             data[ChannelEnum.OCC_DEM][dilated_occlusion == 1] = np.nan
         if ChannelEnum.OCC_DATA_UM in data:
             data[ChannelEnum.OCC_DATA_UM][dilated_occlusion == 1] = np.nan
+
+        return data
+
+    def random_occlusion_raycasting(self, transform_config: dict,
+                               data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
+        rng = self.rng if self.deterministic else np.random
+
+        if self.grid_map_raycasting is None:
+            # we raise the ImportError for grid_map_raycasting on purpose as its required and not available
+            import grid_map_raycasting
+
+        occ_mask = data[ChannelEnum.OCC_MASK]
+        gt_dem = data[ChannelEnum.GT_DEM]
+        res_grid = data[ChannelEnum.RES_GRID]
+
+        vantage_point_elevation = np.NaN
+        while np.isnan(vantage_point_elevation):
+            # we only accept coordinates where we have elevation information
+            vantage_point_u = rng.uniform(low=0, high=gt_dem.size(0))
+            vantage_point_v = rng.uniform(low=0, high=gt_dem.size(1))
+
+            vantage_point_elevation = gt_dem[vantage_point_u, vantage_point_v]
+
+        height_viewpoint = rng.uniform(low=transform_config["height_viewpoint"]["min"],
+                                       high=transform_config["height_viewpoint"]["high"])
+
+        vantage_point_x = (-gt_dem.size(0) / 2 + vantage_point_u) * res_grid[0]
+        vantage_point_y = (-gt_dem.size(1) / 2 + vantage_point_v) * res_grid[1]
+        vantage_point_z = vantage_point_elevation + height_viewpoint
+        
+        vantage_point = np.array([vantage_point_x, vantage_point_y, vantage_point_z], dtype=np.double)
+
+        np_gt_dem = gt_dem.detach().numpy().to(dtype=np.double)
+
+        np_raycasted_occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
+
+        data[ChannelEnum.OCC_MASK] = torch.logical_or(occ_mask, torch.tensor(np_raycasted_occ_mask, dtype=torch.bool))
+
+        if ChannelEnum.OCC_DEM in data:
+            data[ChannelEnum.OCC_DEM][data[ChannelEnum.OCC_MASK] == 1] = np.nan
+        if ChannelEnum.OCC_DATA_UM in data:
+            data[ChannelEnum.OCC_DATA_UM][data[ChannelEnum.OCC_MASK] == 1] = np.nan
 
         return data
 

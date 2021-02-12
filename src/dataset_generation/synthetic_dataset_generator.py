@@ -44,12 +44,11 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
         import grid_map_raycasting
         self.grid_map_raycasting = grid_map_raycasting
 
-        # Path to raisim install (e.g. $LOCAL_INSTALL) as saved in the environment variable $RAISIM_INSTALL
-        # run this in your terminal: export RAISIM_INSTALL=$LOCAL_INSTALL
-        raisim_install_path = Path(os.getenv("RAISIM_INSTALL"))
         # We need to set the path to the raisim license file
         # It is usually placed in the rsc folder of the raisim installation
-        grid_map_raycasting.setRaisimLicenseFile(str(raisim_install_path / "rsc" / "activation.raisim"))
+        # Path to raisim install (e.g. $LOCAL_INSTALL) as saved in the environment variable $RAISIM_INSTALL
+        # run this in your terminal: export RAISIM_INSTALL=$LOCAL_INSTALL
+        grid_map_raycasting.setRaisimLicenseFile(str(Path(os.getenv("RAISIM_INSTALL")) / "rsc" / "activation.raisim"))
 
         # get the terrain parameter size
         self.terrain_param_sizes = self.elevation_map_generator.get_param_sizes()
