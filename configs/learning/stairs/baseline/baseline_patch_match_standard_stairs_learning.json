@@ -22,7 +22,7 @@
                     "batch_size": 144,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "path": "data/2021-02-08-12-13-43_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64]
                     },
                     "num_workers": 4,
@@ -50,7 +50,7 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  10, "correlation_occluded_area": true}
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true, "correlation_occluded_area": true}
     },
     "logging": {"upload": false},
     "remote": true,

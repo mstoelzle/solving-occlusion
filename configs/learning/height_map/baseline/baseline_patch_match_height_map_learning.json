@@ -1,0 +1,58 @@
+{
+    "name": "baseline_patch_match_height_map_learning",
+    "cuda": false,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 1,
+                        "mse_rec_occ": 0,
+                        "mse_rec_nocc": 0
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_occ": 1,
+                        "mse_rec_nocc": 0
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 144,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
+                    },
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "PatchMatch",
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "input_normalization": false,
+                    "inpaint_radius": 3
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true, "correlation_occluded_area": true}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101, 102, 103]
+}
