@@ -1,5 +1,5 @@
 {
-    "name": "baseline_height_map_learning",
+    "name": "baseline_patch_match_height_map_learning",
     "cuda": false,
     "experiment": {
         "task_path": {
@@ -22,13 +22,14 @@
                     "batch_size": 144,
                     "dataset": {
                         "type": "hdf5",
-                        "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                         "size": [64, 64]
                     },
                     "num_workers": 4,
                     "shuffle": true
                 },
                 "model": {
+                    "name": "PatchMatch",
                     "input_dim": [64, 64],
                     "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["rec_dem"],
@@ -38,9 +39,6 @@
                 "controller": {
                     "max_num_epochs": 0,
                     "max_num_better_results": 0
-                },
-                "traversability_assessment": {
-                    "active": true
                 }
             },
             "tasks": [
@@ -48,15 +46,7 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "model": {"name": "Telea"}
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "model_to_train": "untrained",
-                    "domains": {"target": {}},
-                    "dataloaders": {"labeled_dataloader":  "target"},
-                    "model": {"name": "NavierStokes"}
+                    "dataloaders": {"labeled_dataloader":  "target"}
                 }
             ]
         },
@@ -64,5 +54,5 @@
     },
     "logging": {"upload": false},
     "remote": true,
-    "seeds": [101]
+    "seeds": [101, 102, 103]
 }
