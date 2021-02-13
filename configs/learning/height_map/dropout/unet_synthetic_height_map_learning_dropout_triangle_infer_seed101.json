@@ -1,0 +1,77 @@
+{
+    "name": "unet_synthetic_height_map_learning_dropout_triangle_infer_seed101",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6,
+                        "perceptual": 0.05,
+                        "style": 120,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 0,
+                        "mse_rec_occ": 1
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "dataset": {
+                        "type": "hdf5",
+                        "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                        "size": [64, 64]
+                    },
+                    "num_workers": 8,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": 0,
+                    "bilinear": true,
+                    "feature_extractor": true,
+                    "model_uncertainty_estimation": {
+                        "method": "monte_carlo_dropout",
+                        "probability": [0.005, 0.05, 0.2],
+                        "num_solutions": 10,
+                        "use_mean_as_rec": false
+                    },
+                    "training_dropout_probability": 0.0
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-08-22-17-12_learning_unet_synthetic_height_map_learning_heimdal/seed_101/task_1/model.pt"
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true}
+    },
+    "logging": {"upload": false},
+    "remote": true,
+    "seeds": [101]
+}
