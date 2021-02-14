@@ -151,11 +151,19 @@ class UNet(BaseModel):
             loss = reconstruction_weight * loss_dict[LossEnum.MSE_REC_ALL] \
                    + reconstruction_non_occlusion_weight * loss_dict[LossEnum.MSE_REC_NOCC] \
                    + reconstruction_occlusion_weight * loss_dict[LossEnum.MSE_REC_OCC] \
-                   + perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.) \
-                   + style_weight * loss_dict.get(LossEnum.STYLE, 0.) \
-                   + total_variation_weight * loss_dict.get(LossEnum.TV, 0.) \
-                   + adf_het_weight * loss_dict.get(LossEnum.ADF_HET, 0.) \
                    + mse_rec_data_um_nocc_weight * loss_dict.get(LossEnum.MSE_REC_DATA_UM_NOCC, 0.)
+
+            if perceptual_weight > 0:
+                loss += perceptual_weight * loss_dict.get(LossEnum.PERCEPTUAL, 0.)
+
+            if style_weight > 0:
+                loss += style_weight * loss_dict.get(LossEnum.STYLE, 0.)
+
+            if total_variation_weight > 0:
+                loss += total_variation_weight * loss_dict.get(LossEnum.TV, 0.)
+
+            if self.adf and adf_het_weight > 0:
+                loss += adf_het_weight * loss_dict.get(LossEnum.ADF_HET, 0.)
 
             loss_dict.update({LossEnum.LOSS: loss})
 
