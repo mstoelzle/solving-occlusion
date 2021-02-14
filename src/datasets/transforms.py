@@ -22,12 +22,6 @@ class Transformer:
 
         self.rng = np.random.RandomState(seed=1)
 
-        try:
-            import grid_map_raycasting
-            self.grid_map_raycasting = grid_map_raycasting
-        except ImportError:
-            self.grid_map_raycasting = None
-
     def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
 
@@ -230,9 +224,7 @@ class Transformer:
                                data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         rng = self.rng if self.deterministic else np.random
 
-        if self.grid_map_raycasting is None:
-            # we raise the ImportError for grid_map_raycasting on purpose as its required and not available
-            import grid_map_raycasting
+        import grid_map_raycasting
 
         occ_mask = data[ChannelEnum.OCC_MASK]
         gt_dem = data[ChannelEnum.GT_DEM]
@@ -262,7 +254,7 @@ class Transformer:
 
         np_gt_dem = gt_dem.detach().numpy().astype(np.double)
 
-        np_raycasted_occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
+        np_raycasted_occ_mask = grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
 
         data[ChannelEnum.OCC_MASK] = torch.logical_or(occ_mask, torch.tensor(np_raycasted_occ_mask, dtype=torch.bool))
 
