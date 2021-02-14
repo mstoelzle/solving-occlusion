@@ -17,6 +17,7 @@ from src.learning.controller.controller import Controller
 from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
+from src.learning.models.unet.unet_parts import VGG16FeatureExtractor
 from src.learning.tasks import Task
 from src.traversability.traversability_assessment import TraversabilityAssessment
 from src.utils.digest import TensorboardDigest
@@ -50,6 +51,8 @@ class BaseLearning(ABC):
 
         self.results_hdf5_path: pathlib.Path = results_hdf5_path
         self.results_hdf5_file: Optional[h5py.File] = None
+
+        self.feature_extractor = None
 
     def reset(self):
         self.task = None
@@ -128,6 +131,10 @@ class BaseLearning(ABC):
         save_frequency = self.task.config.get("model", {}).get("save_frequency", None)
 
         if self.optimizer is not None:
+            if self.model.config.get("feature_extractor", False) is True and self.feature_extractor is None:
+                self.feature_extractor = VGG16FeatureExtractor()
+                self.feature_extractor = self.feature_extractor.to(device=self.device)
+
             for epoch in self.controller:
                 self.train_epoch(epoch)
                 self.validate_epoch(epoch)

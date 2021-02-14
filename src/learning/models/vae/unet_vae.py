@@ -180,13 +180,3 @@ class UNetVAE(BaseVAE):
             return loss_dict
         else:
             return loss_dict
-
-    def train(self,  mode: bool = True):
-        if mode is True and self.config.get("feature_extractor", False) is True:
-            device, = list(set(p.device for p in self.parameters()))
-            self.feature_extractor = VGG16FeatureExtractor()
-            self.feature_extractor = self.feature_extractor.to(device=device)
-        else:
-            self.feature_extractor = None
-
-        super().train(mode=mode)

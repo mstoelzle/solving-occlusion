@@ -460,6 +460,7 @@ class BaseModel(ABC, nn.Module):
         return loss_dict
 
     def artistic_loss_function(self,
+                               feature_extractor: nn.Module,
                                loss_config: dict,
                                output: Dict[Union[ChannelEnum, str], torch.Tensor],
                                data: Dict[ChannelEnum, torch.Tensor],
@@ -467,20 +468,20 @@ class BaseModel(ABC, nn.Module):
         # Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge.
         # "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
         # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/loss.py
-        # this requires a self.feature_extractor
+        # this requires a feature_extractor
 
         perceptual_loss = 0.
         style_loss = 0.
-        if self.feature_extractor is not None:
+        if feature_extractor is not None:
             gt_dem = data[ChannelEnum.GT_DEM]
             rec_dem = output[ChannelEnum.REC_DEM]
             comp_dem = output[ChannelEnum.COMP_DEM]
 
             # features for the ground-truth, the reconstructed elevation map and the inpainted elevation map
             # the feature extractor expects an image with three channels as an input
-            feat_gt = self.feature_extractor(gt_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
-            feat_rec = self.feature_extractor(rec_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
-            feat_comp = self.feature_extractor(comp_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_gt = feature_extractor(gt_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_rec = feature_extractor(rec_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_comp = feature_extractor(comp_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
 
             for i in range(len(feat_gt)):
                 perceptual_loss += perceptual_loss_fct(feat_rec[i], feat_gt[i], **kwargs)

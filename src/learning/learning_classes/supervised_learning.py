@@ -42,7 +42,8 @@ class SupervisedLearning(BaseLearning):
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,
                                                      data=data,
-                                                     dataloader_meta_info=dataloader_meta_info)
+                                                     dataloader_meta_info=dataloader_meta_info,
+                                                     feature_extractor=self.feature_extractor)
                 loss = loss_dict[LossEnum.LOSS]
                 self.task.loss(batch_size=batch_size, loss_dict=loss_dict)
 

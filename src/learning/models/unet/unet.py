@@ -170,13 +170,3 @@ class UNet(BaseModel):
             return loss_dict
         else:
             return loss_dict
-
-    def train(self, mode: bool = True, **kwargs):
-        if mode is True and self.config.get("feature_extractor", False) is True and self.feature_extractor is None:
-            device, = list(set(p.device for p in self.parameters()))
-            self.feature_extractor = VGG16FeatureExtractor()
-            self.feature_extractor = self.feature_extractor.to(device=device)
-        else:
-            self.feature_extractor = None
-
-        super().train(mode=mode, **kwargs)

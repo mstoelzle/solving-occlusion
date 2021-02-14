@@ -34,7 +34,7 @@
                     "input_normalization": false,
                     "NaN_replacement": 0,
                     "bilinear": true,
-                    "feature_extractor": true
+                    "feature_extractor": false
                 },
                 "optimizer": {
                     "name": "Adam",
