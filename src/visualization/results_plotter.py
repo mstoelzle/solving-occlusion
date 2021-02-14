@@ -93,8 +93,8 @@ class ResultsPlotter:
             if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
                 comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
 
-            u = int(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0])
-            v = int(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1])
+            u = int(round(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0]))
+            v = int(round(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1]))
             # we only visualize the robot position if its inside the elevation map
             plot_robot_position = 0 < u < occluded_elevation_map.shape[0] and 0 < v < occluded_elevation_map.shape[1]
             if plot_robot_position:

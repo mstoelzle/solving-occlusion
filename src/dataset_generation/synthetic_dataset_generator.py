@@ -154,8 +154,8 @@ class SyntheticDatasetGenerator(BaseDatasetGenerator):
                               elevation_map=elevation_map_object)
 
                 # get elevation of robot position
-                u = int(gt_dem.shape[0] / 2 + robot_position.x / self.terrain_resolution)
-                v = int(gt_dem.shape[1] / 2 + robot_position.y / self.terrain_resolution)
+                u = int(round(gt_dem.shape[0] / 2 + robot_position.x / self.terrain_resolution))
+                v = int(round(gt_dem.shape[1] / 2 + robot_position.y / self.terrain_resolution))
                 robot_position.z = gt_dem[u, v] + robot.height_viewpoint
 
                 res_grid = np.array([self.terrain_resolution, self.terrain_resolution], dtype=np.double)

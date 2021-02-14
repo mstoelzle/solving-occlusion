@@ -148,8 +148,8 @@ class BaseDatasetGenerator(ABC):
                     h, w = occ_dem.shape[0], occ_dem.shape[1]
 
                 if rel_position is not None:
-                    u = int(h / 2 + rel_position[0] / res_grid[0])
-                    v = int(w / 2 + rel_position[1] / res_grid[1])
+                    u = int(round(h / 2 + rel_position[0] / res_grid[0]))
+                    v = int(round(w / 2 + rel_position[1] / res_grid[1]))
                     # we only visualize the robot position if its inside the elevation map
                     plot_robot_position = 0 < u < h and 0 < v < w
                     if plot_robot_position:
