@@ -28,7 +28,6 @@ class Transformer:
         except ImportError:
             self.grid_map_raycasting = None
 
-
     def __call__(self, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         transformed_data = data
 
@@ -242,15 +241,18 @@ class Transformer:
         vantage_point_u = 0
         vantage_point_v = 0
         vantage_point_elevation = np.NaN
+        # we only accept coordinates for which we have elevation information
         while np.isnan(vantage_point_elevation):
-            # we only accept coordinates where we have elevation information
-            vantage_point_u = rng.uniform(low=0, high=gt_dem.size(0))
-            vantage_point_v = rng.uniform(low=0, high=gt_dem.size(1))
+            u_choices = np.arange(start=0, stop=gt_dem.size(0))
+            v_choices = np.arange(start=0, stop=gt_dem.size(1))
+
+            vantage_point_u = rng.choice(u_choices)
+            vantage_point_v = rng.choice(v_choices)
 
             vantage_point_elevation = gt_dem[vantage_point_u, vantage_point_v]
 
         height_viewpoint = rng.uniform(low=transform_config["height_viewpoint"]["min"],
-                                       high=transform_config["height_viewpoint"]["high"])
+                                       high=transform_config["height_viewpoint"]["max"])
 
         vantage_point_x = (-gt_dem.size(0) / 2 + vantage_point_u) * res_grid[0]
         vantage_point_y = (-gt_dem.size(1) / 2 + vantage_point_v) * res_grid[1]
@@ -258,7 +260,7 @@ class Transformer:
         
         vantage_point = np.array([vantage_point_x, vantage_point_y, vantage_point_z], dtype=np.double)
 
-        np_gt_dem = gt_dem.detach().numpy().to(dtype=np.double)
+        np_gt_dem = gt_dem.detach().numpy().astype(np.double)
 
         np_raycasted_occ_mask = self.grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
 
