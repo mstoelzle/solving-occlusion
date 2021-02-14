@@ -155,7 +155,7 @@ class BaseDatasetGenerator(ABC):
                     if plot_robot_position:
                         robot_position_pixel = np.array([u, v])
 
-                if np.isnan(gt_dem).all():
+                if gt_dem is not None and np.isnan(gt_dem).all():
                     gt_dem = None
 
                 sample_dir = self.logdir / f"{self.purpose+'_' if self.purpose is not None else ''}samples"

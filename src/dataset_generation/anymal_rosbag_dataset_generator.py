@@ -171,6 +171,9 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
 
                         start_x = stop_x
 
+                    # we only consider layer_idx=0 for now
+                    break
+
         self.save_cache()
         self.write_metadata(self.hdf5_group)
 
