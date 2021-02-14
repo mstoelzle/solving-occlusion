@@ -20,7 +20,6 @@ from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
 from src.learning.models.unet.unet_parts import VGG16FeatureExtractor
 from src.learning.tasks import Task
 from src.traversability.traversability_assessment import TraversabilityAssessment
-from src.utils.digest import TensorboardDigest
 from src.utils.log import get_logger
 
 logger = get_logger("base_learning")
@@ -42,12 +41,6 @@ class BaseLearning(ABC):
 
         self.model = None
         self.optimizer = None
-
-        digest_config: Dict = kwargs.get("digest", {})
-        if len(digest_config) > 0:
-            self.digest = TensorboardDigest(logdir=self.logdir, **digest_config)
-        else:
-            self.digest = None
 
         self.results_hdf5_path: pathlib.Path = results_hdf5_path
         self.results_hdf5_file: Optional[h5py.File] = None

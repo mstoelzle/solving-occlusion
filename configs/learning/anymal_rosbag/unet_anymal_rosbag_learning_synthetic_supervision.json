@@ -114,7 +114,6 @@
         },
         "visualization": {"sample_frequency":  50, "indiv_vranges": true}
     },
-    "logging": {"upload": false},
     "remote": true,
     "seeds": [101]
 }

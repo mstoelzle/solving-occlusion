@@ -12,11 +12,6 @@ from torch.nn import functional as F
 from torch.utils.data import Dataset
 import torchvision
 
-from .domain_distance_metrics.cmmd import conditional_maximum_mean_discrepancy
-from .domain_distance_metrics.coral import coral
-from .domain_distance_metrics.fid import frechet_inception_distance
-from .domain_distance_metrics.lmmd import local_maximum_mean_discrepancy
-from .domain_distance_metrics.mmd import maximum_mean_discrepancy
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.utils.log import get_logger
@@ -391,95 +386,3 @@ def gram_matrix(feat: torch.Tensor):
     feat_t = feat.transpose(1, 2)
     gram = torch.bmm(feat, feat_t) / (ch * h * w)
     return gram
-
-
-def calc_domain_distance(data_domain_1: torch.Tensor, data_domain_2: torch.Tensor,
-                         domain_distance_metric: str = "fid", normalize_activations=True, num_classes=None,
-                         targets_domain_1: torch.Tensor = None, targets_domain_2: torch.Tensor = None,
-                         pred_targets_domain_1: torch.Tensor = None,
-                         pred_targets_domain_2: torch.Tensor = None) -> torch.Tensor:
-    # Input: two 2D torch tensors (e.g. vectors) with the dimension (batch_size, feature_size)
-    # In the case of lmmd, the order of the label predictions is important:
-    # Per definition, the labeled source domain is defined as domain 1 and the unlabeled target domain as domain 2
-    batch_size = data_domain_1.size(0)
-    layer_dim = data_domain_1.size(1)
-
-    assert data_domain_1.size() == data_domain_2.size(), "The tensors from both domains need to have the same size."
-
-    if torch.isnan(data_domain_1).any() or torch.isnan(data_domain_2).any():
-        logger.error("The tensor_domain_1 and / or tensor_domain_2 contains NaN elements in calc_domain_distance\n"
-                     "--> skipping the domain distance")
-        return data_domain_1.new_tensor(0.0)
-
-    # weather to normalize the activations by the own magnitude
-    if normalize_activations:
-        # activation average over all batches from both domains
-        mean_activations = torch.mean(torch.cat((data_domain_1, data_domain_2), dim=0), dim=0)
-        # sum together over all activations
-        sum_mean_activations = torch.sum(torch.abs(mean_activations))
-
-        data_domain_1_normalized = data_domain_1 / sum_mean_activations
-        data_domain_2_normalized = data_domain_2 / sum_mean_activations
-    else:
-        data_domain_1_normalized = data_domain_1 / layer_dim
-        data_domain_2_normalized = data_domain_2 / layer_dim
-
-    if domain_distance_metric == "fid":
-        domain_distance = frechet_inception_distance(data_domain_1_normalized, data_domain_2_normalized)
-
-        if normalize_activations:
-            domain_distance = 10. ** 4 * domain_distance
-        else:
-            domain_distance = 10. ** 2 * domain_distance
-
-    elif domain_distance_metric == "fid_legacy":
-        domain_distance = frechet_inception_distance(data_domain_1, data_domain_2)
-
-    elif domain_distance_metric == "mean_diff":
-        mean_domain_1 = torch.mean(data_domain_1_normalized, dim=0)
-        mean_domain_2 = torch.mean(data_domain_2_normalized, dim=0)
-
-        # we are calculating the p=2 norm of the mean activations
-        domain_distance = torch.dist(mean_domain_1, mean_domain_2, p=2)
-
-    elif domain_distance_metric == "mengfan_wu":
-        # Mengfan Wu's implementation
-        std_labeled, mean_labeled = torch.std_mean(data_domain_1_normalized, dim=0)
-        std_unlabeled, mean_unlabeled = torch.std_mean(data_domain_2_normalized, dim=0)
-        diff_mean = torch.dist(mean_labeled, mean_unlabeled)
-        diff_std = torch.dist(std_labeled, std_unlabeled, p=1)
-
-        domain_distance = 10. * diff_mean + diff_std
-
-    elif domain_distance_metric == "mmd":
-        # the alternative option is to use the torch-two-sample library
-        # mmd_statistic = MMDStatistic(batch_size, batch_size)
-        # domain_distance = mmd_statistic(domain_1_normalized, domain_2_normalized, alphas=[1. / 2.])**2
-
-        domain_distance = maximum_mean_discrepancy(data_domain_1, data_domain_2) ** 2
-
-    elif domain_distance_metric == "cosine_similarity":
-        mean_domain_1 = torch.mean(data_domain_1_normalized, dim=0)
-        mean_domain_2 = torch.mean(data_domain_2_normalized, dim=0)
-
-        domain_distance = data_domain_1.new_tensor(1.0) - F.cosine_similarity(mean_domain_1, mean_domain_2, dim=0)
-
-    elif domain_distance_metric == "coral":
-        domain_distance = coral(data_domain_1, data_domain_2)
-
-    elif domain_distance_metric == "cmmd":
-        domain_distance = conditional_maximum_mean_discrepancy(num_classes,
-                                                               data_domain_1, data_domain_2,
-                                                               targets_domain_1, targets_domain_2)
-
-    elif domain_distance_metric == "lmmd":
-        # In the case of lmmd, the order of the label predictions is important:
-        # Per definition, the labeled source domain is defined as domain 1 and the unlabeled target domain as domain 2
-        domain_distance = local_maximum_mean_discrepancy(num_classes,
-                                                         data_domain_1, data_domain_2,
-                                                         targets_domain_1, pred_targets_domain_2)
-
-    else:
-        raise NotImplementedError(f"The domain distance metric {domain_distance_metric} is not implemented.")
-
-    return domain_distance

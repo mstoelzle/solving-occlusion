@@ -60,9 +60,6 @@
         },
         "visualization": {"sample_frequency":  1}
     },
-    "logging": {
-        "upload": false
-    },
     "remote": true,
     "seeds": [101]
 }

@@ -11,7 +11,6 @@ from src.learning.tasks import TaskPath
 from src.visualization.results_plotter import ResultsPlotter
 from src.utils import hash_dict, measure_runtime
 from src.utils.log import get_logger
-from src.utils.sheet_uploader import SheetUploader
 
 
 class Experiment:
@@ -46,9 +45,6 @@ class Experiment:
     def run(self):
         with measure_runtime(self.logdir):
             for task in self.task_path:
-                if self.config.get("logging", {}).get("upload", False) is True:
-                    self.upload_task()
-
                 with measure_runtime(task.logdir):
                     if task.type == TaskTypeEnum.SUPERVISED_LEARNING:
                         with self.supervised_learning:
@@ -61,20 +57,7 @@ class Experiment:
                     else:
                         raise NotImplementedError(f"The following task type is not implemented: {task.type}")
 
-        if self.config.get("logging", {}).get("upload", False) is True:
-            self.upload_task()
-
         self.save_exit_code(0)
-
-    def upload_task(self):
-        try:
-            uploader = SheetUploader(self.set_name)
-            uploader.upload()
-
-        except Exception:
-            exc = traceback.format_exc()
-            self.logger.exception(exc)
-            self.logger.critical("Could not upload latest results. Likely connection problem to Google sheets.")
 
     def plot(self):
         self.results_plotter.plot()

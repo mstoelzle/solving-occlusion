@@ -42,7 +42,6 @@
         },
         "visualization": {"sample_frequency":  100, "correlation_occluded_area": true}
     },
-    "logging": {"upload": false},
     "remote": true,
     "seeds": [101]
 }
