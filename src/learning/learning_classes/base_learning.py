@@ -52,6 +52,7 @@ class BaseLearning(ABC):
         self.controller = None
         self.model = None
         self.optimizer = None
+        self.feature_extractor = None
 
     def set_task(self, task: Task):
         self.task = task
