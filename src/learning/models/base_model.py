@@ -474,20 +474,20 @@ class BaseModel(ABC, nn.Module):
         if self.feature_extractor is not None:
             gt_dem = data[ChannelEnum.GT_DEM]
             rec_dem = output[ChannelEnum.REC_DEM]
-            inpainted_elevation_map = output[ChannelEnum.COMP_DEM]
+            comp_dem = output[ChannelEnum.COMP_DEM]
 
             # features for the ground-truth, the reconstructed elevation map and the inpainted elevation map
             # the feature extractor expects an image with three channels as an input
             feat_gt = self.feature_extractor(gt_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
-            feat_recons = self.feature_extractor(rec_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
-            feat_inpaint = self.feature_extractor(inpainted_elevation_map.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_rec = self.feature_extractor(rec_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
+            feat_comp = self.feature_extractor(comp_dem.unsqueeze(dim=1).repeat(1, 3, 1, 1))
 
             for i in range(len(feat_gt)):
-                perceptual_loss += perceptual_loss_fct(feat_recons[i], feat_gt[i], **kwargs)
-                perceptual_loss += perceptual_loss_fct(feat_inpaint[i], feat_gt[i], **kwargs)
+                perceptual_loss += perceptual_loss_fct(feat_rec[i], feat_gt[i], **kwargs)
+                perceptual_loss += perceptual_loss_fct(feat_comp[i], feat_gt[i], **kwargs)
 
-                style_loss += style_loss_fct(feat_recons[i], feat_gt[i], **kwargs)
-                style_loss += style_loss_fct(feat_inpaint[i], feat_gt[i], **kwargs)
+                style_loss += style_loss_fct(feat_rec[i], feat_gt[i], **kwargs)
+                style_loss += style_loss_fct(feat_comp[i], feat_gt[i], **kwargs)
 
         return {LossEnum.PERCEPTUAL: perceptual_loss,
                 LossEnum.STYLE: style_loss}
