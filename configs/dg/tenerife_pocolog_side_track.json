@@ -1,0 +1,18 @@
+{
+    "name": "tenerife_pocolog_side_track",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "rock_ga_slam_pocolog",
+        "pocolog_paths": {
+            "test": ["/home/user/rock/bundles/hdpr/logs/20210209-1052/ga_slam.0.log"]
+        },
+        "save_frequency": 10,
+        "size": 75,
+        "psnr_similarity_threshold": 50,
+        "visualization": {
+            "frequency": 20
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
