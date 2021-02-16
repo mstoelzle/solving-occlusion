@@ -52,6 +52,7 @@ class BaseLearning(ABC):
         self.controller = None
         self.model = None
         self.optimizer = None
+        self.feature_extractor = None
 
     def set_task(self, task: Task):
         self.task = task
@@ -124,7 +125,7 @@ class BaseLearning(ABC):
         save_frequency = self.task.config.get("model", {}).get("save_frequency", None)
 
         if self.optimizer is not None:
-            if self.model.config.get("feature_extractor", False) is True and self.feature_extractor is None:
+            if self.model.config.get("feature_extractor", False) is True:
                 self.feature_extractor = VGG16FeatureExtractor()
                 self.feature_extractor = self.feature_extractor.to(device=self.device)
 
