@@ -12,7 +12,7 @@
                 "/home/user/rock/bundles/hdpr/logs/20210209-2218/ga_slam.0.log",
                 "/home/user/rock/bundles/hdpr/logs/20210208-2216/ga_slam.0.log"
             ],
-            "val": ["/home/user/rock/bundles/hdpr/logs/VALLEY_CIRCLE/ga_slam.0.log"],
+            "val": ["/home/user/rock/bundles/hdpr/logs/20210216-1303/ga_slam.0.log"],
             "test": ["/home/user/rock/bundles/hdpr/logs/20210209-1052/ga_slam.0.log"]
         },
         "save_frequency": 10,
