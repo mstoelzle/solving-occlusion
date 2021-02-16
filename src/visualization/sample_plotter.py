@@ -22,7 +22,7 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
 
     dem_cmap = plt.get_cmap("viridis")
 
-    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2.2 * 4.8])
 
     axes[0, 0].set_title("Occluded DEM")
     # matshow plots x and y swapped
