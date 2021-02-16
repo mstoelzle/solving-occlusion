@@ -10,7 +10,7 @@
                 "/home/user/rock/bundles/hdpr/logs/20210216-1236/ga_slam.0.log",
                 "/home/user/rock/bundles/hdpr/logs/20210209-1910/ga_slam.0.log",
                 "/home/user/rock/bundles/hdpr/logs/20210209-2218/ga_slam.0.log",
-                "/home/user/rock/bundles/hdpr/logs/20210208-2216/ga_slam.0.log"
+                "/home/user/rock/bundles/hdpr/logs/20210216-1942/ga_slam.0.log"
             ],
             "val": ["/home/user/rock/bundles/hdpr/logs/20210216-1536/ga_slam.0.log"],
             "test": ["/home/user/rock/bundles/hdpr/logs/20210209-1052/ga_slam.0.log"]
