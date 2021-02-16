@@ -14,11 +14,11 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
         occ_dem[occ_mask == 1] = np.nan
     nocc_dem = occ_dem[~np.isnan(occ_dem)]
 
-    dem_vmin = np.min(nocc_dem)
-    dem_vmax = np.max(nocc_dem)
-    if gt_dem is not None:
-        dem_vmin = np.min([dem_vmin, np.min(gt_dem[~np.isnan(gt_dem)])])
-        dem_vmax = np.max([dem_vmax, np.max(gt_dem[~np.isnan(gt_dem)])])
+    # dem_vmin = np.min(nocc_dem)
+    # dem_vmax = np.max(nocc_dem)
+    # if gt_dem is not None:
+    #     dem_vmin = np.min([dem_vmin, np.min(gt_dem[~np.isnan(gt_dem)])])
+    #     dem_vmax = np.max([dem_vmax, np.max(gt_dem[~np.isnan(gt_dem)])])
 
     dem_cmap = plt.get_cmap("viridis")
 
@@ -26,29 +26,29 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
 
     axes[0, 0].set_title("Occluded DEM")
     # matshow plots x and y swapped
-    mat = axes[0, 0].matshow(np.swapaxes(occ_dem, 0, 1), vmin=dem_vmin,
-                             vmax=dem_vmax, cmap=dem_cmap)
-    fig.colorbar(mat, ax=axes[0, :].ravel().tolist(), fraction=0.045)
+    mat = axes[0, 0].matshow(np.swapaxes(occ_dem, 0, 1), cmap=dem_cmap)
+    fig.colorbar(mat, ax=axes[0, 0], fraction=0.045)
 
     if gt_dem is not None:
         axes[0, 1].set_title("Ground-truth DEM")
         # matshow plots x and y swapped
-        mat = axes[0, 1].matshow(np.swapaxes(gt_dem, 0, 1), vmin=dem_vmin,
-                                 vmax=dem_vmax, cmap=dem_cmap)
+        mat = axes[0, 1].matshow(np.swapaxes(gt_dem, 0, 1), cmap=dem_cmap)
+        fig.colorbar(mat, ax=axes[0, 1], fraction=0.045)
 
     um_cmap = plt.get_cmap("RdYlGn_r")
 
     if occ_data_um is not None:
         axes[1, 0].set_title("Occluded data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 0].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
+        mat = axes[1, 0].matshow(np.swapaxes(occ_data_um, 0, 1), cmap=um_cmap)
+        fig.colorbar(mat, ax=axes[1, 0], fraction=0.045)
         axes[1, 0].grid(False)
 
     if gt_data_um is not None:
         axes[1, 1].set_title("Ground-truth data uncertainty")
         # matshow plots x and y swapped
-        mat = axes[1, 1].matshow(np.swapaxes(occ_data_um, 0, 1), vmin=0, vmax=4, cmap=um_cmap)
-        fig.colorbar(mat, ax=axes[1, :].ravel().tolist(), fraction=0.045)
+        mat = axes[1, 1].matshow(np.swapaxes(occ_data_um, 0, 1), cmap=um_cmap)
+        fig.colorbar(mat, ax=axes[1, 1], fraction=0.045)
         axes[1, 1].grid(False)
 
     for i, ax in enumerate(axes.reshape(-1)):
