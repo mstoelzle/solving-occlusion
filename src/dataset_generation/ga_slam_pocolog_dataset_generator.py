@@ -21,10 +21,6 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.split_config = self.config.get("split")
-        assert list(self.split_config.keys()) == ["train", "val", "test"]
-        self.split_msg_indices = {}
-
         self.reset()
 
         import pocolog_pybind
