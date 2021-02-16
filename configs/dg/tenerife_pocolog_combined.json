@@ -1,0 +1,27 @@
+{
+    "name": "tenerife_pocolog_combined",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "rock_ga_slam_pocolog",
+        "pocolog_paths": {
+            "train": [
+                "/home/user/rock/bundles/hdpr/logs/20210209-1543/ga_slam.0.log",
+                "/home/user/rock/bundles/hdpr/logs/20210216-1034/ga_slam.0.log",
+                "/home/user/rock/bundles/hdpr/logs/20210216-1236/ga_slam.0.log",
+                "/home/user/rock/bundles/hdpr/logs/20210209-1910/ga_slam.0.log",
+                "/home/user/rock/bundles/hdpr/logs/20210209-2218/ga_slam.0.log",
+                "/home/user/rock/bundles/hdpr/logs/20210208-2216/ga_slam.0.log"
+            ],
+            "val": ["/home/user/rock/bundles/hdpr/logs/VALLEY_CIRCLE/ga_slam.0.log"],
+            "test": ["/home/user/rock/bundles/hdpr/logs/20210209-1052/ga_slam.0.log"]
+        },
+        "save_frequency": 10,
+        "size": 75,
+        "psnr_similarity_threshold": 50,
+        "visualization": {
+            "frequency": 50
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
