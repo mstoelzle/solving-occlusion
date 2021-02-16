@@ -1,5 +1,5 @@
 {
-    "name": "unet_synthetic_height_map_learning",
+    "name": "unet_synthetic_height_map_learning_supervised",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -60,45 +60,6 @@
                                 "type": "hdf5",
                                 "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                 "size": [64, 64]
-                            }
-                        ]
-                    }
-                },
-                {
-                    "task_type": "supervised-learning",
-                    "domain_defaults": {
-                        "datasets": [
-                            {
-                                "type": "hdf5",
-                                "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                                "size": [64, 64],
-                                "sampling_weights": {"train": 1, "val":  1, "test":  0},
-                                "self_supervision": true,
-                                "transforms": {
-                                    "defaults": [
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        },
-                                        {
-                                            "type": "random_occlusion_dilation",
-                                            "kernel_size": 3,
-                                            "probability": 0.5
-                                        },
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "hdf5",
-                                "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
-                                "size": [64, 64],
-                                "sampling_weights": {"train": 0, "val":  0, "test":  1}
                             }
                         ]
                     }
