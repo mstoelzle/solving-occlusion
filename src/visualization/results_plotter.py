@@ -203,7 +203,7 @@ class ResultsPlotter:
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
                                             robot_position_pixel=robot_position_pixel, remote=self.remote,
-                                            indiv_vranges=self.config.get("indiv_vranges", False))
+                                            indiv_vranges=self.config.get("indiv_vranges", True))
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,

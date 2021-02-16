@@ -69,7 +69,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                 gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
                                 rec_data_um: np.array = None, comp_data_um: np.array = None,
                                 model_um: np.array = None, total_um: np.array = None,
-                                robot_position_pixel: np.array = None, remote=False, indiv_vranges=False):
+                                robot_position_pixel: np.array = None, remote=False, indiv_vranges=True):
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9 * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
