@@ -57,8 +57,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
             sample_idx = 0
             for pocolog_idx, pocolog_path in enumerate(pocolog_paths[purpose]):
-                print(
-                    f"Processing {pocolog_path} for purpose {purpose} with length {self.pocolog_num_messages[pocolog_idx]}")
+                print(f"Processing {pocolog_path} for purpose {purpose} "
+                      f"with length {self.pocolog_num_messages[pocolog_idx]}")
 
                 occ_dem_stream = self.streams[pocolog_idx]["/ga_slam.localElevationMapMean"]
                 occ_data_um_stream = self.streams[pocolog_idx]["/ga_slam.localElevationMapVariance"]
@@ -114,7 +114,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                         # multiply with the number of subgrids
                         self.total_num_samples = self.num_messages * num_subgrids_x * num_subgrids_y
 
-                        progress_bar = Bar(f"Processing pocologs for purpose {purpose}", max=self.total_num_samples)
+                        progress_bar = Bar(f"Processing pocolog {pocolog_idx} for purpose {purpose}",
+                                           max=self.pocolog_num_messages[pocolog_idx])
 
                     start_x = 0
                     for i in range(num_subgrids_x):
