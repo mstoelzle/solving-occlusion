@@ -45,19 +45,20 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
                 pocolog_streams = multi_file_index.get_all_streams()
                 self.streams.append(pocolog_streams)
-                
+
                 pocolog_num_messages = float('inf')
                 for key, stream in pocolog_streams.items():
-                    if stream.get_name() in ["/ga_slam.localElevationMapMean", 
-                                                "/ga_slam.localElevationMapVariance",
-                                                "/ga_slam.globalElevationMapMean"]:
+                    if stream.get_name() in ["/ga_slam.localElevationMapMean",
+                                             "/ga_slam.localElevationMapVariance",
+                                             "/ga_slam.globalElevationMapMean"]:
                         pocolog_num_messages = min(pocolog_num_messages, stream.get_size())
                 self.pocolog_num_messages.append(pocolog_num_messages)
                 self.num_messages += pocolog_num_messages
 
             sample_idx = 0
             for pocolog_idx, pocolog_path in enumerate(pocolog_paths[purpose]):
-                print(f"Processing {pocolog_path} for purpose {purpose} with length {self.pocolog_num_messages[pocolog_idx]}")
+                print(
+                    f"Processing {pocolog_path} for purpose {purpose} with length {self.pocolog_num_messages[pocolog_idx]}")
 
                 occ_dem_stream = self.streams[pocolog_idx]["/ga_slam.localElevationMapMean"]
                 occ_data_um_stream = self.streams[pocolog_idx]["/ga_slam.localElevationMapVariance"]
@@ -72,25 +73,26 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                     occ_dem_dict = occ_dem_compound.cast(recursive=True)
                     occ_dem = np.array(occ_dem_dict["data"])
                     occ_dem = occ_dem.reshape((occ_dem_dict["height"], occ_dem_dict["width"]), order="F")
-                    occ_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
+                    occ_dem_compound.destroy()  # we need to clean-up the trace of the Typelib::Value in the heap
 
                     occ_data_um_compound = occ_data_um_stream.get_sample(msg_idx)
                     occ_data_um_dict = occ_data_um_compound.cast(recursive=True)
                     occ_data_um = np.array(occ_data_um_dict["data"])
-                    occ_data_um = occ_data_um.reshape((occ_data_um_dict["height"], occ_data_um_dict["width"]), order="F")
-                    occ_data_um_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
+                    occ_data_um_newshape = (occ_data_um_dict["height"], occ_data_um_dict["width"])
+                    occ_data_um = occ_data_um.reshape(occ_data_um_newshape, order="F")
+                    occ_data_um_compound.destroy()  # we need to clean-up the trace of the Typelib::Value in the heap
 
                     gt_dem_compound = gt_dem_stream.get_sample(msg_idx)
                     gt_dem_dict = gt_dem_compound.cast(recursive=True)
                     gt_dem = np.array(gt_dem_dict["data"])
                     gt_dem = gt_dem.reshape((gt_dem_dict["height"], gt_dem_dict["width"]), order="F")
-                    gt_dem_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
+                    gt_dem_compound.destroy()  # we need to clean-up the trace of the Typelib::Value in the heap
 
                     gt_data_um_compound = gt_data_um_stream.get_sample(msg_idx)
                     gt_data_um_dict = gt_data_um_compound.cast(recursive=True)
                     gt_data_um = np.array(gt_data_um_dict["data"])
                     gt_data_um = gt_data_um.reshape((gt_data_um_dict["height"], gt_data_um_dict["width"]), order="F")
-                    gt_data_um_compound.destroy() # we need to clean-up the trace of the Typelib::Value in the heap
+                    gt_data_um_compound.destroy()  # we need to clean-up the trace of the Typelib::Value in the heap
 
                     res_grid = np.array([0.05, 0.05])
                     rel_position_z = occ_dem[int(occ_dem.shape[0] // 2), int(occ_dem.shape[1] // 2)]
@@ -110,7 +112,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
                     if progress_bar is None:
                         # multiply with the number of subgrids
-                        self.total_num_samples = self.num_messages * num_subgrids_x * num_subgrids_y  
+                        self.total_num_samples = self.num_messages * num_subgrids_x * num_subgrids_y
 
                         progress_bar = Bar(f"Processing pocologs for purpose {purpose}", max=self.total_num_samples)
 
@@ -128,10 +130,10 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
                             subgrid_delta_x = res_grid[0] * (-occ_dem.shape[0] / 2 + start_x + target_size_x / 2)
                             subgrid_delta_y = res_grid[1] * (-occ_dem.shape[1] / 2 + start_y + target_size_y / 2)
-                            rel_position_subgrid_z = occ_dem_subgrid[int(target_size_x//2), int(target_size_y//2)]
+                            rel_position_subgrid_z = occ_dem_subgrid[int(target_size_x // 2), int(target_size_y // 2)]
                             rel_position_subgrid = np.array([rel_position[0] + subgrid_delta_x,
-                                                                rel_position[1] + subgrid_delta_y,
-                                                                rel_position_subgrid_z])
+                                                             rel_position[1] + subgrid_delta_y,
+                                                             rel_position_subgrid_z])
 
                             if np.isnan(occ_dem_subgrid).all():
                                 # we skip because the DEM only contains occlusion (NaNs)
@@ -153,13 +155,13 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                                 prior_occ_dem_subgrid_no_nan = np.nan_to_num(prior_occ_dem_subgrid, copy=True, nan=0.0)
 
                                 mse = mse_loss_fct(input=torch.tensor(occ_dem_subgrid_no_nan),
-                                                    target=torch.tensor(prior_occ_dem_subgrid_no_nan))
+                                                   target=torch.tensor(prior_occ_dem_subgrid_no_nan))
 
                                 data_min = np.min([occ_dem_subgrid_no_nan, prior_occ_dem_subgrid_no_nan]).item()
                                 data_max = np.max([occ_dem_subgrid_no_nan, prior_occ_dem_subgrid_no_nan]).item()
                                 psnr = psnr_from_mse_loss_fct(mse=mse,
-                                                                data_min=data_min,
-                                                                data_max=data_max)
+                                                              data_min=data_min,
+                                                              data_max=data_max)
 
                                 # we want to exclude dems which are too similar
                                 if psnr > self.config.get("psnr_similarity_threshold", 50):
@@ -178,26 +180,29 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                                 super().create_base_datasets(self.hdf5_group, self.total_num_samples)
 
                                 self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
-                                                            shape=(0, occ_dem_subgrid.shape[0], occ_dem_subgrid.shape[1]),
-                                                            maxshape=(self.total_num_samples,
-                                                            occ_dem_subgrid.shape[0], occ_dem_subgrid.shape[1]))
+                                                               shape=(
+                                                               0, occ_dem_subgrid.shape[0], occ_dem_subgrid.shape[1]),
+                                                               maxshape=(self.total_num_samples,
+                                                                         occ_dem_subgrid.shape[0],
+                                                                         occ_dem_subgrid.shape[1]))
                                 self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DATA_UM.value,
-                                                            shape=(0, occ_data_um_subgrid.shape[0],
-                                                                        occ_data_um_subgrid.shape[1]),
-                                                            maxshape=(self.total_num_samples,
-                                                                            occ_data_um_subgrid.shape[0],
-                                                                            occ_data_um_subgrid.shape[1]))
+                                                               shape=(0, occ_data_um_subgrid.shape[0],
+                                                                      occ_data_um_subgrid.shape[1]),
+                                                               maxshape=(self.total_num_samples,
+                                                                         occ_data_um_subgrid.shape[0],
+                                                                         occ_data_um_subgrid.shape[1]))
+                                gt_shape = (0, gt_dem_subgrid.shape[0], gt_dem_subgrid.shape[1])
+                                gt_maxshape = (self.total_num_samples, gt_dem_subgrid.shape[0],
+                                               gt_dem_subgrid.shape[1])
                                 self.hdf5_group.create_dataset(name=ChannelEnum.GT_DEM.value,
-                                                            shape=(0, gt_dem_subgrid.shape[0], gt_dem_subgrid.shape[1]),
-                                                            maxshape=(self.total_num_samples,
-                                                                            gt_dem_subgrid.shape[0], gt_dem_subgrid.shape[1]))
+                                                               shape=gt_shape, maxshape=gt_maxshape)
 
                             if self.sample_idx % self.config.get("save_frequency", 50) == 0:
                                 self.save_cache()
 
                             self.visualize(sample_idx=sample_idx, res_grid=res_grid, rel_position=rel_position_subgrid,
-                                            occ_dem=occ_dem_subgrid, gt_dem=gt_dem_subgrid,
-                                            occ_data_um=occ_data_um_subgrid, gt_data_um=gt_data_um_subgrid)
+                                           occ_dem=occ_dem_subgrid, gt_dem=gt_dem_subgrid,
+                                           occ_data_um=occ_data_um_subgrid, gt_data_um=gt_data_um_subgrid)
 
                             prior_occ_dem = occ_dem
                             sample_idx += 1
