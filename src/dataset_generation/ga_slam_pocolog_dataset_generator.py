@@ -1,20 +1,11 @@
-from ctypes import *
-from dataclasses import dataclass
-import matplotlib.pyplot as plt
 import numpy as np
-import msgpack
-import os
-import pathlib
+import torch
 from progress.bar import Bar
 from scipy.spatial.transform import Rotation
-import sys
-import torch
-from typing import *
-import warnings
 
-from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
 from src.learning.loss.loss import psnr_from_mse_loss_fct, mse_loss_fct
+from .base_dataset_generator import BaseDatasetGenerator
 
 
 class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
@@ -38,6 +29,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
     def run(self):
         pocolog_paths = self.config["pocolog_paths"]
         for purpose in pocolog_paths.keys():
+            self.purpose = purpose
+
             self.initialized_datasets = False
             self.hdf5_group = self.hdf5_file.create_group(purpose)
 
@@ -74,7 +67,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                 prior_occ_dem = None
                 progress_bar = None
 
-                for msg_idx in range(self.num_messages):
+                for msg_idx in range(self.pocolog_num_messages[pocolog_idx]):
                     occ_dem_compound = occ_dem_stream.get_sample(msg_idx)
                     occ_dem_dict = occ_dem_compound.cast(recursive=True)
                     occ_dem = np.array(occ_dem_dict["data"])
