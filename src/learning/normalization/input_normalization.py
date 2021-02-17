@@ -7,7 +7,7 @@ from src.enums.channel_enum import ChannelEnum
 class InputNormalization:
     @staticmethod
     def normalize(channel: ChannelEnum, input: torch.Tensor, mean: bool = True, stdev: bool = True,
-                  batch=True, norm_consts: dict = None) -> Tuple[torch.Tensor, Dict]:
+                  batch=True, norm_consts: dict = None, **kwargs) -> Tuple[torch.Tensor, Dict]:
         generate_norm_consts = norm_consts is None
 
         if channel == ChannelEnum.OCC_DEM or channel == ChannelEnum.GT_DEM \
@@ -49,7 +49,7 @@ class InputNormalization:
 
     @staticmethod
     def denormalize(channel: ChannelEnum, input: torch.Tensor, norm_consts: Dict,
-                    mean: bool = True, stdev: bool = True, batch=True) -> torch.Tensor:
+                    mean: bool = True, stdev: bool = True, batch=True, **kwargs) -> torch.Tensor:
         if channel == ChannelEnum.OCC_DEM or channel == ChannelEnum.GT_DEM \
                 or channel == ChannelEnum.REC_DEM:
             if batch:
