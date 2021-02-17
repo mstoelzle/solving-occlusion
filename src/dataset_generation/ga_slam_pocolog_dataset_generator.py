@@ -181,23 +181,22 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                             if self.initialized_datasets is False:
                                 super().create_base_datasets(self.hdf5_group, self.total_num_samples)
 
+                                occ_dem_shape = (0, occ_dem_subgrid.shape[0], occ_dem_subgrid.shape[1])
+                                occ_dem_maxshape = (self.total_num_samples, occ_dem_subgrid.shape[0], 
+                                                    occ_dem_subgrid.shape[1])
                                 self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DEM.value,
-                                                               shape=(
-                                                               0, occ_dem_subgrid.shape[0], occ_dem_subgrid.shape[1]),
-                                                               maxshape=(self.total_num_samples,
-                                                                         occ_dem_subgrid.shape[0],
-                                                                         occ_dem_subgrid.shape[1]))
+                                                               shape=occ_dem_shape, maxshape=occ_dem_maxshape)
                                 self.hdf5_group.create_dataset(name=ChannelEnum.OCC_DATA_UM.value,
                                                                shape=(0, occ_data_um_subgrid.shape[0],
                                                                       occ_data_um_subgrid.shape[1]),
                                                                maxshape=(self.total_num_samples,
                                                                          occ_data_um_subgrid.shape[0],
                                                                          occ_data_um_subgrid.shape[1]))
-                                gt_shape = (0, gt_dem_subgrid.shape[0], gt_dem_subgrid.shape[1])
-                                gt_maxshape = (self.total_num_samples, gt_dem_subgrid.shape[0],
-                                               gt_dem_subgrid.shape[1])
+                                gt_dem_shape = (0, gt_dem_subgrid.shape[0], gt_dem_subgrid.shape[1])
+                                gt_dem_maxshape = (self.total_num_samples, gt_dem_subgrid.shape[0],
+                                                   gt_dem_subgrid.shape[1])
                                 self.hdf5_group.create_dataset(name=ChannelEnum.GT_DEM.value,
-                                                               shape=gt_shape, maxshape=gt_maxshape)
+                                                               shape=gt_dem_shape, maxshape=gt_dem_maxshape)
 
                             if self.sample_idx % self.config.get("save_frequency", 50) == 0:
                                 self.save_cache()
@@ -216,9 +215,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                     progress_bar.next()
 
                 self.save_cache()
+                self.write_metadata(self.hdf5_group)
                 progress_bar.finish()
-
-            self.write_metadata(self.hdf5_group)
 
     def save_cache(self):
         self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
