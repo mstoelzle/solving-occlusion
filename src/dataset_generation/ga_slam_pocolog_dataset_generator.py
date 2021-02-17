@@ -32,6 +32,7 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
             self.purpose = purpose
 
             self.initialized_datasets = False
+            self.reset_metadata()
             self.hdf5_group = self.hdf5_file.create_group(purpose)
 
             self.streams = []
@@ -177,6 +178,9 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                             self.occ_data_ums.append(occ_data_um_subgrid)
                             self.gt_dems.append(gt_dem_subgrid)
 
+                            self.update_dataset_range(occ_dem_subgrid)
+                            self.update_dataset_range(gt_dem_subgrid)
+
                             if self.initialized_datasets is False:
                                 super().create_base_datasets(self.hdf5_group, self.total_num_samples)
 
@@ -214,6 +218,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
 
                 self.save_cache()
                 progress_bar.finish()
+
+            self.write_metadata(self.hdf5_group)
 
     def save_cache(self):
         self.extend_dataset(self.hdf5_group[ChannelEnum.OCC_DEM.value], self.occ_dems)
