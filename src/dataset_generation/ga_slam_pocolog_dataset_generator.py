@@ -140,13 +140,11 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                             if np.isnan(occ_dem_subgrid).all():
                                 # we skip because the DEM only contains occlusion (NaNs)
                                 start_y = stop_y
-                                progress_bar.next()
                                 continue
 
                             if np.isnan(occ_dem_subgrid).sum() > (target_size_x * target_size_y / 2):
                                 # we do not want to include the subgrid in the dataset if its occluded to more than 50%
                                 start_y = stop_y
-                                progress_bar.next()
                                 continue
 
                             if prior_occ_dem is not None:
@@ -168,7 +166,6 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                                 # we want to exclude dems which are too similar
                                 if psnr > self.config.get("psnr_similarity_threshold", 50):
                                     start_y = stop_y
-                                    progress_bar.next()
                                     continue
 
                             self.res_grid.append(res_grid)
@@ -215,6 +212,8 @@ class GASlamPocologDatasetGenerator(BaseDatasetGenerator):
                             progress_bar.next()
 
                         start_x = stop_x
+
+                    progress_bar.next()
 
                 self.save_cache()
                 progress_bar.finish()
