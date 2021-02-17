@@ -115,6 +115,12 @@ class BaseDatasetGenerator(ABC):
         self.reset_cache()
 
     def update_dataset_range(self, dem: np.array):
+        # print("dem", dem)
+
+        if np.isnan(dem).all():
+            # nothing to do as the dem only contains NaNs
+            return
+
         # update min and max
         sample_min = np.min(dem[~np.isnan(dem)]).item()
         sample_max = np.max(dem[~np.isnan(dem)]).item()
