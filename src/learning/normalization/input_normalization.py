@@ -22,8 +22,13 @@ class InputNormalization:
                     item = input[idx, ...]
 
                     if generate_norm_consts:
-                        mean_elevation = torch.mean(item[~torch.isnan(item)])
-                        stdev_elevation = torch.std(item[~torch.isnan(item)])
+                        if torch.isnan(item).all():
+                            mean_elevation = 0.
+                            stdev_elevation = 1.
+                        else:
+                            mean_elevation = torch.mean(item[~torch.isnan(item)])
+                            stdev_elevation = torch.std(item[~torch.isnan(item)])
+
                         norm_consts["mean_elevation"][idx] = mean_elevation
                         norm_consts["stdev_elevation"][idx] = stdev_elevation
                     else:
