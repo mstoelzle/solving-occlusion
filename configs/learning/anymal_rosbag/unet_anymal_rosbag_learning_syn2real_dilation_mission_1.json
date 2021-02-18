@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_semi_self_supervision_mission_1",
+    "name": "unet_anymal_rosbag_learning_syn2real_dilation_mission_1",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -31,7 +31,7 @@
                     "in_channels": ["occ_dem", "occ_mask"],
                     "out_channels": ["rec_dem"],
                     "hidden_dims": [64, 128, 256],
-                    "input_normalization": false,
+                    "input_normalization": {"mean": true, "stdev": false},
                     "NaN_replacement": 0,
                     "bilinear": true
                 },
