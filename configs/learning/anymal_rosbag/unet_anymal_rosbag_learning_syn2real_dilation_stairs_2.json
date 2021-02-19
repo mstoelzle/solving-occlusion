@@ -162,7 +162,7 @@
                             "datasets": [
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-01-27-11-03-23_dataset_generation_anymal_rosbag_stairs_2021-01-20-15-16-53_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  1},
                                     "self_supervision": true,
@@ -243,7 +243,7 @@
                                 },
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-01-27-11-03-23_dataset_generation_anymal_rosbag_stairs_2021-01-20-15-16-53_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  1},
                                     "self_supervision": true,
