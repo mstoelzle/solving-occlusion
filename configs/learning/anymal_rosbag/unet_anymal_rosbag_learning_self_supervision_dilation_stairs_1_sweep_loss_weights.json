@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_full_self_supervision_sweep_loss_weights",
+    "name": "unet_anymal_rosbag_learning_self_supervision_dilation_stairs_1_sweep_loss_weights",
     "cuda": true,
     "experiment": {
         "task_path": {

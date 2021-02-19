@@ -1,5 +1,5 @@
 {
-    "name": "baseline_anymal_rosbag",
+    "name": "baseline_anymal_rosbag_stairs_1",
     "cuda": true,
     "experiment": {
         "task_path": {
