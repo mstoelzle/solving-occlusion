@@ -162,12 +162,12 @@ def reduction_fct(loss: torch.Tensor, reduction='mean', mask: Optional[np.array]
     if reduction == 'mean_per_sample':
         if loss.dim() > 1:
             dim_tuple = tuple(range(1, loss.dim()))
-            if mask is None:
+            if mask is None or mask.sum() == 0:
                 loss = loss.mean(dim=dim_tuple)
             else:
                 loss = loss.sum(dim=dim_tuple) / mask.sum(dim_tuple)
     elif reduction == "mean":
-        if mask is None:
+        if mask is None or mask.sum() == 0:
             loss = loss.mean()
         else:
             loss = loss.sum() / mask.sum()
