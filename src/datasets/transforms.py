@@ -243,18 +243,59 @@ class Transformer:
 
             vantage_point_elevation = gt_dem[vantage_point_u, vantage_point_v]
 
-        height_viewpoint = rng.uniform(low=transform_config["height_viewpoint"]["min"],
-                                       high=transform_config["height_viewpoint"]["max"])
+        if transform_config.get("occluded_area_constraint") is not None:
+            constraint_config = transform_config["occluded_area_constraint"]
+            max_iterations = constraint_config["max_iterations"]
+            min_fraction = constraint_config["min"]
+            max_fraction = constraint_config["max"]
+            min_step = constraint_config.get("min_step", 0.05)
+        else:
+            max_iterations = 1
+            min_fraction = 0
+            max_fraction = 1
+            min_step = 0
 
-        vantage_point_x = (-gt_dem.size(0) / 2 + vantage_point_u) * res_grid[0]
-        vantage_point_y = (-gt_dem.size(1) / 2 + vantage_point_v) * res_grid[1]
-        vantage_point_z = vantage_point_elevation + height_viewpoint
-        
-        vantage_point = np.array([vantage_point_x, vantage_point_y, vantage_point_z], dtype=np.double)
+        low = transform_config["height_viewpoint"]["min"]
+        high = transform_config["height_viewpoint"]["max"]
+        found_suitable_occlusion = False
+        i = 0
+        while found_suitable_occlusion is False and i < max_iterations:
+            i += 1
 
-        np_gt_dem = gt_dem.detach().numpy().astype(np.double)
+            height_viewpoint = rng.uniform(low=low, high=high)
 
-        np_raycasted_occ_mask = grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
+            vantage_point_x = (-gt_dem.size(0) / 2 + vantage_point_u) * res_grid[0]
+            vantage_point_y = (-gt_dem.size(1) / 2 + vantage_point_v) * res_grid[1]
+            vantage_point_z = vantage_point_elevation + height_viewpoint
+
+            vantage_point = np.array([vantage_point_x, vantage_point_y, vantage_point_z], dtype=np.double)
+
+            np_gt_dem = gt_dem.detach().numpy().astype(np.double)
+
+            np_raycasted_occ_mask = grid_map_raycasting.rayCastGridMap(vantage_point, np_gt_dem, res_grid)
+
+            occ_mask_shape = np_raycasted_occ_mask.shape
+            occlusion_fraction = np_raycasted_occ_mask.sum() / (occ_mask_shape[0] * occ_mask_shape[1])
+
+            if transform_config.get("occluded_area_constraint") is not None:
+                if min_fraction <= occlusion_fraction <= max_fraction:
+                    found_suitable_occlusion = True
+                else:
+                    if occlusion_fraction < min_fraction:
+                        high = height_viewpoint
+
+                        if np.abs(high - low) < min_step:
+                            low = max(0, low - min_step)
+
+                    elif max_fraction < occlusion_fraction:
+                        low = height_viewpoint
+
+                        if np.abs(high - low) < min_step:
+                            high += min_step
+                    else:
+                        raise ValueError
+            else:
+                found_suitable_occlusion = True
 
         data[ChannelEnum.OCC_MASK] = torch.logical_or(occ_mask, torch.tensor(np_raycasted_occ_mask, dtype=torch.bool))
 

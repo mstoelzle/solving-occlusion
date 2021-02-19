@@ -26,8 +26,13 @@
                                 "defaults": [
                                     {
                                         "type": "random_occlusion_raycasting",
-                                        "height_viewpoint": {"min":  0.2, "max":  0.5},
-                                        "occluded_area": {"min":  0.01, "max": 50}
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
                                     }
                                 ]
                             }
@@ -42,8 +47,13 @@
                                 "defaults": [
                                     {
                                         "type": "random_occlusion_raycasting",
-                                        "height_viewpoint": {"min":  0.2, "max":  0.5},
-                                        "occluded_area": {"min":  0.01, "max": 50}
+                                        "height_viewpoint": {"min":  0.3, "max":  0.7},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
                                     }
                                 ]
                             }
