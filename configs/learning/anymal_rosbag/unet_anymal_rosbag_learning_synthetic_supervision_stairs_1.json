@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_synthetic_supervision",
+    "name": "unet_anymal_rosbag_learning_synthetic_supervision_stairs_1",
     "cuda": true,
     "experiment": {
         "task_path": {

@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_semi_self_supervision_2021-01-20-15-16-53",
+    "name": "unet_anymal_rosbag_learning_syn2real_dilation_stairs_2",
     "cuda": true,
     "experiment": {
         "task_path": {
