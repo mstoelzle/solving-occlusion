@@ -50,6 +50,11 @@ class OpenCVBaseline(BaseBaselineModel):
             map = data[ChannelEnum.OCC_DEM][idx, ...].clone()
             occ_mask = data[ChannelEnum.OCC_MASK][idx, ...]
 
+            if torch.isnan(map).all():
+                # the occ_dem is fully occluded
+                rec_dem[idx, ...] = torch.zeros(size=map.size())
+                continue
+
             min = torch.min(map[~torch.isnan(map)])
             max = torch.max(map[~torch.isnan(map)])
 
