@@ -82,7 +82,7 @@ class TaskPath:
                         model = deepcopy(self.get_prior_model(TaskTypeEnum.SUPERVISED_LEARNING))
                     else:
                         raise ValueError(f"Cannot interpret the {model_to_pick} config parameter: "
-                                         f"{task.config['model_to_pick']} for task {self.idx}")
+                                         f"{task.config[model_to_pick]} for task {self.idx}")
 
                     if model is None:
                         ValueError(f"The model could not get properly assigned for {model_to_pick}")

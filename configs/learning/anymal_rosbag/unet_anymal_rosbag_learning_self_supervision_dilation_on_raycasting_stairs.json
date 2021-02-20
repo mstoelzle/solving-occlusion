@@ -49,7 +49,7 @@
             "tasks": [
                 {
                     "task_type": "supervised-learning",
-                    "model_to_train": "logs/2021-02-19-15-30-12_learning_unet_anymal_rosbag_learning_syn2real_dilation_stairs/seed_101/task_0/model.pt",
+                    "model_to_train": "logs/2021-02-19-15-30-12_learning_unet_anymal_rosbag_learning_syn2real_dilation_stairs_heimdal/seed_101/task_0/model.pt",
                     "domains": {
                         "target": {
                             "datasets": [
