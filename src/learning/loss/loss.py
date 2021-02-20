@@ -165,7 +165,11 @@ def reduction_fct(loss: torch.Tensor, reduction='mean', mask: Optional[np.array]
             if mask is None or mask.sum() == 0:
                 loss = loss.mean(dim=dim_tuple)
             else:
-                loss = loss.sum(dim=dim_tuple) / mask.sum(dim_tuple)
+                loss_sum = loss.sum(dim=dim_tuple)
+                mask_sum = mask.sum(dim=dim_tuple)
+                reduced_loss = loss.new_zeros(size=loss_sum.size())
+                reduced_loss[mask_sum != 0] = loss_sum[mask_sum != 0] / mask_sum[mask_sum != 0]
+                loss = reduced_loss
     elif reduction == "mean":
         if mask is None or mask.sum() == 0:
             loss = loss.mean()
