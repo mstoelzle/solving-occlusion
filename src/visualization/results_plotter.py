@@ -103,11 +103,14 @@ class ResultsPlotter:
                 robot_position_pixel = None
 
             # 2D
-            elevation_vmin = np.min([np.min(non_occluded_elevation_map), np.min(rec_dem),
-                                     np.min(comp_dem)])
-            elevation_vmax = np.max([np.max(non_occluded_elevation_map), np.max(rec_dem),
-                                     np.max(comp_dem)])
-            if gt_dem is not None:
+            elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem)])
+            elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem)])
+
+            if non_occluded_elevation_map.size != 0:
+                elevation_vmin = np.min([elevation_vmin, np.min(non_occluded_elevation_map)])
+                elevation_vmax = np.max([elevation_vmax, np.max(non_occluded_elevation_map)])
+
+            if gt_dem is not None and np.isnan(gt_dem).all() is False:
                 ground_truth_dem_vmin = np.min(gt_dem[~np.isnan(gt_dem)])
                 ground_truth_dem_vmax = np.max(gt_dem[~np.isnan(gt_dem)])
                 elevation_vmin = np.min([elevation_vmin, ground_truth_dem_vmin])
