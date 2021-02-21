@@ -12,8 +12,8 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
     if occ_dem is None and occ_mask is not None:
         occ_dem = gt_dem.copy()
         occ_dem[occ_mask == 1] = np.nan
-    nocc_dem = occ_dem[~np.isnan(occ_dem)]
 
+    # nocc_dem = occ_dem[~np.isnan(occ_dem)]
     # dem_vmin = np.min(nocc_dem)
     # dem_vmax = np.max(nocc_dem)
     # if gt_dem is not None:

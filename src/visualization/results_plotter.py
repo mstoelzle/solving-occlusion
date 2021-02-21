@@ -11,6 +11,7 @@ import warnings
 
 from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, draw_traversability_plot
 from src.enums import *
+from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, l1_loss_fct, psnr_loss_fct
 from src.utils.log import get_logger
 
 logger = get_logger("results_plotter")
@@ -38,6 +39,9 @@ class ResultsPlotter:
                 task_uid = int(task_string_split[1])
 
                 self.plot_task(task_uid, task_hdf5_group)
+
+            if self.config.get("loss_magnitude_distribution", False) is True:
+                self.plot_loss_magnitude_distribution()
 
     def plot_task(self, task_uid: int, task_hdf5_group: h5py.Group):
         logdir = self.logdir / f"task_{task_uid}"
@@ -270,3 +274,68 @@ class ResultsPlotter:
         if self.remote is not True:
             plt.show()
         plt.close()
+
+    def plot_loss_magnitude_distribution(self):
+        for purpose in ["test"]:
+            purpose_logdir = self.logdir / f"{purpose}_analysis"
+            purpose_logdir.mkdir(exist_ok=True, parents=True)
+
+            pd_occ_dict = {"task_uid": [], "l1_rec_occ": [], "mse_rec_occ": []}
+            pd_nocc_dict = {"task_uid": [], "l1_rec_nocc": [], "mse_rec_nocc": []}
+            for task_string, task_hdf5_group in self.results_hdf5_file.items():
+                task_string_split = task_string.split("_")
+                task_uid = int(task_string_split[1])
+
+                data_hdf5_group = task_hdf5_group[purpose]["data"]
+                loss_hdf5_group = task_hdf5_group[purpose]["loss"]
+
+                gt_dem = torch.tensor(data_hdf5_group[ChannelEnum.GT_DEM.value])
+                occ_dem = torch.tensor(data_hdf5_group[ChannelEnum.OCC_DEM.value])
+                occ_mask = torch.tensor(data_hdf5_group[ChannelEnum.OCC_MASK.value], dtype=torch.bool)
+                rec_dem = torch.tensor(data_hdf5_group[ChannelEnum.REC_DEM.value])
+
+                l1_rec_occ = masked_loss_fct(l1_loss_fct, rec_dem,
+                                             gt_dem, occ_mask, reduction="none")[occ_mask == True]
+                l1_rec_nocc = masked_loss_fct(l1_loss_fct, rec_dem,
+                                              gt_dem, ~occ_mask, reduction="none")[occ_mask == False]
+                mse_rec_occ = masked_loss_fct(mse_loss_fct, rec_dem,
+                                              gt_dem, occ_mask, reduction="none")[occ_mask == True]
+                mse_rec_nocc = masked_loss_fct(mse_loss_fct, rec_dem,
+                                               gt_dem, ~occ_mask, reduction="none")[occ_mask == False]
+
+                task_uid_occ = np.ones(shape=l1_rec_occ.shape) * task_uid
+                pd_occ_dict["task_uid"].extend(task_uid_occ.tolist())
+                pd_occ_dict["l1_rec_occ"].extend(l1_rec_occ.tolist())
+                pd_occ_dict["mse_rec_occ"].extend(mse_rec_occ.tolist())
+
+                task_uid_nocc = np.ones(shape=l1_rec_nocc.shape) * task_uid
+                pd_nocc_dict["task_uid"].extend(task_uid_nocc.tolist())
+                pd_nocc_dict["l1_rec_nocc"].extend(l1_rec_nocc.tolist())
+                pd_nocc_dict["mse_rec_nocc"].extend(mse_rec_nocc.tolist())
+
+            df_occ = pd.DataFrame(data=pd_occ_dict)
+            df_nocc = pd.DataFrame(data=pd_nocc_dict)
+
+            # sns.violinplot(data=df, x="task_uid", y="mse_rec_occ", inner="box")
+            # plt.show()
+
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
+
+            axes[0, 0].set_title("L1 loss occluded area")
+            sns.boxplot(x="task_uid", y="l1_rec_occ", data=df_occ, ax=axes[0, 0], showfliers=False)
+
+            axes[0, 1].set_title("L1 loss non-occluded area")
+            sns.boxplot(x="task_uid", y="l1_rec_nocc", data=df_nocc, ax=axes[0, 1], showfliers=False)
+
+            axes[1, 0].set_title("MSE loss occluded area")
+            sns.boxplot(x="task_uid", y="mse_rec_occ", data=df_occ, ax=axes[1, 0], showfliers=False)
+
+            axes[1, 1].set_title("MSE loss occluded area")
+            sns.boxplot(x="task_uid", y="mse_rec_nocc", data=df_nocc, ax=axes[1, 1], showfliers=False)
+
+            plt.tight_layout()
+            plt.draw()
+            plt.savefig(str(purpose_logdir / f"loss_magnitude_distribution.pdf"))
+            if self.remote is not True:
+                plt.show()
+            plt.close()
