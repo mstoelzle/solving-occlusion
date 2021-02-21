@@ -50,6 +50,96 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
+                    "model": {
+                        "name": "Telea",
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    },
+                    "controller": {
+                        "max_num_epochs": 0,
+                        "max_num_better_results": 0
+                    },
+                    "domains": {
+                        "target": {
+                            "datasets": [
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-02-17-22-25-54_dataset_generation_tenerife_pocolog_combined_user/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion",
+                                                "probability": 0.025,
+                                                "apply_to": ["occ_dem", "occ_mask"]
+                                            },
+                                            {
+                                                "type": "random_occlusion_dilation",
+                                                "kernel_size": 3,
+                                                "probability": 0.5
+                                            },
+                                            {
+                                                "type": "random_occlusion",
+                                                "probability": 0.025,
+                                                "apply_to": ["occ_dem", "occ_mask"]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "name": "NavierStokes",
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    },
+                    "controller": {
+                        "max_num_epochs": 0,
+                        "max_num_better_results": 0
+                    },
+                    "domains": {
+                        "target": {
+                            "datasets": [
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-02-17-22-25-54_dataset_generation_tenerife_pocolog_combined_user/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion",
+                                                "probability": 0.025,
+                                                "apply_to": ["occ_dem", "occ_mask"]
+                                            },
+                                            {
+                                                "type": "random_occlusion_dilation",
+                                                "kernel_size": 3,
+                                                "probability": 0.5
+                                            },
+                                            {
+                                                "type": "random_occlusion",
+                                                "probability": 0.025,
+                                                "apply_to": ["occ_dem", "occ_mask"]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
                     "domains": {
                         "target": {
                             "datasets": [
