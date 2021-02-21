@@ -277,6 +277,8 @@ class ResultsPlotter:
 
     def plot_loss_magnitude_distribution(self):
         for purpose in ["test"]:
+            logger.info(f"Plot loss magnitude distribution for purpose {purpose}")
+
             purpose_logdir = self.logdir / f"{purpose}_analysis"
             purpose_logdir.mkdir(exist_ok=True, parents=True)
 
