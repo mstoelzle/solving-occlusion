@@ -48,7 +48,7 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "controller": {
-                        "max_num_epochs": 80,
+                        "max_num_epochs": 100,
                         "max_num_better_results": 25
                     },
                     "domain_defaults": {
