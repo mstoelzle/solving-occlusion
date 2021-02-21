@@ -64,12 +64,23 @@ class BaseDataset(ABC):
 
             output[key] = value
 
-        if ChannelEnum.OCC_MASK not in output and ChannelEnum.OCC_DEM in output:
-            output[ChannelEnum.OCC_MASK] = self.create_binary_occlusion_map(
-                occluded_elevation_map=output[ChannelEnum.OCC_DEM])
-        else:
+        if ChannelEnum.OCC_MASK in output:
             if invert_mask:
                 output[ChannelEnum.OCC_MASK] = ~output[ChannelEnum.OCC_MASK]
+        else:
+            if ChannelEnum.OCC_DEM in output:
+                output[ChannelEnum.OCC_MASK] = self.create_binary_occlusion_map(
+                    occluded_elevation_map=output[ChannelEnum.OCC_DEM])
+            else:
+                raise ValueError
+
+        if ChannelEnum.OCC_DEM not in output:
+            if ChannelEnum.OCC_MASK in output and ChannelEnum.GT_DEM in output:
+                output[ChannelEnum.OCC_DEM] = \
+                    self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GT_DEM],
+                                                       occ_mask=output[ChannelEnum.OCC_MASK])
+            else:
+                raise ValueError
 
         # for backwards compatibility as ChannelEnum.PARAMS is deprecated
         if ChannelEnum.PARAMS in output:
@@ -114,16 +125,6 @@ class BaseDataset(ABC):
                         value = value.to(dtype=torch.bool)
 
                 output[key] = value
-
-        if ChannelEnum.OCC_MASK in output and ChannelEnum.GT_DEM in output:
-            output[ChannelEnum.OCC_DEM] = \
-                self.create_occluded_elevation_map(elevation_map=output[ChannelEnum.GT_DEM],
-                                                   occ_mask=output[ChannelEnum.OCC_MASK])
-
-        elif ChannelEnum.OCC_DEM in output:
-            pass
-        else:
-            raise ValueError
 
         if self.config.get("self_supervision", False) is True:
             if ChannelEnum.GT_DEM in output:
