@@ -104,19 +104,14 @@
                                 "transforms": {
                                     "defaults": [
                                         {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        },
-                                        {
-                                            "type": "random_occlusion_dilation",
-                                            "kernel_size": 3,
-                                            "probability": 0.5
-                                        },
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.3, "max":  1},
+                                            "occluded_area_constraint": {
+                                                "min":  0.001,
+                                                "max": 0.5,
+                                                "max_iterations": 15,
+                                                "min_step": 0.15
+                                            }
                                         }
                                     ]
                                 }
@@ -130,19 +125,14 @@
                                 "transforms": {
                                     "defaults": [
                                         {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        },
-                                        {
-                                            "type": "random_occlusion_dilation",
-                                            "kernel_size": 3,
-                                            "probability": 0.5
-                                        },
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.3, "max":  1},
+                                            "occluded_area_constraint": {
+                                                "min":  0.001,
+                                                "max": 0.5,
+                                                "max_iterations": 15,
+                                                "min_step": 0.15
+                                            }
                                         }
                                     ]
                                 }
