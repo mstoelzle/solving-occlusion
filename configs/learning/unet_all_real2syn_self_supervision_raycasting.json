@@ -1,5 +1,5 @@
 {
-    "name": "unet_all_real2syn_self_supervision_dilation",
+    "name": "unet_all_real2syn_self_supervision_raycasting",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -48,8 +48,8 @@
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
                     "controller": {
-                        "max_num_epochs": 100,
-                        "max_num_better_results": 35
+                        "max_num_epochs": 80,
+                        "max_num_better_results": 25
                     },
                     "domain_defaults": {
                         "datasets": [
@@ -62,19 +62,14 @@
                                 "transforms": {
                                     "defaults": [
                                         {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        },
-                                        {
-                                            "type": "random_occlusion_dilation",
-                                            "kernel_size": 3,
-                                            "probability": 0.5
-                                        },
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.3, "max":  1},
+                                            "occluded_area_constraint": {
+                                                "min":  0.001,
+                                                "max": 0.5,
+                                                "max_iterations": 15,
+                                                "min_step": 0.15
+                                            }
                                         }
                                     ]
                                 }
@@ -88,19 +83,14 @@
                                 "transforms": {
                                     "defaults": [
                                         {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
-                                        },
-                                        {
-                                            "type": "random_occlusion_dilation",
-                                            "kernel_size": 3,
-                                            "probability": 0.5
-                                        },
-                                        {
-                                            "type": "random_occlusion",
-                                            "probability": 0.025,
-                                            "apply_to": ["occ_dem", "occ_mask"]
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.3, "max":  1},
+                                            "occluded_area_constraint": {
+                                                "min":  0.001,
+                                                "max": 0.5,
+                                                "max_iterations": 15,
+                                                "min_step": 0.15
+                                            }
                                         }
                                     ]
                                 }
@@ -153,6 +143,27 @@
                                             "type": "random_occlusion",
                                             "probability": 0.025,
                                             "apply_to": ["occ_dem", "occ_mask"]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "hdf5",
+                                "path": "data/2021-02-17-22-25-54_dataset_generation_tenerife_pocolog_combined_user/DATASET_OCCLUSION.hdf5",
+                                "size": [64, 64],
+                                "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                                "self_supervision": true,
+                                "transforms": {
+                                    "defaults": [
+                                        {
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.3, "max":  1},
+                                            "occluded_area_constraint": {
+                                                "min":  0.001,
+                                                "max": 0.6,
+                                                "max_iterations": 15,
+                                                "min_step": 0.15
+                                            }
                                         }
                                     ]
                                 }
