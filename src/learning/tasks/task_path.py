@@ -138,7 +138,7 @@ def recursive_default_setting(source_config: dict, target_config: dict):
     for default_key, default_value in source_config.items():
         if default_key not in target_config:
             target_config.update({default_key: deepcopy(default_value)})
-        elif isinstance(default_value, dict):
+        elif isinstance(default_value, dict) and isinstance(target_config[default_key], dict):
             recursive_default_setting(source_config[default_key], target_config[default_key])
 
 
