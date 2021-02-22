@@ -3,7 +3,7 @@
 ## Instructions
 
 ### 1. Prerequisites
-This framework requires **Python 3.9.1**. The generation of synthetic datasets requires an Ubuntu environment. 
+This framework requires **Python 3.9.2**. The generation of synthetic datasets requires an Ubuntu environment. 
 
 **Note:** To use efficient neural network training, Cuda 11 needs to be installed and available.
 
@@ -24,6 +24,7 @@ git submodule update --init --recursive
 ### 3. Installation:
 #### 3.0 Install C++ dependencies
 Please install the following C++ dependencies to use this repo:
+
 On macOS this can be done with:
 ```bash
 brew install cmake pybind11 eigen
@@ -39,30 +40,18 @@ The required Python packages can be installed as follows (within the Conda envir
 pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
 ```
 
-#### 3.2 Build OpenCV from source (not required for now):
+### 3.2 Install ros-noetic-ros-core
+We rely on ROS Noetic to read the ANYmal datasets stored in rosbags and process them in our DatasetGeneration.
 
-1. Install the pkg-config package
-for macOS: `brew install pkg-config` for Ubuntu: `sudo apt-get install pkg-config`.
-2. Manual build of OpenCV for [macOS](https://docs.opencv.org/master/d0/db2/tutorial_macos_install.html) and [Linux](https://docs.opencv.org/master/d7/d9f/tutorial_linux_install.html).
-Run this command (while adjusting the paths):
+On Ubuntu this can be done with:
 ```
-cmake -D CMAKE_BUILD_TYPE=Release -D \
-         OPENCV_EXTRA_MODULES_PATH="${WORKSPACE}/opencv_contrib/modules" \
-         PYTHON3_EXECUTABLE=~/miniconda3/envs/rsl_solving_occlusion/bin/python \
-         PYTHON_INCLUDE_DIR=~/miniconda3/envs/rsl_solving_occlusion/include/python3.8 \
-         PYTHON3_LIBRARY=~/miniconda3/envs/rsl_solving_occlusion/lib/libpython3.so \
-         PYTHON3_NUMPY_INCLUDE_DIRS=~/rock/install/pip/lib/python3.8/site-packages/numpy/core/include \
-         PYTHON3_PACKAGES_PATH=~/rock/install/pip/lib/python3.8/site-packages \
-         -DOPENCV_GENERATE_PKGCONFIG=ON \
-         -S "${WORKSPACE}/opencv" \
-         -B "${WORKSPACE}/opencv_build"
-```
-and then make & install the build: 
-```
-cd ${WORKSPACE}/opencv_build && make -j7 && sudo make install
+sudo apt install ros-noetic-ros-base
 ```
 
-3. Set the environmental variable `export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig`
+or on macOS with (requires Python 3.6.* or 3.8.* for now):
+```
+conda install -c robostack ros-noetic-ros-base
+```
 
 #### 3.3 Install the TerrainDataGenerator
 **System requirements:** Ubuntu >= 16.04, g++ / gcc >= 6, CMake >= 3.10, CPU with support for avx2 instructions (produced within last 6 years)
@@ -140,6 +129,15 @@ Subsequently, a learning experiment can be started by stating the path relative 
 
 ```
 python learning.py configs/{CONFIG_NAME}.json
+```
+
+### 6. Visualization
+
+We immediately visualize the trained model after all tasks of an experiment (e.g. seed) have completed as specified in 
+`experiment/visualization` section of the config. That said, you can also visualize an experiment manually. 
+In this case, please specify the path to the `config.json` within the experiment log directory:
+```
+python visualization.py configs/{PATH_TO_EXPERIMENT_LOGDIR}/config.json
 ```
 
 ### Tenerife Dataset
