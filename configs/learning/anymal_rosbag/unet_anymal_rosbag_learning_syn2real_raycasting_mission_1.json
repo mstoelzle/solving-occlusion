@@ -214,7 +214,7 @@
                             "datasets": [
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-13-43_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -259,7 +259,7 @@
                                 },
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -304,7 +304,7 @@
                                 },
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2021-01-28-15-25-16_dataset_generation_synthetic_random_boxes_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-19-41-43_dataset_generation_synthetic_random_boxes_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -416,7 +416,7 @@
                             "datasets": [
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-09-26-13-31-23_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-13-43_dataset_generation_synthetic_standard_stairs_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -461,7 +461,7 @@
                                 },
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -506,7 +506,7 @@
                                 },
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2021-01-28-15-25-16_dataset_generation_synthetic_random_boxes_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-19-41-43_dataset_generation_synthetic_random_boxes_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {

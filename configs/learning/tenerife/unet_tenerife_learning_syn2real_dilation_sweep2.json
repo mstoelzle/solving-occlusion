@@ -181,7 +181,7 @@
                             "datasets": [
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "transforms": {
@@ -303,7 +303,7 @@
                             "datasets": [
                                 {
                                     "type": "hdf5",
-                                    "path": "data/2020-10-02-15-09-00_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  0, "test":  0},
                                     "transforms": {
