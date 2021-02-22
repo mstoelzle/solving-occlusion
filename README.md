@@ -40,7 +40,7 @@ The required Python packages can be installed as follows (within the Conda envir
 pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
 ```
 
-### 3.2 Install ros-noetic-ros-core
+#### 3.2 Install ros-noetic-ros-core
 We rely on ROS Noetic to read the ANYmal datasets stored in rosbags and process them in our DatasetGeneration.
 
 On Ubuntu this can be done with:
