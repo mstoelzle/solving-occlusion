@@ -140,22 +140,14 @@ In this case, please specify the path to the `config.json` within the experiment
 python visualization.py configs/{PATH_TO_EXPERIMENT_LOGDIR}/config.json
 ```
 
-### Tenerife Dataset
-We evaluate our methods on a dataset which was collected in June 2017 at the "Minas de San José" site in Tenerife using 
-the Heavy Duty Planetary Rover (HDPR) as a Lunar Analogue. This dataset consists of images from three stereo cameras, one of which on a pan tilt unit, 
-LiDAR and a Time of FLight (ToF) camera. It also includes an onboard Inertial Measurements Unit (IMU), an additional laser gyro for heading estimation
-and Global Navigation Satellite System (GNSS) antenna for ground-truth absolute positioning. 
-The dataset is stored in serialized [Rock pocolog logs](https://github.com/rock-core/tools-pocolog). 
-We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Digital Elevation Maps (DEMs).
-
-## Important components
+## Important notes
 
 ### Task Path
 The main ingredient to path learning are what we call task paths. 
 They consist of different "training regimes" applied sequentially to a machine learning model. 
 In our implementation they create tasks from their configs and are used as iterators to yield these tasks.
 ### Task
-A task consists of a set of dataloaders, which are created from a base dataset (i.e. MNIST) and transformers applied to it. 
+A task consists of a set of dataloaders, which are created from a base dataset and transformers applied to it. 
 Moreover it also specifies a loss function, loss aggregator and the batch size for the dataloader.
 In our implementation tasks measure their own runtime by using the "with" keyword.
 
@@ -165,6 +157,14 @@ or a maximum number of epochs is reached.
 
 ### Experiment
 The experiment contains all other objects introduced above. It manages device placement and logdir creation.
+
+### Tenerife Dataset
+We evaluate our methods on a dataset which was collected in June 2017 at the "Minas de San José" site in Tenerife using 
+the Heavy Duty Planetary Rover (HDPR) as a Lunar Analogue. This dataset consists of images from three stereo cameras, one of which on a pan tilt unit, 
+LiDAR and a Time of FLight (ToF) camera. It also includes an onboard Inertial Measurements Unit (IMU), an additional laser gyro for heading estimation
+and Global Navigation Satellite System (GNSS) antenna for ground-truth absolute positioning. 
+The dataset is stored in serialized [Rock pocolog logs](https://github.com/rock-core/tools-pocolog). 
+We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Digital Elevation Maps (DEMs).
 
 ## Citations
 <a id="1">[1]</a> Barnes, Connelly, et al. 
