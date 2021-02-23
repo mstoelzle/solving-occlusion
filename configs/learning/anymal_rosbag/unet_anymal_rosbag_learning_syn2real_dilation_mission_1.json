@@ -214,7 +214,7 @@
                                                 "probability": 0.025,
                                                 "apply_to": ["occ_dem", "occ_mask"]
                                             }
-                                        ],
+                                        ]
                                     }
                                 }
                             ]
