@@ -94,8 +94,7 @@
                             ]
                         }
                     }
-                },
-
+                }
             ]
         },
         "visualization": {"sample_frequency":  50, "indiv_vranges": true}
