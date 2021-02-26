@@ -281,6 +281,7 @@
                                     "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
                                     "sampling_weights": {"train":  1, "val":  0, "test":  0},
+                                    "init_occ_data_um": 0.0001,
                                     "transforms": {
                                         "defaults": [
                                             {
