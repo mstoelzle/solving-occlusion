@@ -35,8 +35,8 @@
 module use /opt/insy/modulefiles
 module load cuda/11.1
 
-# activate conda environment
-conda init bash && conda activate rsl-solving-occlusion
+# we want to show the used python bin
+which python
 
 # Complex or heavy commands should be started with 'srun' (see 'man srun' for more information)
 # For example: srun python my_program.py
