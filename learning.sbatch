@@ -26,6 +26,9 @@ SBATCH --mem=10240
 # Do not enable mails when submitting large numbers (>20) of jobs at once
 #SBATCH --mail-type=END
 
+# Request GPU
+SBATCH --gres=gpu
+
 # Your job commands go below here
 
 # Uncomment these lines when your job requires this software
