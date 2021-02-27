@@ -1,0 +1,135 @@
+{
+    "name": "unet_synthetic_height_map_viz_all",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 0,
+                        "mse_rec_occ": 1
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64]
+                        }
+                    ],
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "name": "Telea",
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "name": "NavierStokes",
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-08-22-17-12_learning_unet_synthetic_height_map_learning_heimdal/seed_101/task_0/model.pt",
+                    "model": {
+                        "name": "UNet",
+                        "save_frequency": 1,
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "hidden_dims": [64, 128, 256],
+                        "input_normalization": false,
+                        "NaN_replacement": 0,
+                        "bilinear": true,
+                        "feature_extractor": true
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-17-12-34-55_learning_unet_synthetic_height_map_learning_supervised_no_feature_extractor_heimdal/seed_101/task_0/model.pt",
+                    "model": {
+                        "name": "UNet",
+                        "save_frequency": 1,
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "hidden_dims": [64, 128, 256],
+                        "input_normalization": false,
+                        "NaN_replacement": 0,
+                        "bilinear": true,
+                        "feature_extractor": true
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-18-12-41-11_learning_unet_synthetic_height_map_learning_self_supervision_raycasting_heimdal/seed_101/task_0/model.pt",
+                    "model": {
+                        "name": "UNet",
+                        "save_frequency": 1,
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "hidden_dims": [64, 128, 256],
+                        "input_normalization": false,
+                        "NaN_replacement": 0,
+                        "bilinear": true,
+                        "feature_extractor": true
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-16-09-44-37_learning_unet_synthetic_height_map_learning_self_supervision_dilation_heimdal/seed_101/task_0/model.pt",
+                    "model": {
+                        "name": "UNet",
+                        "save_frequency": 1,
+                        "input_dim": [64, 64],
+                        "in_channels": ["occ_dem", "occ_mask"],
+                        "out_channels": ["rec_dem"],
+                        "hidden_dims": [64, 128, 256],
+                        "input_normalization": false,
+                        "NaN_replacement": 0,
+                        "bilinear": true,
+                        "feature_extractor": true
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true, "loss_magnitude_distribution": true}
+    },
+    "remote": true,
+    "seeds": [101]
+}
