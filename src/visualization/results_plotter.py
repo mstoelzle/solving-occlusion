@@ -332,7 +332,7 @@ class ResultsPlotter:
             axes[1, 0].set_title("MSE loss occluded area")
             sns.boxplot(x="task_uid", y="mse_rec_occ", data=df_occ, ax=axes[1, 0], showfliers=False)
 
-            axes[1, 1].set_title("MSE loss occluded area")
+            axes[1, 1].set_title("MSE loss non-occluded area")
             sns.boxplot(x="task_uid", y="mse_rec_nocc", data=df_nocc, ax=axes[1, 1], showfliers=False)
 
             plt.tight_layout()
