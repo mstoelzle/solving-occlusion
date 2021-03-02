@@ -20,7 +20,7 @@
 #SBATCH --cpus-per-gpu=4
 
 # The default memory per node is 1024 megabytes (1GB) (for multiple tasks, specify --mem-per-cpu instead)
-#SBATCH --mem=10240
+#SBATCH --mem-per-cpu=10240
 
 # Set mail type to 'END' to receive a mail when the job finishes
 # Do not enable mails when submitting large numbers (>20) of jobs at once
