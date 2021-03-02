@@ -34,7 +34,12 @@ or on Ubuntu with:
 sudo apt install cmake python-pybind11 libeigen3-dev
 ```
 
-#### 3.1 Install all required PIP packages
+#### 3.1 Install all required Conda and PIP packages
+If we want to leverage a NVIDIA GPU to train and infer the neural network, we need to install PyTorch first using conda:
+```
+conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch -c=conda-forge
+```
+
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
 ```
 pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
