@@ -34,6 +34,10 @@
 # Uncomment these lines when your job requires this software
 module use /opt/insy/modulefiles
 module load cuda/11.1
+module load miniconda
+
+# init conda
+conda init && conda activate rsl-solving-occlusion
 
 # we want to show the used python bin
 which python
