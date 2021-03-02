@@ -1,0 +1,69 @@
+{
+    "name": "unet_height_map_real2syn_self_supervision_raycasting",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1}
+                        }
+                    ],
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 3,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-02-21-14-08-02_learning_unet_tenerife_learning_syn2real_raycasting_heimdal/seed_101/task_2/model.pt"
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  25, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [101]
+}
