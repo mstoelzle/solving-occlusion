@@ -20,6 +20,6 @@ scipy==1.6.1
 tensorboard==2.4.1
 tifffile==2021.3.4
 torch==1.7.1
-torchvision==0.8.2
+torchvision==0.9.0
 
 git+https://github.com/mstoelzle/grid-map-raycasting
