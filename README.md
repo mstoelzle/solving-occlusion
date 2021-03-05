@@ -5,7 +5,7 @@
 ### 1. Prerequisites
 This framework requires **Python 3.9.2**. The generation of synthetic datasets requires an Ubuntu environment. 
 
-**Note:** To use efficient neural network training, Cuda 11 needs to be installed and available.
+**Note:** To use efficient neural network training, CUDA 11.* needs to be installed and available.
 
 It is recommended to use a package manager like Conda (https://docs.conda.io/en/latest/) to manage the Python version 
 and all required Python packages.
@@ -37,7 +37,7 @@ sudo apt install cmake python-pybind11 libeigen3-dev
 #### 3.1 Install all required Conda and PIP packages
 If we want to leverage a NVIDIA GPU to train and infer the neural network, we need to install PyTorch first using conda:
 ```
-conda install pytorch torchvision torchaudio cudatoolkit=11.0 -c pytorch -c=conda-forge
+conda install pytorch=1.8 torchvision=0.9 torchaudio=0.8 cudatoolkit=11.1 -c pytorch -c conda-forge
 ```
 
 The required Python packages can be installed as follows (within the Conda environment) in the root directory:
