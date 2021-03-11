@@ -4,15 +4,8 @@
     "experiment": {
         "task_path": {
             "defaults": {
-                "loss": {
-                    "report_frequency": 100,
-                    "normalization": [],
-                    "eval_weights": {
-                        "mse_rec_all": 0,
-                        "mse_rec_nocc": 0,
-                        "mse_rec_occ": 1
-                    }
-                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}},
                 "domain_defaults": {
                     "batch_size": 1,
                     "datasets": [
@@ -28,24 +21,22 @@
                     "shuffle": true,
                     "subgrid_size": [64, 64]
                 },
-                "dataloaders": {"labeled_dataloader":  "target"},
-                "domains": {"target": {}}
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": {"mean": true, "stdev": false},
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                }
             },
             "tasks": [
                 {
                     "task_type": "inference",
-                    "model_to_infer": "logs/2021-03-02-22-18-16_learning_unet_anymal_rosbag_learning_syn2real_dilation_mission_1_task456_mstolzle/seed_101/task_1/model.pt",
-                    "model": {
-                        "name": "UNet",
-                        "save_frequency": 1,
-                        "input_dim": [64, 64],
-                        "in_channels": ["occ_dem", "occ_mask"],
-                        "out_channels": ["rec_dem"],
-                        "hidden_dims": [64, 128, 256],
-                        "input_normalization": {"mean": true, "stdev": false},
-                        "NaN_replacement": 0,
-                        "bilinear": true
-                    }
+                    "model_to_infer": "logs/2021-03-02-22-18-16_learning_unet_anymal_rosbag_learning_syn2real_dilation_mission_1_task456_mstolzle/seed_101/task_1/model.pt"
                 }
             ]
         },
