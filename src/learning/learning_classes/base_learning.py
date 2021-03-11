@@ -221,12 +221,17 @@ class BaseLearning(ABC):
 
         dataloader_meta_info = DataloaderMetaInfo(dataloader)
 
+        subgrid_size = self.task.labeled_dataloader.config.get("subgrid_size")
+
         with torch.no_grad(), profiler.profile() as prof:
             start_idx = 0
             progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.OCC_DEM].size(0)
+
+                if subgrid_size is not None:
+                    data = self.split_subgrids(subgrid_size, data)
 
                 with profiler.record_function("model_inference"):
                     output = self.model(data)
@@ -269,3 +274,27 @@ class BaseLearning(ABC):
                 hdf5_dataset = hdf5_group[key]
 
             hdf5_dataset[start_idx:start_idx + value_shape[0], ...] = value
+
+    @staticmethod
+    def split_subgrids(subgrid_size: list, data: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
+        assert type(subgrid_size) == list and len(subgrid_size) == 2
+
+        subgrid_data = {}
+        for channel, tensor in data.items():
+            # we assert batch size of 1 for now to make it easier
+            assert tensor.size(0) == 1
+
+            if channel in [ChannelEnum.OCC_DEM, ChannelEnum.GT_DEM, ChannelEnum.OCC_MASK, ChannelEnum.OCC_DATA_UM]:
+                tensor = tensor.squeeze(dim=0)
+
+                split_tensors_x = torch.split(tensor, subgrid_size[0], dim=0)
+
+                subgrids = []
+                for split_tensor_x in split_tensors_x:
+                    subgrids += torch.split(split_tensor_x, subgrid_size[1], dim=1)
+
+                tensor = torch.stack(subgrids)
+
+            subgrid_data[channel] = tensor
+
+        return subgrid_data
