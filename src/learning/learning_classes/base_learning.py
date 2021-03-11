@@ -21,7 +21,6 @@ from src.learning.models.unet.unet_parts import VGG16FeatureExtractor
 from src.learning.tasks import Task
 from src.traversability.traversability_assessment import TraversabilityAssessment
 from src.utils.log import get_logger
-from src.visualization.live_inference_plotter import LiveInferencePlotter
 
 logger = get_logger("base_learning")
 
@@ -225,10 +224,6 @@ class BaseLearning(ABC):
 
         subgrid_size = self.task.labeled_dataloader.config.get("subgrid_size")
 
-        live_inference_plotter = None
-        if self.remote is False and self.task.config.get("visualization", {}).get("live_inference", False):
-            live_inference_plotter = LiveInferencePlotter()
-
         with torch.no_grad(), profiler.profile() as prof:
             start_idx = 0
             progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
@@ -268,11 +263,6 @@ class BaseLearning(ABC):
 
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
-
-                if live_inference_plotter is not None:
-                    # we want to continuously plot the elevation maps live
-                    assert batch_size == 1
-                    live_inference_plotter.step(data, output)
 
                 start_idx += batch_size
                 progress_bar.next()

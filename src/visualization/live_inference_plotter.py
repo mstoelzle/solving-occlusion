@@ -1,5 +1,13 @@
+from collections import deque
+import dash
+from dash.dependencies import Output, Input
+import dash_core_components as dcc
+import dash_html_components as html
+import matplotlib.pyplot as plt
 import numpy as np
+import plotly
 import plotly.graph_objects as go
+import random
 import torch
 from typing import *
 
@@ -9,22 +17,41 @@ from src.utils.log import get_logger
 logger = get_logger("live_inference_plotter")
 
 
-class LiveInferencePlotter:
-    def step(self, data: dict[ChannelEnum, torch.Tensor], output: dict[ChannelEnum, torch.Tensor]):
-        occ_dem = data[ChannelEnum.OCC_DEM][0].detach().cpu().numpy()
-        res_grid = data[ChannelEnum.RES_GRID][0].detach().cpu().numpy()
-        rec_dem = output[ChannelEnum.REC_DEM][0].detach().cpu().numpy()
-        comp_dem = output[ChannelEnum.COMP_DEM][0].detach().cpu().numpy()
+def plot_live_inference():
+    app = dash.Dash(__name__)
+    app.layout = html.Div(
+        [
+            dcc.Graph(id='live-graph', animate=True),
+            dcc.Interval(
+                id='graph-update',
+                interval=1000,
+                n_intervals=0
+            ),
+        ]
+    )
 
-        # start_x = -occ_dem.shape[0] // 2 * res_grid[0]
-        # stop_x = occ_dem.shape[0] // 2 * res_grid[0]
-        # start_y = -occ_dem.shape[1] // 2 * res_grid[1]
-        # stop_y = occ_dem.shape[1] // 2 * res_grid[1]
-        # x = np.arange(start=start_x, stop=stop_x, step=res_grid[0])
-        # y = np.arange(start=start_y, stop=stop_y, step=res_grid[1])
-        # array_y, array_x = np.meshgrid(x, y)
+    X = deque(maxlen=20)
+    X.append(1)
 
-        fig = go.Figure(data=[go.Surface(z=occ_dem)])
+    Y = deque(maxlen=20)
+    Y.append(1)
 
-        fig.update_layout(title='Mt Bruno Elevation')
-        fig.show()
+    @app.callback(
+        Output('live-graph', 'figure'),
+        [Input('graph-update', 'n_intervals')]
+    )
+    def update_graph_scatter(n):
+        X.append(X[-1] + 1)
+        Y.append(Y[-1] + Y[-1] * random.uniform(-0.1, 0.1))
+
+        data = plotly.graph_objs.Scatter(
+            x=list(X),
+            y=list(Y),
+            name='Scatter',
+            mode='lines+markers'
+        )
+
+        return {'data': [data],
+                'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]), )}
+
+    app.run_server()

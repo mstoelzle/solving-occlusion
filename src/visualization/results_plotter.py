@@ -13,6 +13,7 @@ from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, dr
 from src.enums import *
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, l1_loss_fct, psnr_loss_fct
 from src.utils.log import get_logger
+from src.visualization.live_inference_plotter import plot_live_inference
 
 logger = get_logger("results_plotter")
 sns.set(style="whitegrid")
@@ -55,6 +56,9 @@ class ResultsPlotter:
             for purpose, purpose_hdf5_group in task_hdf5_group.items():
                 if 'loss' in purpose_hdf5_group:
                     self.plot_correlation_area_occluded(purpose_hdf5_group, logdir / f"{purpose}_analysis")
+
+        if self.config.get("live_inference", False) is True and self.remote is False:
+            plot_live_inference()
 
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
