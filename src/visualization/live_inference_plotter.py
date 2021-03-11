@@ -34,7 +34,7 @@ def plot_live_inference(purpose_hdf5_group: h5py.Group):
             dcc.Graph(id='live-graph', animate=True),
             dcc.Interval(
                 id='graph-update',
-                interval=1000,
+                interval=500,
                 n_intervals=0,
                 max_intervals=comp_dem_dataset.shape[0]
             ),
@@ -58,8 +58,8 @@ def plot_live_inference(purpose_hdf5_group: h5py.Group):
             z=comp_dems[i],
             name='Composed DEM',
             colorscale="viridis",
-            colorbar={"len": 0.75, "lenmode": "fraction"},
-            opacity=0.5,
+            colorbar={"len": 0.6, "lenmode": "fraction"},
+            opacity=0.65,
             showscale=True
         )
 
