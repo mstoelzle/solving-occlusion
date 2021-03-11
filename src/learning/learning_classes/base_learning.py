@@ -316,8 +316,19 @@ class BaseLearning(ABC):
 
         subgrid_data = {}
         for channel, tensor in data.items():
+            # we assert batch size of 1 for now to make it easier
+            assert tensor.size(0) == 1
+
             if channel in [ChannelEnum.OCC_DEM, ChannelEnum.GT_DEM, ChannelEnum.OCC_MASK, ChannelEnum.OCC_DATA_UM]:
-                tensor = torch.reshape(tensor, shape=(-1, subgrid_size[0], subgrid_size[1]))
+                tensor = tensor.squeeze(dim=0)
+
+                split_tensors_x = torch.split(tensor, subgrid_size[0], dim=0)
+
+                subgrids = []
+                for split_tensor_x in split_tensors_x:
+                    subgrids += torch.split(split_tensor_x, subgrid_size[1], dim=1)
+
+                tensor = torch.stack(subgrids)
 
             subgrid_data[channel] = tensor
 
@@ -331,7 +342,25 @@ class BaseLearning(ABC):
             if channel in [ChannelEnum.REC_DEM, ChannelEnum.COMP_DEM, ChannelEnum.REC_DATA_UM, ChannelEnum.COMP_DATA_UM,
                            ChannelEnum.TOTAL_UM, ChannelEnum.REC_DEMS, ChannelEnum.COMP_DEMS,
                            ChannelEnum.REC_TRAV_RISK_MAP, ChannelEnum.COMP_TRAV_RISK_MAP]:
-                tensor = torch.reshape(tensor, shape=(-1, grid_size[0], grid_size[1]))
+                grid = tensor.new_zeros(size=(1, grid_size[0], grid_size[1]))
+                start_u = 0
+                start_v = 0
+                for subgrid_idx in range(tensor.size(0)):
+                    subgrid = tensor[subgrid_idx]
+
+                    stop_u = start_u + subgrid.size(0)
+                    stop_v = start_v + subgrid.size(1)
+
+                    grid[0, start_u:stop_u, start_v:stop_v] = subgrid
+
+                    if stop_v >= grid.size(1):
+                        # we jump to next major row
+                        start_u = stop_u
+                        start_v = 0
+                    else:
+                        start_v = stop_v
+
+                tensor = grid
 
             output[channel] = tensor
 
