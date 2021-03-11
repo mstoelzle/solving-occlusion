@@ -245,8 +245,26 @@ class BaseLearning(ABC):
                     output = self.model(data)
 
                 if subgrid_size is not None:
-                    data = grid_data
+                    # max occlusion ratio threshold for COMP_DEM where we accept reconstruction
+                    # instead of just taking all OCC_DEM
+                    subgrid_max_occ_ratio_thresh = self.task.config.get("subgrid_max_occ_ratio_thresh", 1.0)
+                    if subgrid_max_occ_ratio_thresh < 1.0:
+                        occ_dem = data[ChannelEnum.OCC_DEM]
+                        occ_ratio = torch.isnan(occ_dem).sum(dim=(1, 2)) / (occ_dem.size(1) * occ_dem.size(2))
+                        occ_ratio_selector = occ_ratio > subgrid_max_occ_ratio_thresh
+
+                        comp_dem = output[ChannelEnum.COMP_DEM]
+                        comp_dem[occ_ratio_selector, :, :] = occ_dem[occ_ratio_selector, :, :]
+                        output[ChannelEnum.COMP_DEM] = comp_dem
+
+                        if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.COMP_DATA_UM in output:
+                            occ_data_um = output[ChannelEnum.OCC_DATA_UM]
+                            comp_data_um = output[ChannelEnum.COMP_DATA_UM]
+                            comp_data_um[occ_ratio_selector, :, :] = occ_data_um[occ_ratio_selector, :, :]
+                            output[ChannelEnum.COMP_DATA_UM] = comp_dem
+
                     output = self.unsplit_subgrids(grid_size, output)
+                    data = grid_data
 
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
@@ -311,7 +329,8 @@ class BaseLearning(ABC):
         output = {}
         for channel, tensor in subgrid_output.items():
             if channel in [ChannelEnum.REC_DEM, ChannelEnum.COMP_DEM, ChannelEnum.REC_DATA_UM, ChannelEnum.COMP_DATA_UM,
-                           ChannelEnum.TOTAL_UM, ChannelEnum.REC_DEMS, ChannelEnum.COMP_DEMS]:
+                           ChannelEnum.TOTAL_UM, ChannelEnum.REC_DEMS, ChannelEnum.COMP_DEMS,
+                           ChannelEnum.REC_TRAV_RISK_MAP, ChannelEnum.COMP_TRAV_RISK_MAP]:
                 tensor = torch.reshape(tensor, shape=(-1, grid_size[0], grid_size[1]))
 
             output[channel] = tensor
