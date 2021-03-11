@@ -31,6 +31,13 @@ dependencies:
   - cpuonly=1.0=0
   - cryptography=3.4.4=py39h36ea649_0
   - cycler=0.10.0=py_2
+  - dash=0.39.0=py_0
+  - dash-core-components=0.44.0=py_0
+  - dash-html-components=0.14.0=py_0
+  - dash-renderer=0.20.0=py_0
+  - dash-table=3.6.0=py_0
+  - flask=1.1.2=pyh9f0ad1d_0
+  - flask-compress=1.4.0=py_0
   - freetype=2.10.4=h4cff582_1
   - giflib=5.2.1=hbcb3906_2
   - google-auth=1.24.0=pyhd3deb0d_0
@@ -41,6 +48,8 @@ dependencies:
   - idna=2.10=pyh9f0ad1d_0
   - imagecodecs=2021.1.28=py39h5071892_0
   - importlib-metadata=3.7.2=py39h6e9494a_0
+  - itsdangerous=1.1.0=py_0
+  - jinja2=2.11.3=pyh44b312d_0
   - jpeg=9d=hbcb3906_0
   - jsonschema=3.2.0=pyhd8ed1ab_3
   - jxrlib=1.1=h35c211d_2
@@ -71,6 +80,7 @@ dependencies:
   - llvm-openmp=11.0.1=h7c73e74_0
   - lz4-c=1.9.3=h046ec9c_0
   - markdown=3.3.4=pyhd8ed1ab_0
+  - markupsafe=1.1.1=py39hcbf5805_3
   - matplotlib-base=3.3.4=py39hc986735_0
   - mkl=2020.4=h08c4f10_301
   - mkl-devel=2020.4=h694c41f_302
