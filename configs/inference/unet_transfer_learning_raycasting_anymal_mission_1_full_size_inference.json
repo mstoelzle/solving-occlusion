@@ -36,12 +36,13 @@
             "tasks": [
                 {
                     "task_type": "inference",
-                    "model_to_infer": "logs/2021-03-02-22-18-16_learning_unet_anymal_rosbag_learning_syn2real_dilation_mission_1_task456_mstolzle/seed_101/task_1/model.pt"
+                    "model_to_infer": "logs/2021-03-02-22-18-16_learning_unet_anymal_rosbag_learning_syn2real_dilation_mission_1_task456_mstolzle/seed_101/task_1/model.pt",
+                    "visualization": {"live_inference": true}
                 }
             ]
         },
         "visualization": {"sample_frequency":  25, "indiv_vranges": true}
     },
-    "remote": true,
+    "remote": false,
     "seeds": [101]
 }
