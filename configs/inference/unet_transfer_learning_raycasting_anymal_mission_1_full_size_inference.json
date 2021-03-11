@@ -13,8 +13,7 @@
                             "type": "hdf5",
                             "path": "data/2021-03-11-15-26-19_dataset_generation_anymal_rosbag_mission_1_full_size_inference_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                             "size": [256, 256],
-                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
-                            "self_supervision": true
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1}
                         }
                     ],
                     "num_workers": 4,
