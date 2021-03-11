@@ -108,10 +108,16 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
                         for purpose, purpose_split in self.split_config.items():
                             total_split += purpose_split
                         start_msg_idx = 0
-                        for purpose, purpose_split in self.split_config.items():
+                        for i, (purpose, purpose_split) in enumerate(self.split_config.items()):
                             self.split_msg_indices[purpose] = start_msg_idx
                             purpose_num_msgs = int(purpose_split / total_split * total_num_messages)
-                            self.purpose_max_num_samples[purpose] = purpose_num_msgs*num_subgrids_x*num_subgrids_y + 1
+
+                            if i >= len(self.split_config.keys()) - 1:
+                                self.purpose_max_num_samples[purpose] = (total_num_messages - start_msg_idx) * \
+                                                                        num_subgrids_x * num_subgrids_y + 1
+                            else:
+                                self.purpose_max_num_samples[purpose] = purpose_num_msgs * \
+                                                                        num_subgrids_x * num_subgrids_y + 1
                             start_msg_idx += purpose_num_msgs
 
                         self.total_num_samples = total_num_messages * num_subgrids_x * num_subgrids_y
