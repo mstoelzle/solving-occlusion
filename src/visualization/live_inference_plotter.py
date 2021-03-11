@@ -10,6 +10,7 @@ import pathlib
 import plotly
 import plotly.graph_objects as go
 import random
+import time
 import torch
 from typing import *
 
@@ -21,8 +22,10 @@ logger = get_logger("live_inference_plotter")
 
 def plot_live_inference(purpose_hdf5_group: h5py.Group):
     data_hdf5_group = purpose_hdf5_group["data"]
+    occ_dem_dataset = data_hdf5_group[ChannelEnum.OCC_DEM.value]
     comp_dem_dataset = data_hdf5_group[ChannelEnum.COMP_DEM.value]
 
+    occ_dems = np.array(occ_dem_dataset)
     comp_dems = np.array(comp_dem_dataset)
 
     app = dash.Dash(__name__)
@@ -43,11 +46,26 @@ def plot_live_inference(purpose_hdf5_group: h5py.Group):
         [Input('graph-update', 'n_intervals')]
     )
     def update_graph_scatter(i):
-        data = plotly.graph_objs.Surface(
-                z=comp_dems[i],
-                name='Composed DEM'
-            )
+        data_occ = plotly.graph_objs.Surface(
+            z=occ_dems[i],
+            name='Occluded DEM',
+            colorscale="viridis",
+            opacity=0.9,
+            showscale=False
+        )
 
-        return {'data': [data]}
+        data_comp = plotly.graph_objs.Surface(
+            z=comp_dems[i],
+            name='Composed DEM',
+            colorscale="viridis",
+            colorbar={"len": 0.75, "lenmode": "fraction"},
+            opacity=0.5,
+            showscale=True
+        )
+
+        layout = go.Layout(title='Occluded & Composed DEM',  width=1000, height=900,
+                           scene={"aspectratio": {"x": 1, "y": 1, "z": 0.3}})
+
+        return {'data': [data_occ, data_comp], 'layout': layout}
 
     app.run_server()
