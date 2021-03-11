@@ -27,12 +27,13 @@ logger = get_logger("base_learning")
 
 class BaseLearning(ABC):
     def __init__(self, seed: int, logdir: pathlib.Path, device: torch.device, logger: logging.Logger,
-                 results_hdf5_path: pathlib.Path, **kwargs):
+                 results_hdf5_path: pathlib.Path, remote: bool = False, **kwargs):
         super().__init__()
 
         self.seed = seed
         self.logdir = logdir
         self.logger = logger
+        self.remote = remote
 
         self.task: Optional[Task] = None
 

@@ -33,10 +33,10 @@ class Experiment:
         self.task_path: TaskPath = TaskPath(self.seed, self.logdir, self.datadir, **kwargs["task_path"])
 
         self.supervised_learning = SupervisedLearning(seed=self.seed, logdir=self.logdir, device=self.device,
-                                                      results_hdf5_path=self.results_hdf5_path)
+                                                      results_hdf5_path=self.results_hdf5_path, remote=remote)
 
         self.inference = Inference(seed=self.seed, logdir=self.logdir, device=self.device,
-                                   results_hdf5_path=self.results_hdf5_path)
+                                   results_hdf5_path=self.results_hdf5_path, remote=remote)
 
         self.results_plotter = ResultsPlotter(results_hdf5_path=self.results_hdf5_path,
                                               logdir=self.logdir, remote=remote,
