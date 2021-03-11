@@ -229,12 +229,18 @@ class BaseLearning(ABC):
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.OCC_DEM].size(0)
+                grid_size = list(data[ChannelEnum.OCC_DEM].size()[1:3])
 
+                grid_data = data
                 if subgrid_size is not None:
                     data = self.split_subgrids(subgrid_size, data)
 
                 with profiler.record_function("model_inference"):
                     output = self.model(data)
+
+                if subgrid_size is not None:
+                    data = grid_data
+                    output = self.unsplit_subgrids(grid_size, output)
 
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
                 self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
@@ -281,20 +287,22 @@ class BaseLearning(ABC):
 
         subgrid_data = {}
         for channel, tensor in data.items():
-            # we assert batch size of 1 for now to make it easier
-            assert tensor.size(0) == 1
-
             if channel in [ChannelEnum.OCC_DEM, ChannelEnum.GT_DEM, ChannelEnum.OCC_MASK, ChannelEnum.OCC_DATA_UM]:
-                tensor = tensor.squeeze(dim=0)
-
-                split_tensors_x = torch.split(tensor, subgrid_size[0], dim=0)
-
-                subgrids = []
-                for split_tensor_x in split_tensors_x:
-                    subgrids += torch.split(split_tensor_x, subgrid_size[1], dim=1)
-
-                tensor = torch.stack(subgrids)
+                tensor = torch.reshape(tensor, shape=(-1, subgrid_size[0], subgrid_size[1]))
 
             subgrid_data[channel] = tensor
 
         return subgrid_data
+
+    @staticmethod
+    def unsplit_subgrids(grid_size: list,
+                         subgrid_output: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
+        output = {}
+        for channel, tensor in subgrid_output.items():
+            if channel in [ChannelEnum.REC_DEM, ChannelEnum.COMP_DEM, ChannelEnum.REC_DATA_UM, ChannelEnum.COMP_DATA_UM,
+                           ChannelEnum.TOTAL_UM, ChannelEnum.REC_DEMS, ChannelEnum.COMP_DEMS]:
+                tensor = torch.reshape(tensor, shape=(-1, grid_size[0], grid_size[1]))
+
+            output[channel] = tensor
+
+        return output
