@@ -58,7 +58,7 @@ class ResultsPlotter:
 
         if self.config.get("live_inference", False) is True and self.remote is False:
             for purpose, purpose_hdf5_group in task_hdf5_group.items():
-                plot_live_inference(self.results_hdf5_path, task_uid, purpose)
+                plot_live_inference(purpose_hdf5_group)
 
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
