@@ -1,0 +1,19 @@
+{
+    "name": "anymal_rosbag_mission_1_full_size_inference",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anymal_rosbag",
+        "rosbag_paths": [
+            "../anymal-rosbags/missions/mission_1_elevation_map.bag"
+        ],
+        "max_occlusion_ratio_threshold": 1.0,
+        "size": 300,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 50
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
