@@ -111,8 +111,8 @@ class ResultsPlotter:
                 robot_position_pixel = None
 
             # 2D
-            elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem)])
-            elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem)])
+            elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem[~np.isnan(comp_dem)])])
+            elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem[~np.isnan(comp_dem)])])
 
             if non_occluded_elevation_map.size != 0:
                 elevation_vmin = np.min([elevation_vmin, np.min(non_occluded_elevation_map)])
