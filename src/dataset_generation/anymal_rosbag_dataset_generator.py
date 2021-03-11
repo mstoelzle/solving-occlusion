@@ -147,8 +147,9 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
 
                             subgrid = grid_map[start_x:stop_x, start_y:stop_y]
 
-                            if np.isnan(subgrid).sum() > (target_size_x * target_size_y / 2):
-                                # we do not want to include the subgrid in the dataset if its occluded to more than 50%
+                            max_occ_ratio_thresh = self.config.get("max_occlusion_ratio_threshold", 0.5)
+                            # we do not want to include the subgrid in the dataset if its occluded to more than 50%
+                            if np.isnan(subgrid).sum() > (target_size_x * target_size_y * max_occ_ratio_thresh):
                                 progress_bar.next()
                                 start_y = stop_y
                                 continue
