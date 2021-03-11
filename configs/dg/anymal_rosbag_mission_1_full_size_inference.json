@@ -9,7 +9,7 @@
         "max_occlusion_ratio_threshold": 1.0,
         "size": 300,
         "save_frequency": 10,
-        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "split": {"train": 0.01, "val":  0.01, "test":  0.98},
         "visualization": {
             "frequency": 50
         }
