@@ -1,5 +1,6 @@
 name: rsl-solving-occlusion
 channels:
+  - plotly
   - pytorch
   - conda-forge
   - defaults
@@ -84,8 +85,9 @@ dependencies:
   - openssl=1.1.1j=hbcf498f_0
   - pandas=1.2.3=py39h4d6be9b_0
   - patsy=0.5.1=py_0
-  - pillow=8.1.1=py39h5fdd921_0
+  - pillow=8.1.2=py39h5fdd921_0
   - pip=21.0.1=pyhd8ed1ab_0
+  - plotly=4.14.3=py_0
   - progress=1.5=py_1
   - protobuf=3.15.5=py39h9fcab8e_0
   - pyasn1=0.4.8=py_0
@@ -107,6 +109,7 @@ dependencies:
   - readline=8.0=h0678c8f_2
   - requests=2.25.1=pyhd3deb0d_0
   - requests-oauthlib=1.3.0=pyh9f0ad1d_0
+  - retrying=1.3.3=py_2
   - rsa=4.7.2=pyh44b312d_0
   - seaborn=0.11.1=hd8ed1ab_1
   - seaborn-base=0.11.1=pyhd8ed1ab_1
