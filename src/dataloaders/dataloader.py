@@ -19,9 +19,9 @@ class Dataloader:
         self.config = kwargs
 
         if "datasets" in self.config:
-            datasets_config = self.config["datasets"]
+            self.datasets_config = self.config["datasets"]
         elif "dataset" in self.config:
-            datasets_config = [self.config["dataset"]]
+            self.datasets_config = [self.config["dataset"]]
         else:
             raise ValueError
 
@@ -31,7 +31,7 @@ class Dataloader:
             subsets[purpose] = []
             sampling_weights[purpose] = []
 
-        for dataset_config in datasets_config:
+        for dataset_config in self.datasets_config:
             dataset_type = DatasetEnum(dataset_config["type"])
 
             dataset_sampling_weights = dataset_config.get("sampling_weights", {"train": 1, "val": 1, "test": 1})
