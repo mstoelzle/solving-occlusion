@@ -32,7 +32,6 @@ class ResultsPlotter:
 
     def plot(self):
         self.results_hdf5_file: h5py.File = h5py.File(str(self.results_hdf5_path), 'r')
-        self.results_hdf5_file.__enter__()
 
         with self.results_hdf5_file:
             for task_string, task_hdf5_group in self.results_hdf5_file.items():
@@ -58,7 +57,8 @@ class ResultsPlotter:
                     self.plot_correlation_area_occluded(purpose_hdf5_group, logdir / f"{purpose}_analysis")
 
         if self.config.get("live_inference", False) is True and self.remote is False:
-            plot_live_inference()
+            for purpose, purpose_hdf5_group in task_hdf5_group.items():
+                plot_live_inference(self.results_hdf5_path, task_uid, purpose)
 
     def save_samples(self, purpose_hdf5_group: h5py.Group, logdir: pathlib.Path):
         logdir.mkdir(exist_ok=True, parents=True)
