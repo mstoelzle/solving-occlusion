@@ -109,20 +109,25 @@ class ResultsPlotter:
                 robot_position_pixel = np.array([u, v])
             else:
                 robot_position_pixel = None
+            indiv_vranges = self.config.get("indiv_vranges", True)
 
             # 2D
-            elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem[~np.isnan(comp_dem)])])
-            elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem[~np.isnan(comp_dem)])])
+            if indiv_vranges is False:
+                elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem[~np.isnan(comp_dem)])])
+                elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem[~np.isnan(comp_dem)])])
 
-            if non_occluded_elevation_map.size != 0:
-                elevation_vmin = np.min([elevation_vmin, np.min(non_occluded_elevation_map)])
-                elevation_vmax = np.max([elevation_vmax, np.max(non_occluded_elevation_map)])
+                if non_occluded_elevation_map.size != 0:
+                    elevation_vmin = np.min([elevation_vmin, np.min(non_occluded_elevation_map)])
+                    elevation_vmax = np.max([elevation_vmax, np.max(non_occluded_elevation_map)])
 
-            if gt_dem is not None and np.isnan(gt_dem).all() is False:
-                ground_truth_dem_vmin = np.min(gt_dem[~np.isnan(gt_dem)])
-                ground_truth_dem_vmax = np.max(gt_dem[~np.isnan(gt_dem)])
-                elevation_vmin = np.min([elevation_vmin, ground_truth_dem_vmin])
-                elevation_vmax = np.max([elevation_vmax, ground_truth_dem_vmax])
+                if gt_dem is not None and np.isnan(gt_dem).all() is False:
+                    ground_truth_dem_vmin = np.min(gt_dem[~np.isnan(gt_dem)])
+                    ground_truth_dem_vmax = np.max(gt_dem[~np.isnan(gt_dem)])
+                    elevation_vmin = np.min([elevation_vmin, ground_truth_dem_vmin])
+                    elevation_vmax = np.max([elevation_vmax, ground_truth_dem_vmax])
+            else:
+                elevation_vmin = None
+                elevation_vmax = None
 
             elevation_cmap = plt.get_cmap("viridis")
 
@@ -134,19 +139,30 @@ class ResultsPlotter:
                 # matshow plots x and y swapped
                 mat = axes[0, 0].matshow(np.swapaxes(gt_dem, 0, 1), vmin=elevation_vmin,
                                          vmax=elevation_vmax, cmap=elevation_cmap)
+                if indiv_vranges:
+                    fig.colorbar(mat, ax=axes[0, 0], fraction=0.08)
+
             axes[0, 1].set_title("Reconstruction")
             # matshow plots x and y swapped
             mat = axes[0, 1].matshow(np.swapaxes(rec_dem, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
+            if indiv_vranges:
+                fig.colorbar(mat, ax=axes[0, 1], fraction=0.08)
             axes[1, 0].set_title("Composition")
             # matshow plots x and y swapped
             mat = axes[1, 0].matshow(np.swapaxes(comp_dem, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
+            if indiv_vranges:
+                fig.colorbar(mat, ax=axes[1, 0], fraction=0.08)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
             mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
-            fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+            if indiv_vranges:
+                fig.colorbar(mat, ax=axes[1, 1], fraction=0.08)
+
+            if indiv_vranges is False:
+                fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
 
             for i, ax in enumerate(axes.reshape(-1)):
                 if plot_robot_position:
@@ -214,7 +230,7 @@ class ResultsPlotter:
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
                                             robot_position_pixel=robot_position_pixel, remote=self.remote,
-                                            indiv_vranges=self.config.get("indiv_vranges", True))
+                                            indiv_vranges=indiv_vranges)
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
