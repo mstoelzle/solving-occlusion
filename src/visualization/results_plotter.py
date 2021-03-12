@@ -131,7 +131,7 @@ class ResultsPlotter:
 
             elevation_cmap = plt.get_cmap("viridis")
 
-            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[10, 10])
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[12, 10])
             # axes = np.expand_dims(axes, axis=0)
 
             if gt_dem is not None:
