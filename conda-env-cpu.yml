@@ -1,6 +1,5 @@
 name: rsl-solving-occlusion
 channels:
-  - plotly
   - pytorch
   - conda-forge
   - defaults
@@ -15,6 +14,7 @@ dependencies:
   - blinker=1.4=py_1
   - blosc=1.21.0=h046ec9c_0
   - brotli=1.0.9=h046ec9c_4
+  - brotli-python=1.0.9=py39h81cd7d3_4
   - brotlipy=0.7.0=py39hcbf5805_1001
   - brunsli=0.1=h046ec9c_0
   - bzip2=1.0.8=hc929b4f_4
@@ -31,14 +31,15 @@ dependencies:
   - cpuonly=1.0=0
   - cryptography=3.4.4=py39h36ea649_0
   - cycler=0.10.0=py_2
-  - dash=0.39.0=py_0
-  - dash-core-components=0.44.0=py_0
-  - dash-html-components=0.14.0=py_0
-  - dash-renderer=0.20.0=py_0
-  - dash-table=3.6.0=py_0
+  - dash=1.19.0=pyhd8ed1ab_0
+  - dash-core-components=1.15.0=pyhd8ed1ab_0
+  - dash-html-components=1.1.2=pyh44b312d_0
+  - dash-renderer=1.9.0=pyhd8ed1ab_0
+  - dash-table=4.11.2=pyhd8ed1ab_0
   - flask=1.1.2=pyh9f0ad1d_0
-  - flask-compress=1.4.0=py_0
+  - flask-compress=1.9.0=pyhd8ed1ab_0
   - freetype=2.10.4=h4cff582_1
+  - future=0.18.2=py39h6e9494a_3
   - giflib=5.2.1=hbcb3906_2
   - google-auth=1.24.0=pyhd3deb0d_0
   - google-auth-oauthlib=0.4.1=py_2
@@ -97,7 +98,7 @@ dependencies:
   - patsy=0.5.1=py_0
   - pillow=8.1.2=py39h5fdd921_0
   - pip=21.0.1=pyhd8ed1ab_0
-  - plotly=4.14.3=py_0
+  - plotly=4.14.3=pyh44b312d_0
   - progress=1.5=py_1
   - protobuf=3.15.5=py39h9fcab8e_0
   - pyasn1=0.4.8=py_0
@@ -113,7 +114,7 @@ dependencies:
   - python=3.9.2=h2502468_0_cpython
   - python-dateutil=2.8.1=py_0
   - python_abi=3.9=1_cp39
-  - pytorch=1.8.0=py3.9_0
+  - pytorch=1.8.0=cpu_py39h4f2e8f6_0
   - pytz=2021.1=pyhd8ed1ab_0
   - pyyaml=5.4.1=py39hcbf5805_0
   - readline=8.0=h0678c8f_2
@@ -125,6 +126,7 @@ dependencies:
   - seaborn-base=0.11.1=pyhd8ed1ab_1
   - setuptools=49.6.0=py39h6e9494a_3
   - six=1.15.0=pyh9f0ad1d_0
+  - sleef=3.5.1=h35c211d_1
   - snappy=1.1.8=hb1e8313_3
   - sqlite=3.34.0=h17101e1_0
   - statsmodels=0.12.2=py39h329c335_0
