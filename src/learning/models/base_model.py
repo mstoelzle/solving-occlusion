@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from distutils.version import StrictVersion
 import numpy as np
 import torch
 from torch import nn
@@ -182,14 +183,15 @@ class BaseModel(ABC, nn.Module):
         return input, norm_consts
 
     def preprocess_occluded_map(self, occ_dem: torch.Tensor, NaN_replacement: float = 0.0) -> torch.Tensor:
-        poem = occ_dem.clone()
+        if StrictVersion(torch.__version__) < StrictVersion("1.8.0"):
+            poem = occ_dem.clone()
 
-        # replace NaNs signifying occluded areas with arbitrary high or low number
-        # poem[occ_dem != occ_dem] = -10000
-        poem[occ_dem != occ_dem] = NaN_replacement
+            # replace NaNs signifying occluded areas with arbitrary high or low number
+            # poem[occ_dem != occ_dem] = -10000
+            poem[occ_dem != occ_dem] = NaN_replacement
 
-        # TODO: for torch==1.8
-        # poem = torch.nan_to_num(occ_dem, nan=NaN_replacement)
+        else:
+            poem = torch.nan_to_num(occ_dem, nan=NaN_replacement)
 
         return poem
 
