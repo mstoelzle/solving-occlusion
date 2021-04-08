@@ -25,7 +25,10 @@ git submodule update --init --recursive
 #### 3.0 Install C++ dependencies
 Please install the following C++ dependencies to use this repo:
 
-On macOS this can be done with:
+```bash
+conda install cmake pybind11 eigen
+```
+or alternatively on macOS with homebrew:
 ```bash
 brew install cmake pybind11 eigen
 ```
@@ -33,6 +36,7 @@ or on Ubuntu with:
 ```bash
 sudo apt install cmake python-pybind11 libeigen3-dev
 ```
+
 
 #### 3.1 Install all required Conda and PIP packages
 If we want to leverage a NVIDIA GPU to train and infer the neural network, we need to install PyTorch first using conda:
