@@ -2,6 +2,7 @@
 aenum==3.0.0
 coloredlogs==15.0
 dash==1.19.0
+dlib
 h5py==3.2.1
 jsonschema==3.2
 matplotlib==3.4.1
@@ -24,4 +25,3 @@ tifffile==2021.3.31
 torch==1.8.1
 torchvision==0.9.1
 
-git+https://github.com/mstoelzle/grid-map-raycasting

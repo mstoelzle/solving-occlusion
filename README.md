@@ -37,6 +37,11 @@ or on Ubuntu with:
 sudo apt install cmake python-pybind11 libeigen3-dev
 ```
 
+On Windows we need to additionally install Visual Studio C++ to build Python packages and subsequently install dlib via pip:
+```
+pip install dlib
+```
+
 
 #### 3.1 Install all required Conda and PIP packages
 If we want to leverage a NVIDIA GPU to train and infer the neural network, we need to install PyTorch first using conda:
