@@ -25,3 +25,4 @@ tifffile==2021.4.8
 torch==1.8.1
 torchvision==0.9.1
 
+git+https://github.com/mstoelzle/grid-map-raycasting
