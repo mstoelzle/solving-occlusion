@@ -19,7 +19,7 @@ pyyaml==5.4.1
 rospkg==1.3.0
 seaborn==0.11.1
 scipy==1.6.2
-tensorboard==2.4.1
+tensorboard==2.5.0
 tifffile==2021.4.8
 torch==1.8.1
 torchvision==0.9.1
