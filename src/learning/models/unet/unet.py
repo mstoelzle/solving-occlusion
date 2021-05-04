@@ -20,6 +20,9 @@ class UNet(BaseModel):
         if self.hidden_dims is None:
             self.hidden_dims = [64, 128, 256, 512, 1024]
 
+        # number of convolutions per layer (in the original paper two convolutions per layer)
+        self.num_conv_per_layer = self.config.get("num_conv_per_layer", 2)
+
         factor = 2 if bilinear else 1
 
         encoder_layers = []
@@ -36,10 +39,12 @@ class UNet(BaseModel):
 
             if in_idx == 0:
                 encoder_layers.append(DoubleConv(len(self.in_channels), self.hidden_dims[in_idx],
+                                                 num_conv_per_layer=self.num_conv_per_layer,
                                                  nn_module=nn_module, dropout_p=layer_dropout_p,
                                                  keep_variance_fn=self.keep_variance_fn))
             else:
                 encoder_layers.append(Down(self.hidden_dims[in_idx-1], num_down_out_channels,
+                                           num_conv_per_layer=self.num_conv_per_layer,
                                            nn_module=nn_module, dropout_p=layer_dropout_p,
                                            keep_variance_fn=self.keep_variance_fn))
 
@@ -61,11 +66,12 @@ class UNet(BaseModel):
                 layer_dropout_p = self.dropout_p
 
             decoder_layers.append(Up(reversed_hidden_dims[in_idx], num_up_out_channels,
-                                     self.bilinear, nn_module=nn_module, dropout_p=layer_dropout_p,
+                                     self.bilinear, num_conv_per_layer=self.num_conv_per_layer,
+                                     nn_module=nn_module, dropout_p=layer_dropout_p,
                                      keep_variance_fn=self.keep_variance_fn))
 
-        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels), nn_module=nn_module,
-                                      keep_variance_fn=self.keep_variance_fn))
+        decoder_layers.append(OutConv(reversed_hidden_dims[-1], len(self.out_channels),
+                                      nn_module=nn_module, keep_variance_fn=self.keep_variance_fn))
 
         self.decoder = nn_module.Sequential(*decoder_layers)
 

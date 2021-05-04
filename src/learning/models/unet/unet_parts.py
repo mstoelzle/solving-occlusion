@@ -14,7 +14,8 @@ from src.learning.models.adf import adf
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
 
-    def __init__(self, in_channels, out_channels, mid_channels=None, nn_module=None, dropout_p: float = 0.0, **kwargs):
+    def __init__(self, in_channels, out_channels, mid_channels=None, num_conv_per_layer=2,
+                 nn_module=None, dropout_p: float = 0.0, **kwargs):
         super().__init__()
         if not mid_channels:
             mid_channels = out_channels
@@ -22,32 +23,46 @@ class DoubleConv(nn.Module):
         if nn_module is None:
             nn_module = nn
 
-        if nn_module == adf:
-            conv_1 = nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels,
-                                      kernel_size=3, padding=1, **kwargs)
-            batch_norm_1 = nn_module.BatchNorm2d(num_features=mid_channels, **kwargs)
-            relu_1 = nn_module.ReLU(inplace=True, **kwargs)
-            dropout_1 = nn_module.Dropout2d(p=dropout_p, **kwargs)
-            conv_2 = nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels,
-                                      kernel_size=3, padding=1, **kwargs)
-            batch_norm_2 = nn_module.BatchNorm2d(num_features=out_channels, **kwargs)
-            relu_2 = nn_module.ReLU(inplace=True, **kwargs)
-            dropout_2 = nn_module.Dropout2d(p=dropout_p, **kwargs)
-        else:
-            conv_1 = nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels, kernel_size=3, padding=1)
-            batch_norm_1 = nn_module.BatchNorm2d(num_features=mid_channels)
-            relu_1 = nn_module.ReLU(inplace=True)
-            dropout_1 = nn_module.Dropout2d(p=dropout_p)
-            conv_2 = nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels, kernel_size=3, padding=1)
-            batch_norm_2 = nn_module.BatchNorm2d(num_features=out_channels)
-            relu_2 = nn_module.ReLU(inplace=True)
-            dropout_2 = nn_module.Dropout2d(p=dropout_p)
+        assert isinstance(num_conv_per_layer, int)
+        assert num_conv_per_layer > 0
 
-        if dropout_p > 0.0:
-            self.double_conv = nn_module.Sequential(conv_1, batch_norm_1, relu_1, dropout_1,
-                                                    conv_2, batch_norm_2, relu_2, dropout_2)
+        if nn_module == adf:
+            params = kwargs
         else:
-            self.double_conv = nn_module.Sequential(conv_1, batch_norm_1, relu_1, conv_2, batch_norm_2, relu_2)
+            params = {}
+
+        modules = []
+        if num_conv_per_layer == 1:
+            modules.append(nn_module.Conv2d(in_channels=in_channels, out_channels=out_channels,
+                                            kernel_size=3, padding=1, **params))
+            modules.append(nn_module.BatchNorm2d(num_features=out_channels, **params))
+            modules.append(nn_module.ReLU(inplace=True, **params))
+            if dropout_p > 0.0:
+                modules.append(nn_module.Dropout2d(p=dropout_p, **params))
+        else:
+            modules.append(nn_module.Conv2d(in_channels=in_channels, out_channels=mid_channels,
+                                            kernel_size=3, padding=1, **params))
+            modules.append(nn_module.BatchNorm2d(num_features=mid_channels, **params))
+            modules.append(nn_module.ReLU(inplace=True, **params))
+            if dropout_p > 0.0:
+                modules.append(nn_module.Dropout2d(p=dropout_p, **params))
+
+            for i in range(max(num_conv_per_layer - 2, 0)):
+                modules.append(nn_module.Conv2d(in_channels=mid_channels, out_channels=mid_channels,
+                                                kernel_size=3, padding=1, **params))
+                modules.append(nn_module.BatchNorm2d(num_features=mid_channels, **params))
+                modules.append(nn_module.ReLU(inplace=True, **params))
+                if dropout_p > 0.0:
+                    modules.append(nn_module.Dropout2d(p=dropout_p, **params))
+
+            modules.append(nn_module.Conv2d(in_channels=mid_channels, out_channels=out_channels,
+                                            kernel_size=3, padding=1, **params))
+            modules.append(nn_module.BatchNorm2d(num_features=out_channels, **params))
+            modules.append(nn_module.ReLU(inplace=True, **params))
+            if dropout_p > 0.0:
+                modules.append(nn_module.Dropout2d(p=dropout_p, **params))
+
+        self.double_conv = nn_module.Sequential(*modules)
 
     def forward(self, *x):
         return self.double_conv(*x)
