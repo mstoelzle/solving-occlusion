@@ -1,4 +1,3 @@
-# FROM nvidia/cuda:11.3.0-devel-ubuntu20.04
 FROM pytorch/pytorch:latest
 
 # Fix timezone issue
@@ -14,7 +13,8 @@ RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev
 # install pybind11
 RUN conda install pybind11
 
-RUN git clone https://github.com/mstoelzle/solving-occlusion
+# RUN git clone https://github.com/mstoelzle/solving-occlusion
+COPY . ./solving-occlusion
 WORKDIR solving-occlusion
 
 RUN pip3 install -r requirements.txt --user
