@@ -1,6 +1,7 @@
 /venv/*
 /cache/*
 /.idea/*
+/.vscode/*
 /sandbox.py
 *__pycache__*
 
