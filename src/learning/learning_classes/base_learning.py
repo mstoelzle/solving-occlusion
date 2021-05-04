@@ -301,7 +301,7 @@ class BaseLearning(ABC):
             hdf5_dataset[start_idx:start_idx + value_shape[0], ...] = value
 
     @staticmethod
-    def split_subgrids(subgrid_size: list, data: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
+    def split_subgrids(subgrid_size: list, data: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         assert type(subgrid_size) == list and len(subgrid_size) == 2
 
         subgrid_data = {}
@@ -326,7 +326,7 @@ class BaseLearning(ABC):
 
     @staticmethod
     def unsplit_subgrids(grid_size: list,
-                         subgrid_output: dict[ChannelEnum, torch.Tensor]) -> dict[ChannelEnum, torch.Tensor]:
+                         subgrid_output: Dict[ChannelEnum, torch.Tensor]) -> Dict[ChannelEnum, torch.Tensor]:
         output = {}
         for channel, tensor in subgrid_output.items():
             if channel in [ChannelEnum.REC_DEM, ChannelEnum.COMP_DEM, ChannelEnum.REC_DATA_UM, ChannelEnum.COMP_DATA_UM,
