@@ -1,0 +1,203 @@
+{
+    "name": "unet_all_real2syn_self_supervision_raycasting_sweep_num_convs",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2020-11-30-22-38-28_dataset_generation_anymal_rosbag_stairs_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "init_occ_data_um": 0.0001,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-01-27-11-03-23_dataset_generation_anymal_rosbag_stairs_2021-01-20-15-16-53_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "init_occ_data_um": 0.0001,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-01-27-22-47-04_dataset_generation_anymal_rosbag_obstacles_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "init_occ_data_um": 0.0001,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-02-13-21-03-23_dataset_generation_anymal_rosbag_mission_1_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "init_occ_data_um": 0.0001,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-02-17-22-25-54_dataset_generation_tenerife_pocolog_combined_user/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.6,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 3,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}},
+                "controller": {
+                    "max_num_epochs": 100,
+                    "max_num_better_results": 35
+                }
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "num_conv_per_layer": 2
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "num_conv_per_layer": 3
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "num_conv_per_layer": 4
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "num_conv_per_layer": 6
+                    }
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "num_conv_per_layer": 8
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  25, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [101]
+}
