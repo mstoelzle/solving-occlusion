@@ -10,6 +10,7 @@ from typing import *
 import torch
 from torch import optim
 import torch.autograd.profiler as profiler
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, LambdaLR, ReduceLROnPlateau, MultiplicativeLR
 
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
@@ -42,6 +43,7 @@ class BaseLearning(ABC):
 
         self.model = None
         self.optimizer = None
+        self.scheduler = None
 
         self.results_hdf5_path: pathlib.Path = results_hdf5_path
         self.results_hdf5_file: Optional[h5py.File] = None
@@ -87,8 +89,10 @@ class BaseLearning(ABC):
         # we do not need an optimizer for our baseline models with traditional algorithms
         if pick_optimizer is True and not (issubclass(type(self.model), BaseBaselineModel)):
             self.pick_optimizer()
+            self.pick_scheduler(optimizer=self.optimizer)
         else:
             self.optimizer = None
+            self.scheduler = None
 
     def pick_optimizer(self):
         optimizer_config = self.task.config["optimizer"]
@@ -103,6 +107,49 @@ class BaseLearning(ABC):
                                        weight_decay=optimizer_config.get("weight_decay", 0))
         else:
             raise NotImplementedError("Pick a valid optimizer")
+
+        return self.optimizer
+
+    def pick_scheduler(self, optimizer: torch.optim.Optimizer):
+        SCHEDULER_DICT = {
+            "cosine_annealing_warm_restarts": CosineAnnealingWarmRestarts,
+            "multiplicative_lr": MultiplicativeLR,
+            "reduce_on_plateau": ReduceLROnPlateau,
+            "lambda_lr": LambdaLR,
+        }
+
+        EXPECTED_KWARGS = {
+            "cosine_annealing_warm_restarts": ["T_0", "T_mult", "eta_min"],
+            "multiplicative_lr": ["lr_lambda"],
+            "reduce_on_plateau": ["factor", "patience"]
+        }
+
+        scheduler_config = self.task.config.get("scheduler", None)
+        if scheduler_config is None or len(scheduler_config) == 0:
+            return
+
+        scheduler_name = scheduler_config["name"]
+        scheduler = None
+        assert scheduler_name in SCHEDULER_DICT, f"Chosen scheduler name {scheduler_name} is not implemented " \
+                                                 f"in scheduler dict {SCHEDULER_DICT}"
+        logger.info(f"scheduler_config: {scheduler_config}, expected arguments: {EXPECTED_KWARGS[scheduler_name]}, ")
+        for kwarg in EXPECTED_KWARGS[scheduler_name]:
+            assert kwarg in scheduler_config.keys(), f"Expected keyword {kwarg} for LR scheduler selection not provided " \
+                                           f"in keywords {scheduler_config.keys()}."
+
+        if scheduler_name == "multiplicative_lr":
+            logger.info(f'kwargs["lr_lambda"]: {scheduler_config["lr_lambda"]}')
+            # Multiplicate LR needs function not value with which to rescale
+            scheduler = SCHEDULER_DICT[scheduler_name](optimizer, lr_lambda=lambda epoch: scheduler_config["lr_lambda"])
+        elif scheduler_name == "cosine_annealing_warm_restarts":
+            scheduler = SCHEDULER_DICT[scheduler_name](optimizer, T_0=scheduler_config["T_0"],
+                                                       T_mult=scheduler_config["T_mult"],
+                                                       eta_min=scheduler_config["eta_min"])
+        assert scheduler is not None, "scheduler was not assigned"
+
+        self.scheduler = scheduler
+
+        return scheduler
 
     def __enter__(self):
         self.results_hdf5_file = h5py.File(str(self.results_hdf5_path), 'a')
