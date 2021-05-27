@@ -48,4 +48,4 @@ nvidia-smi
 # Complex or heavy commands should be started with 'srun' (see 'man srun' for more information)
 # For example: srun python my_program.py
 # Use this simple command to check that your sbatch settings are working (verify the resources allocated in the usage statistics)
-srun python learning.py $1
+srun python main.py $1

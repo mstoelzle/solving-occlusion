@@ -142,7 +142,7 @@ The absolute or relative path to the dataset needs to be specified in the JSON c
 Subsequently, a learning experiment can be started by stating the path relative to the `{DIR_TO_REPO}` directory:
 
 ```
-python learning.py configs/{CONFIG_NAME}.json
+python main.py configs/{CONFIG_NAME}.json
 ```
 
 ### 6. Visualization
