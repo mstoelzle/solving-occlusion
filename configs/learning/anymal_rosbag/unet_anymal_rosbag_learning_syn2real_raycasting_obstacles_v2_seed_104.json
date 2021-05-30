@@ -42,7 +42,7 @@
                 },
                 "controller": {
                     "max_num_epochs": 100,
-                    "max_num_better_results": 35
+                    "max_num_better_results": 50
                 },
                 "dataloaders": {"labeled_dataloader":  "target"}
             },

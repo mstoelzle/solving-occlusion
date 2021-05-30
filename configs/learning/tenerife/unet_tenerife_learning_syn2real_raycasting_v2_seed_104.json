@@ -10,7 +10,7 @@
                     "train_weights": {
                         "mse_rec_all": 0,
                         "mse_rec_nocc": 1,
-                        "mse_rec_occ": 6,
+                        "mse_rec_occ": 10,
                         "total_variation": 0.1
                     },
                     "eval_weights": {
