@@ -1,0 +1,20 @@
+{
+    "name": "anymal_rosbag_stairtest",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anymal_rosbag",
+        "rosbag_paths": [
+            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest1_merged_2021-06-03-17-54-53.bag",
+            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest2_merged_2021-06-03-18-00-35.bag",
+            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest3_2021-06-03-18-04-38.bag"
+        ],
+        "size": 75,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 50
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
