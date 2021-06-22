@@ -4,9 +4,9 @@
     "dataset_generation": {
         "type": "anymal_rosbag",
         "rosbag_paths": [
-            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest1_merged_2021-06-03-17-54-53.bag",
-            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest2_merged_2021-06-03-18-00-35.bag",
-            "/media/psf/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest3_2021-06-03-18-04-38.bag"
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest1_merged_2021-06-03-17-54-53.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest2_merged_2021-06-03-18-00-35.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/stairtest/stairstest3_2021-06-03-18-04-38.bag"
         ],
         "size": 75,
         "save_frequency": 10,
