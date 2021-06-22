@@ -12,7 +12,7 @@ from src.enums import *
 from src.utils.rosbags_utils import register_msg_types
 
 
-class AnymalRosbagDatasetGeneratorV2(BaseDatasetGenerator):
+class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -60,7 +60,7 @@ class AnymalRosbagDatasetGeneratorV2(BaseDatasetGenerator):
 
         msg_idx = -1
         for bag_idx, reader in enumerate(self.bags):
-            for topic, msgtype, rawdata, t in reader.messages(self.rosbag_topics):
+            for topic, msgtype, t, rawdata in reader.messages(self.rosbag_topics):
                 msg = deserialize_cdr(ros1_to_cdr(rawdata, msgtype), msgtype)
 
                 msg_idx += 1

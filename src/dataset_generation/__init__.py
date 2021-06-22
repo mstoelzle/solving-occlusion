@@ -1,4 +1,4 @@
-from .anymal_rosbag_dataset_generator import AnymalRosbagDatasetGenerator
+from .anymal_rosbag_dataset_generator_v2 import AnymalRosbagDatasetGenerator
 from .base_dataset_generator import BaseDatasetGenerator
 from .ga_slam_msgpack_dataset_generator import GASlamMsgpackDatasetGenerator
 from .ga_slam_pocolog_dataset_generator import GASlamPocologDatasetGenerator
