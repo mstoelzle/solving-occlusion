@@ -1,3 +1,5 @@
+import collections
+import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
@@ -56,7 +58,15 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
 
         total_num_messages = 0
         for reader in self.bags:
-            total_num_messages += reader.message_count
+            # quick-and-dirty fix to access the number of messages for a list of filter topics in a rosbag
+            # https://nelsonslog.wordpress.com/2016/04/06/python3-no-len-for-iterators/
+
+            # source: https://github.com/wbolster/cardinality/blob/master/cardinality.py#L48-L52
+            d = collections.deque(enumerate(reader.messages(self.rosbag_topics), 1), maxlen=1)
+            total_num_messages += d[0][0] if d else 0
+
+            # this requires a lot of memory, but is pretty fast
+            # total_num_messages += len(tuple(reader.messages(self.rosbag_topics)))
 
         msg_idx = -1
         for bag_idx, reader in enumerate(self.bags):
