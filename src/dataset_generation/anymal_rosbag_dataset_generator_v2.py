@@ -9,11 +9,15 @@ import warnings
 
 from .base_dataset_generator import BaseDatasetGenerator
 from src.enums import *
+from src.utils.rosbags_utils import register_msg_types
 
 
 class AnymalRosbagDatasetGeneratorV2(BaseDatasetGenerator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        # initialise ROS msg types with rosbags module
+        register_msg_types()
 
         self.rosbag_paths = self.config.get("rosbag_paths", [])
         self.rosbag_topics = ['/elevation_mapping/elevation_map_recordable']
