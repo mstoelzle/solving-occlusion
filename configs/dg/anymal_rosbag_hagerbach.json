@@ -1,0 +1,24 @@
+{
+    "name": "anymal_rosbag_hagerbach",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anymal_rosbag",
+        "rosbag_paths": [
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission1/2021-05-19-09-32-10_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission2/2021-05-19-10-42-19_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission3/2021-05-19-11-03-45_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission4/2021-05-19-11-57-08_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission5/2021-05-19-11-44-32_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission6/2021-05-19-12-59-58_anymal-cerberus_mission.bag",
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/hagerbach/cerberus/bags/mission7/2021-05-19-14-16-14_anymal-cerberus_mission.bag"
+        ],
+        "size": 75,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 200
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}

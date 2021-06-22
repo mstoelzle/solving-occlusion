@@ -1,0 +1,18 @@
+{
+    "name": "anymal_rosbag_lee_h_floor_mission_2",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "anymal_rosbag",
+        "rosbag_paths": [
+            "/Volumes/MAXI_SSD/ethz/MT/anymal-datasets/lee-h-floor/bags/mission2/2021-04-20-11-38-18_anymal-chimera_mission.bag"
+        ],
+        "size": 75,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 50
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}
