@@ -56,19 +56,22 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
     def run(self):
         progress_bar = None
 
-        total_num_messages = 0
-        for reader in self.bags:
+        num_messages = np.zeros(shape=(len(self.bags), 1))
+        for bag_idx, reader in enumerate(self.bags):
             # quick-and-dirty fix to access the number of messages for a list of filter topics in a rosbag
             # https://nelsonslog.wordpress.com/2016/04/06/python3-no-len-for-iterators/
 
             # source: https://github.com/wbolster/cardinality/blob/master/cardinality.py#L48-L52
             d = collections.deque(enumerate(reader.messages(self.rosbag_topics), 1), maxlen=1)
-            total_num_messages += d[0][0] if d else 0
+            num_messages[bag_idx] = d[0][0] if d else 0
 
             # this requires a lot of memory, but is pretty fast
-            # total_num_messages += len(tuple(reader.messages(self.rosbag_topics)))
+            # num_messages[bag_idx] = len(tuple(reader.messages(self.rosbag_topics)))
+
+        total_num_messages = int(num_messages.sum().item())
 
         msg_idx = -1
+        progress_bar = None
         for bag_idx, reader in enumerate(self.bags):
             for topic, msgtype, t, rawdata in reader.messages(self.rosbag_topics):
                 msg = deserialize_cdr(ros1_to_cdr(rawdata, msgtype), msgtype)
@@ -135,9 +138,12 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
                                                                         num_subgrids_x * num_subgrids_y + 1
                             start_msg_idx += purpose_num_msgs
 
+                        num_samples = num_messages * num_subgrids_x * num_subgrids_y
                         self.total_num_samples = total_num_messages * num_subgrids_x * num_subgrids_y
 
-                        progress_bar = Bar(f"Reading anymal bag", max=self.total_num_samples)
+                    if progress_bar is None:
+                        progress_bar = Bar(f"Reading anymal bag {bag_idx+1} / {len(self.bags)}",
+                                           max=num_samples[bag_idx])
 
                     if self.purpose is None and msg_idx >= self.split_msg_indices["train"]:
                         self.purpose = "train"
@@ -196,10 +202,11 @@ class AnymalRosbagDatasetGenerator(BaseDatasetGenerator):
                     # we only consider layer_idx=0 for now
                     break
 
+            progress_bar.finish()
+            progress_bar = None
+
         self.save_cache()
         self.write_metadata(self.hdf5_group)
-
-        progress_bar.finish()
 
     def process_item(self, res_grid: np.array, rel_position: np.array, rel_attitude: np.array, subgrid: np.array,
                      force_save: bool = False):
