@@ -14,6 +14,9 @@ jobs:
         with:
           submodules: false
       -
+          name: Grab Branch Name
+          run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       -
@@ -32,7 +35,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: mstoelzle/solving-occlusion:latest
+          tags: mstoelzle/solving-occlusion:${{ env.BRANCH }}
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
