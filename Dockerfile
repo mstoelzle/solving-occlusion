@@ -14,18 +14,18 @@ RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev pcl-t
 RUN conda install pybind11
 
 # install ROS1 Noetic
-RUN apt update && apt install -y ros-noetic-ros-base ros-noetic-grid-map
+RUN apt-get update && apt-get install -y ros-noetic-ros-base ros-noetic-grid-map
 
 # RUN git clone https://github.com/mstoelzle/solving-occlusion
 COPY . ./solving-occlusion
 WORKDIR solving-occlusion
+RUN echo "WORKDIR={pwd}"
 
 # install pip requirements
 RUN pip3 install -r requirements.txt --user
 
 # install PyPatchMatch
-RUN echo pwd
-RUN cd "src/learning/models/baseline/py_patch_match" && make
+# RUN cd "src/learning/models/baseline/py_patch_match" && make
 
 
 
