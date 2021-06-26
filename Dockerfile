@@ -26,7 +26,8 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 # install ros packages
 # RUN apt-get update && apt-get install -y -f ros-noetic-ros-core && rm -rf /var/lib/apt/lists/*
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get autoremove && apt-get clean && apt-get update && \
+    apt-get install -y --no-install-recommends \
     ros-noetic-ros-core=1.5.0-1* \
     && rm -rf /var/lib/apt/lists/*
 # RUN apt-get update && apt-get install -y -f ros-noetic-ros-base ros-noetic-grid-map && rm -rf /var/lib/apt/lists/*
