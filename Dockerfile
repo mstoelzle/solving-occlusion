@@ -25,7 +25,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 # install ros packages
-RUN apt-get update && apt-get install -y -f ros-noetic-ros-base ros-noetic-grid-map && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y -f ros-noetic-ros-core && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y -f ros-noetic-ros-base ros-noetic-grid-map && rm -rf /var/lib/apt/lists/*
 # install ros grid map packages
 #RUN apt-get update && apt-get install -y --no-install-recommends \
 #    ros-noetic-grid-map ros-noetic-grid-map-core ros-noetic-grid-map-cv \
