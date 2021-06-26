@@ -1,0 +1,19 @@
+{
+    "name": "enav_planetary",
+    "cuda": false,
+    "dataset_generation": {
+        "type": "rosbag",
+        "rosbag_paths": [
+            "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run1_clouds_only.bag"
+        ],
+        "ros_topics": ["/omni_stitched_cloud"],
+        "size": 75,
+        "save_frequency": 10,
+        "split": {"train": 0.8, "val":  0.1, "test":  0.1},
+        "visualization": {
+            "frequency": 200
+        }
+    },
+    "remote": true,
+    "seeds": [101]
+}

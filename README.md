@@ -54,17 +54,17 @@ The required Python packages can be installed as follows (within the Conda envir
 pip install -r ${WORKSPACE}/solving-occlusion/requirements.txt --user
 ```
 
-#### 3.2 Install ros-noetic-ros-core
-We rely on ROS Noetic to read the ANYmal datasets stored in rosbags and process them in our DatasetGeneration.
+#### 3.2 Install ROS
+We rely on ROS Noetic to read datasets stored in rosbags and process them in our DatasetGeneration component.
 
 On Ubuntu this can be done with:
 ```
-sudo apt install ros-noetic-ros-base
+sudo apt install ros-noetic-ros-base ros-noetic-grid-map
 ```
 
 or on macOS with (requires Python 3.6.* or 3.8.* for now):
 ```
-conda install -c robostack ros-noetic-ros-base
+conda install -c robostack ros-noetic-ros-base ros-noetic-grid-map
 ```
 
 #### 3.3 Install the TerrainDataGenerator
@@ -180,11 +180,26 @@ and Global Navigation Satellite System (GNSS) antenna for ground-truth absolute 
 The dataset is stored in serialized [Rock pocolog logs](https://github.com/rock-core/tools-pocolog). 
 We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Digital Elevation Maps (DEMs).
 
+### Canadian Planetary Emulation Terrain Energy-Aware Rover Navigation Dataset
+We benchmark or methods on the enav-planetary dataset [[3]](#3).
+Preparation of data:
+1. Download rosbag with point clouds from: https://starslab.ca/enav-planetary-dataset/
+2. Transform ROS PointCloud2 messages in topic `/omni_stitched_cloud` to PCD files: http://wiki.ros.org/pcl_ros#bag_to_pcd
+   ```bash
+   rosrun pcl_ros bag_to_pcd run1_clouds_only.bag /omni_stitched_cloud ./run1
+   ```
+3. Voxelize point clouds to `grid_map` ROS messages with: https://github.com/ANYbotics/grid_map/blob/master/grid_map_pcl/README.md
+
 ## Citations
 <a id="1">[1]</a> Barnes, Connelly, et al. 
-"PatchMatch: A randomized correspondence algorithm for structural image editing." ACM Trans. Graph. 28.3 (2009): 24.
+"PatchMatch: A randomized correspondence algorithm for structural image editing." 
+ACM Trans. Graph. 28.3 (2009): 24.
 
 <a id="2">[2]</a> Geromichalos, Dimitrios, et al. "SLAM for autonomous planetary rovers with global localization." 
 Journal of Field Robotics 37.5 (2020): 830-847.
+
+<a id="3">[3]</a> Lamarre, Olivier, et al. 
+"The canadian planetary emulation terrain energy-aware rover navigation dataset." 
+The International Journal of Robotics Research 39.6 (2020): 641-650.
 
 

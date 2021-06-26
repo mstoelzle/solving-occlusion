@@ -2,7 +2,6 @@ import pathlib
 import numpy as np
 from scipy.spatial.transform import Rotation
 import torch
-from torchvision.datasets.folder import is_image_file
 from typing import *
 
 from .base_dataset import BaseDataset
@@ -21,7 +20,7 @@ class TrasysPlanetaryDataset(BaseDataset):
             if sample_dir.is_dir():
                 sample_dict = {}
                 for filepath in sorted(sample_dir.iterdir()):
-                    if filepath.is_file() and is_image_file(str(filepath)):
+                    if filepath.is_file():
                         filename = filepath.stem
                         if filename == "height":
                             sample_dict[ChannelEnum.GT_DEM] = filepath
