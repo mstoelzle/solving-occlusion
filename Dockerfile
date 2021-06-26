@@ -14,7 +14,26 @@ RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev pcl-t
 RUN conda install pybind11
 
 # install ROS1 Noetic
-RUN apt-get update && apt-get install -y ros-noetic-ros-base ros-noetic-grid-map
+# https://github.com/osrf/docker_images/blob/11c613986e35a1f36fd0fa18b49173e0c564cf1d/ros/noetic/ubuntu/focal/ros-core/Dockerfile
+# setup timezone
+RUN echo 'Etc/UTC' > /etc/timezone && \
+    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    apt-get update && \
+    apt-get install -q -y --no-install-recommends tzdata && \
+    rm -rf /var/lib/apt/lists/*
+# install support packages
+RUN apt-get update && apt-get install -q -y --no-install-recommends \
+    dirmngr \
+    gnupg2 \
+    && rm -rf /var/lib/apt/lists/*
+# setup sources.list
+RUN echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros1-latest.list
+# setup keys
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+# setup environment
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+RUN apt-get update && apt-get install -y --no-install-recommends ros-noetic-ros-base ros-noetic-grid-map && rm -rf /var/lib/apt/lists/*
 
 # RUN git clone https://github.com/mstoelzle/solving-occlusion
 COPY . ./solving-occlusion
