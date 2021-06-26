@@ -12,12 +12,6 @@ RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev pcl-t
 
 # install ROS1 Noetic
 # https://github.com/osrf/docker_images/blob/11c613986e35a1f36fd0fa18b49173e0c564cf1d/ros/noetic/ubuntu/focal/ros-core/Dockerfile
-# setup timezone
-RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    apt-get update && \
-    apt-get install -q -y --no-install-recommends tzdata && \
-    rm -rf /var/lib/apt/lists/*
 # install support packages
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
     dirmngr \
