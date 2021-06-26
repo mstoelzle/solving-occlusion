@@ -10,9 +10,6 @@ RUN apt-get update && apt-get install -y curl wget git
 # Dependencies
 RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev pcl-tools
 
-# install pybind11
-RUN conda install pybind11
-
 # install ROS1 Noetic
 # https://github.com/osrf/docker_images/blob/11c613986e35a1f36fd0fa18b49173e0c564cf1d/ros/noetic/ubuntu/focal/ros-core/Dockerfile
 # setup timezone
@@ -33,7 +30,11 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C1CF6E31E6
 # setup environment
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
+# install ros packages
 RUN apt-get update && apt-get install -y --no-install-recommends ros-noetic-ros-base ros-noetic-grid-map && rm -rf /var/lib/apt/lists/*
+
+# install pybind11
+RUN conda install pybind11
 
 # RUN git clone https://github.com/mstoelzle/solving-occlusion
 COPY . ./solving-occlusion
