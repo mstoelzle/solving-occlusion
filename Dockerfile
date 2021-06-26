@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y cmake libeigen3-dev libopencv-dev pcl-t
 RUN conda install pybind11
 
 # install ROS1 Noetic
-RUN apt update && sudo apt install -y ros-noetic-ros-base ros-noetic-grid-map
+RUN apt update && apt install -y ros-noetic-ros-base ros-noetic-grid-map
 
 # RUN git clone https://github.com/mstoelzle/solving-occlusion
 COPY . ./solving-occlusion
