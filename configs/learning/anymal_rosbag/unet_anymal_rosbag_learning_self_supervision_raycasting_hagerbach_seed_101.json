@@ -1,5 +1,5 @@
 {
-    "name": "unet_anymal_rosbag_learning_self_supervision_raycasting_hagerbach_seed_102",
+    "name": "unet_anymal_rosbag_learning_self_supervision_raycasting_hagerbach_seed_101",
     "cuda": true,
     "experiment": {
         "task_path": {
