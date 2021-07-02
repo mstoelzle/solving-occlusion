@@ -1,0 +1,129 @@
+{
+    "name": "unet_domain_adaptation_raycasting_gonzen_hagerbach_seemuehle_GS2H_seed_104",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": {"mean": true, "stdev": false},
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 100,
+                    "max_num_better_results": 35
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {
+                        "target": {
+                            "datasets": [
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-02-13-21-03-23_dataset_generation_anymal_rosbag_mission_1_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  0},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion_raycasting",
+                                                "height_viewpoint": {"min":  0.3, "max":  1},
+                                                "occluded_area_constraint": {
+                                                    "min":  0.001,
+                                                    "max": 0.5,
+                                                    "max_iterations": 15,
+                                                    "min_step": 0.15
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-06-22-23-37-51_dataset_generation_anymal_rosbag_hagerbach_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  0, "val":  0, "test":  1},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion_raycasting",
+                                                "height_viewpoint": {"min":  0.3, "max":  1},
+                                                "occluded_area_constraint": {
+                                                    "min":  0.001,
+                                                    "max": 0.5,
+                                                    "max_iterations": 15,
+                                                    "min_step": 0.15
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-06-23-09-00-42_dataset_generation_anymal_rosbag_seemuehle_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  0},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion_raycasting",
+                                                "height_viewpoint": {"min":  0.3, "max":  1},
+                                                "occluded_area_constraint": {
+                                                    "min":  0.001,
+                                                    "max": 0.5,
+                                                    "max_iterations": 15,
+                                                    "min_step": 0.15
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [104]
+}
