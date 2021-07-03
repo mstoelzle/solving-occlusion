@@ -182,6 +182,24 @@ We apply the GA SLAM [[2]](#2) technique on the raw data to extract occluded Dig
 
 ### Canadian Planetary Emulation Terrain Energy-Aware Rover Navigation Dataset
 We benchmark or methods on the enav-planetary dataset [[3]](#3).
+We need to project the stitched point clouds stored in the dataset to 2.5D elevation maps. 
+We use the [GridMap ROS](https://github.com/mstoelzle/grid_map/tree/from_point_cloud) package to transform ROS 
+`sensors_msgs/PointCloud2` messages to `grid_map_msgs/grid_map`.
+1. Download rosbag with point clouds from: https://starslab.ca/enav-planetary-dataset/
+2. Generate rosbag with grid map messages from rosbag with point clouds. Run the following three ROS1 commands each in a separate terminal:
+Converter ROS node:
+```bash
+roslaunch grid_map_pcl PointCloud2_to_GridMap_msg_node.launch
+```
+Save `/grid_map` topic to a new rosbag:
+```bash
+rosbag record /grid_map
+```
+Replay rosbag with point cloud 2 messages:
+```bash
+rosbag play run1_clouds_only.bag
+```
+
 Preparation of data:
 1. Download rosbag with point clouds from: https://starslab.ca/enav-planetary-dataset/
 2. Transform ROS PointCloud2 messages in topic `/omni_stitched_cloud` to PCD files: http://wiki.ros.org/pcl_ros#bag_to_pcd
