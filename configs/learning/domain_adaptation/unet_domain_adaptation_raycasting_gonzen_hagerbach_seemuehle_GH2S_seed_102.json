@@ -1,5 +1,5 @@
 {
-    "name": "unet_domain_adaptation_raycasting_gonzen_hagerbach_seemuehle_HS2G_seed_101",
+    "name": "unet_domain_adaptation_raycasting_gonzen_hagerbach_seemuehle_GH2S_seed_102",
     "cuda": true,
     "experiment": {
         "task_path": {
@@ -57,7 +57,7 @@
                                     "type": "hdf5",
                                     "path": "data/2021-02-13-21-03-23_dataset_generation_anymal_rosbag_mission_1_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
-                                    "sampling_weights": {"train":  0, "val":  0, "test":  1},
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  0},
                                     "self_supervision": true,
                                     "transforms": {
                                         "defaults": [
@@ -99,7 +99,7 @@
                                     "type": "hdf5",
                                     "path": "data/2021-06-23-09-00-42_dataset_generation_anymal_rosbag_seemuehle_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
                                     "size": [64, 64],
-                                    "sampling_weights": {"train":  1, "val":  1, "test":  0},
+                                    "sampling_weights": {"train":  0, "val":  0, "test":  1},
                                     "self_supervision": true,
                                     "transforms": {
                                         "defaults": [
@@ -125,5 +125,5 @@
         "visualization": {"sample_frequency":  50, "indiv_vranges": true}
     },
     "remote": true,
-    "seeds": [101]
+    "seeds": [102]
 }
