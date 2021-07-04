@@ -26,7 +26,4 @@ pcl_grid_map_extraction:
       z: 0.02
   grid_map:
     min_num_points_per_cell: 1
-    resolution: 0.05
-
-
-
+    resolution: 0.025
