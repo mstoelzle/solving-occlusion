@@ -200,9 +200,9 @@ Save `/grid_map` topic to a new rosbag:
 ```bash
 rosbag record /grid_map
 ```
-Replay rosbag with point cloud 2 messages:
+Replay rosbag with point cloud 2 messages at rate of 1% of original speed:
 ```bash
-rosbag play run1_clouds_only.bag
+rosbag play -r 0.01 run1_clouds_only.bag
 ```
 
 ## Citations
