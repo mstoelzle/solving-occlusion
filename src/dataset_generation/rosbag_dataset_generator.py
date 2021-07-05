@@ -24,9 +24,15 @@ class RosbagDatasetGenerator(BaseDatasetGenerator):
         self.rosbag_paths = self.config.get("rosbag_paths", [])
         self.ros_topics = self.config.get("rosbag_topics")
 
-        self.split_config = self.config.get("split")
-        assert list(self.split_config.keys()) == ["train", "val", "test"]
-        self.split_msg_indices = {}
+        if type(self.rosbag_paths) is dict:
+            assert list(self.rosbag_paths.keys()) == ["train", "val", "test"]
+            self.split_dataset = False
+        else:
+            self.split_dataset = True
+            self.split_config = self.config.get("split")
+            assert list(self.split_config.keys()) == ["train", "val", "test"]
+            self.split_dataset = True
+            self.split_msg_indices = {}
 
         self.bags = []
         self.reset()
@@ -38,10 +44,23 @@ class RosbagDatasetGenerator(BaseDatasetGenerator):
         self.purpose_max_num_samples = {}
 
     def __enter__(self):
-        for rosbag_path in self.rosbag_paths:
-            rosbag = rosbag1.Reader(rosbag_path)
-            rosbag.__enter__()
-            self.bags.append(rosbag)
+        if self.split_dataset:
+            for rosbag_path in self.rosbag_paths:
+                rosbag = rosbag1.Reader(rosbag_path)
+                rosbag.__enter__()
+                self.bags.append(rosbag)
+        else:
+            self.bag_idx_for_purpose = {}
+            self.purpose_bags = {}
+            for purpose in self.rosbag_paths.keys():
+                self.bag_idx_for_purpose[purpose] = np.arange(start=len(self.bags),
+                                                              stop=len(self.bags)+len(self.rosbag_paths[purpose]))
+                self.purpose_bags[purpose] = []
+                for rosbag_path in self.rosbag_paths[purpose]:
+                    rosbag = rosbag1.Reader(rosbag_path)
+                    rosbag.__enter__()
+                    self.bags.append(rosbag)
+                    self.purpose_bags[purpose].append(rosbag)
 
         super().__enter__()
 
@@ -56,19 +75,20 @@ class RosbagDatasetGenerator(BaseDatasetGenerator):
     def run(self):
         assert self.ros_topics is not None, "You need to specify the applicable ROS topics in the config"
 
-        num_messages = np.zeros(shape=(len(self.bags), 1))
+        num_messages = np.zeros(shape=(len(self.bags),), dtype=np.int)
         for bag_idx, reader in enumerate(self.bags):
-            # quick-and-dirty fix to access the number of messages for a list of filter topics in a rosbag
-            # https://nelsonslog.wordpress.com/2016/04/06/python3-no-len-for-iterators/
+            num_messages[bag_idx] = 0
+            for topic in self.ros_topics:
+                num_messages[bag_idx] += reader.topics[topic].msgcount
+        total_num_messages = num_messages.sum().item()
 
-            # source: https://github.com/wbolster/cardinality/blob/master/cardinality.py#L48-L52
-            d = collections.deque(enumerate(reader.messages(self.ros_topics), 1), maxlen=1)
-            num_messages[bag_idx] = d[0][0] if d else 0
-
-            # this requires a lot of memory, but is pretty fast
-            # num_messages[bag_idx] = len(tuple(reader.messages(self.rosbag_topics)))
-
-        total_num_messages = int(num_messages.sum().item())
+        if not self.split_dataset:
+            purpose_num_msgs = {}
+            for purpose in self.purpose_bags.keys():
+                purpose_num_msgs[purpose] = 0
+                for bag_idx, reader in enumerate(self.purpose_bags[purpose]):
+                    for topic in self.ros_topics:
+                        purpose_num_msgs[purpose] += int(reader.topics[topic].msgcount)
 
         msg_idx = -1
         progress_bar = None
@@ -122,48 +142,57 @@ class RosbagDatasetGenerator(BaseDatasetGenerator):
                     assert num_subgrids_x >= 1 and num_subgrids_y >= 1
 
                     if self.total_num_samples is None:
-                        total_split = 0
-                        for purpose, purpose_split in self.split_config.items():
-                            total_split += purpose_split
-                        start_msg_idx = 0
-                        for i, (purpose, purpose_split) in enumerate(self.split_config.items()):
-                            self.split_msg_indices[purpose] = start_msg_idx
-                            purpose_num_msgs = int(purpose_split / total_split * total_num_messages)
+                        if self.split_dataset:
+                            total_split = 0
+                            for purpose, purpose_split in self.split_config.items():
+                                total_split += purpose_split
+                            start_msg_idx = 0
 
-                            if i >= len(self.split_config.keys()) - 1:
-                                self.purpose_max_num_samples[purpose] = (total_num_messages - start_msg_idx) * \
+                            for i, (purpose, purpose_split) in enumerate(self.split_config.items()):
+                                self.split_msg_indices[purpose] = start_msg_idx
+                                purpose_num_msgs = int(purpose_split / total_split * total_num_messages)
+
+                                if i >= len(self.split_config.keys()) - 1:
+                                    self.purpose_max_num_samples[purpose] = (total_num_messages - start_msg_idx) * \
+                                                                            num_subgrids_x * num_subgrids_y + 1
+                                else:
+                                    self.purpose_max_num_samples[purpose] = purpose_num_msgs * \
+                                                                            num_subgrids_x * num_subgrids_y + 1
+                                start_msg_idx += purpose_num_msgs
+                        else:
+                            for purpose in purpose_num_msgs.keys():
+                                self.purpose_max_num_samples[purpose] = purpose_num_msgs[purpose] * \
                                                                         num_subgrids_x * num_subgrids_y + 1
-                            else:
-                                self.purpose_max_num_samples[purpose] = purpose_num_msgs * \
-                                                                        num_subgrids_x * num_subgrids_y + 1
-                            start_msg_idx += purpose_num_msgs
 
                         num_samples = num_messages * num_subgrids_x * num_subgrids_y
                         self.total_num_samples = total_num_messages * num_subgrids_x * num_subgrids_y
 
                     if progress_bar is None:
-                        progress_bar = Bar(f"Reading anymal bag {bag_idx+1} / {len(self.bags)}",
+                        progress_bar = Bar(f"Reading rosbag {bag_idx+1} / {len(self.bags)}",
                                            max=num_samples[bag_idx])
 
-                    if self.purpose is None and msg_idx >= self.split_msg_indices["train"]:
-                        self.purpose = "train"
-                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                    elif self.purpose == "train" and msg_idx >= self.split_msg_indices["val"]:
-                        self.save_cache()
-                        self.write_metadata(self.hdf5_group)
-                        self.reset_metadata()
-                        self.purpose = "val"
-                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                        self.initialized_datasets = False
-                    elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
-                        self.save_cache()
-                        self.write_metadata(self.hdf5_group)
-                        self.reset_metadata()
-                        self.purpose = "test"
-                        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
-                        self.initialized_datasets = False
+                    if self.split_dataset:
+                        if self.purpose is None and msg_idx >= self.split_msg_indices["train"]:
+                            self.switch_purpose("train")
+                        elif self.purpose == "train" and msg_idx >= self.split_msg_indices["val"]:
+                            self.switch_purpose("val")
+                        elif self.purpose == "val" and msg_idx >= self.split_msg_indices["test"]:
+                            self.switch_purpose("test")
+                        else:
+                            pass
                     else:
-                        pass
+                        if self.purpose is None:
+                            self.switch_purpose("train")
+                        elif bag_idx > self.bag_idx_for_purpose[self.purpose][-1]:
+                            # we need to switch to the next purpose
+                            if self.purpose == "train":
+                                self.switch_purpose("val")
+                            elif self.purpose == "val":
+                                self.switch_purpose("test")
+                            else:
+                                raise ValueError(f"Unknown logic to switch purpose for current purpose {self.purpose}")
+                        else:
+                            pass
 
                     start_x = 0
                     for i in range(num_subgrids_x):
@@ -207,6 +236,15 @@ class RosbagDatasetGenerator(BaseDatasetGenerator):
 
         self.save_cache()
         self.write_metadata(self.hdf5_group)
+
+    def switch_purpose(self, new_purpose):
+        if self.purpose is not None:
+            self.save_cache()
+            self.write_metadata(self.hdf5_group)
+            self.reset_metadata()
+        self.purpose = new_purpose
+        self.hdf5_group = self.hdf5_file.create_group(self.purpose)
+        self.initialized_datasets = False
 
     def process_item(self, res_grid: np.array, rel_position: np.array, rel_attitude: np.array, subgrid: np.array,
                      force_save: bool = False):
