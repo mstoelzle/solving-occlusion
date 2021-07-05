@@ -3,15 +3,22 @@
     "cuda": false,
     "dataset_generation": {
         "type": "rosbag",
-        "rosbag_paths": [
-            "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run1_grid_maps.bag"
-        ],
+        "rosbag_paths": {
+            "train": [
+                "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run1_grid_maps.bag",
+                "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run2_grid_maps.bag",
+                "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run3_grid_maps.bag",
+                "/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run6_grid_maps.bag"
+            ],
+            "val": ["/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run4_grid_maps.bag"],
+            "test": ["/Volumes/MAXI_SSD/ethz/MT/enav-planetary/run5_grid_maps.bag"]
+        },
         "rosbag_topics": ["/grid_map"],
         "size": 75,
         "save_frequency": 10,
         "split": {"train": 0.8, "val":  0.1, "test":  0.1},
         "visualization": {
-            "frequency": 1
+            "frequency": 25
         }
     },
     "remote": true,
