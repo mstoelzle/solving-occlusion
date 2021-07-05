@@ -186,7 +186,12 @@ We need to project the stitched point clouds stored in the dataset to 2.5D eleva
 We use the [GridMap ROS](https://github.com/mstoelzle/grid_map/tree/from_point_cloud) package to transform ROS 
 `sensors_msgs/PointCloud2` messages to `grid_map_msgs/grid_map`.
 1. Download rosbag with point clouds from: https://starslab.ca/enav-planetary-dataset/
+2. Copy grid map PCL config: 
+   ```bash
+   cp {PATH_TO_SOLVING_OCCLUSION}/src/ros/configs/grid_map_pcl_params.yml {PATH_TO_GRID_MAP}/grid_map_pcl/parameters.yml
+   ```
 2. Generate rosbag with grid map messages from rosbag with point clouds. Run the following three ROS1 commands each in a separate terminal:
+
 Converter ROS node:
 ```bash
 roslaunch grid_map_pcl PointCloud2_to_GridMap_msg_node.launch
@@ -199,14 +204,6 @@ Replay rosbag with point cloud 2 messages:
 ```bash
 rosbag play run1_clouds_only.bag
 ```
-
-Preparation of data:
-1. Download rosbag with point clouds from: https://starslab.ca/enav-planetary-dataset/
-2. Transform ROS PointCloud2 messages in topic `/omni_stitched_cloud` to PCD files: http://wiki.ros.org/pcl_ros#bag_to_pcd
-   ```bash
-   rosrun pcl_ros bag_to_pcd run1_clouds_only.bag /omni_stitched_cloud ./run1
-   ```
-3. Voxelize point clouds to `grid_map` ROS messages with: https://github.com/ANYbotics/grid_map/blob/master/grid_map_pcl/README.md
 
 ## Citations
 <a id="1">[1]</a> Barnes, Connelly, et al. 
