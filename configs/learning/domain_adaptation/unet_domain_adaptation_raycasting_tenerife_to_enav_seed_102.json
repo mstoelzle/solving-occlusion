@@ -1,0 +1,87 @@
+{
+    "name": "unet_domain_adaptation_raycasting_tenerife_to_enav_seed_102",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": {"mean": true, "stdev": false},
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 0,
+                    "max_num_better_results": 0
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "logs/2021-05-20-22-01-00_learning_unet_tenerife_learning_syn2real_raycasting_v2_seed_101_mstolzle/seed_102/task_2/model.pt",
+                    "domains": {
+                        "target": {
+                            "datasets": [
+                                {
+                                    "type": "hdf5",
+                                    "path": "data/2021-07-09-14-36-00_dataset_generation_enav_planetary_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                    "size": [64, 64],
+                                    "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                                    "self_supervision": true,
+                                    "transforms": {
+                                        "defaults": [
+                                            {
+                                                "type": "random_occlusion_raycasting",
+                                                "height_viewpoint": {"min":  0.3, "max":  1},
+                                                "occluded_area_constraint": {
+                                                    "min":  0.001,
+                                                    "max": 0.5,
+                                                    "max_iterations": 15,
+                                                    "min_step": 0.15
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [102]
+}
