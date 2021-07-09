@@ -49,7 +49,7 @@
             "tasks": [
                 {
                     "task_type": "supervised-learning",
-                    "model_to_train": "logs/2021-05-20-22-01-00_learning_unet_tenerife_learning_syn2real_raycasting_v2_seed_101_mstolzle/seed_103/task_2/model.pt",
+                    "model_to_train": "logs/2021-05-20-22-33-42_learning_unet_tenerife_learning_syn2real_raycasting_v2_seed_103_mstolzle/seed_103/task_2/model.pt",
                     "domains": {
                         "target": {
                             "datasets": [
