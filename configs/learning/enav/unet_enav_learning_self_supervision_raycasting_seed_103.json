@@ -1,0 +1,112 @@
+{
+    "name": "unet_enav_learning_self_supervision_raycasting_seed_103",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 6
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-07-09-14-36-00_dataset_generation_enav_planetary_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": {"mean": true, "stdev": false},
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 100,
+                    "max_num_better_results": 50
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "name": "Telea",
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    },
+                    "controller": {
+                        "max_num_epochs": 0,
+                        "max_num_better_results": 0
+                    },
+                    "domains": {"target": {}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "model": {
+                        "name": "NavierStokes",
+                        "input_normalization": false,
+                        "inpaint_radius": 3
+                    },
+                    "controller": {
+                        "max_num_epochs": 0,
+                        "max_num_better_results": 0
+                    },
+                    "domains": {"target": {}}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [103]
+}
