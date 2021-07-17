@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
+from typing import *
 
 from src.enums import *
 
@@ -279,6 +280,81 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
 
     plt.draw()
     plt.savefig(str(logdir / f"traversability_{sample_idx}.pdf"))
+    if remote is not True:
+        plt.show()
+    plt.close()
+
+
+def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
+                                     gt_dem: np.array = None, occ_dem: np.array = None,
+                                     rec_dems: Dict[str, np.array] = {},
+                                     robot_position_pixel: np.array = None, remote=False):
+    dem_cmap = plt.get_cmap("viridis")
+
+    num_subplots = len(rec_dems)
+    if gt_dem is not None:
+        num_subplots += 1
+    if occ_dem is not None:
+        num_subplots += 1
+
+    fig, axes = plt.subplots(nrows=1, ncols=num_subplots, figsize=[num_subplots * 6.4, 1.2 * 4.8])
+    axes = np.expand_dims(axes, axis=0)
+
+    mins = [np.Inf]
+    maxs = [-np.Inf]
+    if gt_dem is not None and np.isnan(gt_dem).all() is False:
+        mins.append(np.min(gt_dem[~np.isnan(gt_dem)]))
+        maxs.append(np.max(gt_dem[~np.isnan(gt_dem)]))
+    if occ_dem is not None and np.isnan(occ_dem).all() is False:
+        mins.append(np.min(occ_dem[~np.isnan(occ_dem)]))
+        maxs.append(np.max(occ_dem[~np.isnan(occ_dem)]))
+    for key, rec_dem in rec_dems.items():
+        mins.append(np.min(rec_dem[~np.isnan(rec_dem)]))
+        maxs.append(np.max(rec_dem[~np.isnan(rec_dem)]))
+    elevation_vmin = np.min(mins)
+    elevation_vmax = np.max(maxs)
+
+    elevation_cmap = plt.get_cmap("viridis")
+
+    plot_id = 0
+    if occ_dem is not None:
+        axes[0, plot_id].set_title("Occlusion")
+        # matshow plots x and y swapped
+        mat = axes[0, plot_id].matshow(np.swapaxes(occ_dem, 0, 1), vmin=elevation_vmin,
+                                       vmax=elevation_vmax, cmap=elevation_cmap)
+        plot_id += 1
+    if gt_dem is not None:
+        axes[0, plot_id].set_title("Ground-truth")
+        # matshow plots x and y swapped
+        mat = axes[0, plot_id].matshow(np.swapaxes(gt_dem, 0, 1), vmin=elevation_vmin,
+                                       vmax=elevation_vmax, cmap=elevation_cmap)
+        plot_id += 1
+    for key, rec_dem in rec_dems.items():
+        axes[0, plot_id].set_title(key)
+        # matshow plots x and y swapped
+        mat = axes[0, plot_id].matshow(np.swapaxes(rec_dem, 0, 1), vmin=elevation_vmin,
+                                       vmax=elevation_vmax, cmap=elevation_cmap)
+        plot_id += 1
+
+    fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+
+    for i, ax in enumerate(axes.reshape(-1)):
+        if robot_position_pixel is not None:
+            ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
+
+        # Hide grid lines
+        ax.grid(False)
+
+        # hide ticks
+        ax.tick_params(
+            axis='x',  # changes apply to the x-axis
+            which='both',  # both major and minor ticks are affected
+            bottom=False,  # ticks along the bottom edge are off
+            top=False,  # ticks along the top edge are off
+            labelbottom=False)  # labels along the bottom edge are off
+
+    plt.draw()
+    plt.savefig(str(logdir / f"qualitative_comparison_2d_{sample_idx}.pdf"))
     if remote is not True:
         plt.show()
     plt.close()
