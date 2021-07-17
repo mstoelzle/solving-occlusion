@@ -151,7 +151,7 @@ We immediately visualize the trained model after all tasks of an experiment (e.g
 `experiment/visualization` section of the config. That said, you can also visualize an experiment manually. 
 In this case, please specify the path to the `config.json` within the experiment log directory:
 ```
-python visualization.py configs/{PATH_TO_EXPERIMENT_LOGDIR}/config.json
+python visualization.py {PATH_TO_EXPERIMENT_LOGDIR}/config.json
 ```
 
 ## Important notes
