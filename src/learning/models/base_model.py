@@ -80,7 +80,7 @@ class BaseModel(ABC, nn.Module):
         self.set_dropout_mode(dropout_mode=True if self.training and self.use_training_dropout else False)
 
         data_uncertainty = None
-        x = self.forward_pass(input=input, data=data)
+        x = self.forward_pass(input=input)
         if type(x) in [list, tuple]:
             rec_dem = x[0]
             data_uncertainty = x[1]
@@ -96,7 +96,7 @@ class BaseModel(ABC, nn.Module):
                 dem_solutions = []
                 data_uncertainties = []
                 for i in range(self.num_solutions):
-                    x = self.forward_pass(input=input, data=data)
+                    x = self.forward_pass(input=input)
 
                     if type(x) in [list, tuple]:
                         dem_solutions.append(x[0])
