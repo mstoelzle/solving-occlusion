@@ -82,9 +82,14 @@ class BaseModel(ABC, nn.Module):
         data_uncertainty = None
         x = self.forward_pass(input=input)
         if type(x) in [list, tuple]:
+            # remove channels dimension from tensor
+            for i in range(len(x)):
+                x[i] = x[i].squeeze(dim=1)
+
             rec_dem = x[0]
             data_uncertainty = x[1]
         else:
+            x = x.squeeze(dim=1)
             rec_dem = x
         output[ChannelEnum.REC_DEM] = rec_dem
 
@@ -99,9 +104,14 @@ class BaseModel(ABC, nn.Module):
                     x = self.forward_pass(input=input)
 
                     if type(x) in [list, tuple]:
+                        # remove channels dimension from tensor
+                        for i in range(len(x)):
+                            x[i] = x[i].squeeze(dim=1)
+
                         dem_solutions.append(x[0])
                         data_uncertainties.append(x[1])
                     else:
+                        x = x.squeeze(dim=1)
                         dem_solutions.append(x)
 
                 dem_solutions = torch.stack(dem_solutions, dim=1)

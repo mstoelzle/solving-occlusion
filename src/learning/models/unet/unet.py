@@ -94,10 +94,6 @@ class UNet(BaseModel):
                     x = decoder_layer(x, encodings[decoding_idx + 1])
                 else:
                     x = decoder_layer(*x)
-
-            # remove channels dimension from tensor
-            for i in range(len(x)):
-                x[i] = x[i].squeeze(dim=1)
         else:
             encodings = []
             for encoding_idx, encoder_layer in enumerate(self.encoder):
@@ -114,8 +110,6 @@ class UNet(BaseModel):
                     x = decoder_layer(x, encodings[decoding_idx + 1])
                 else:
                     x = decoder_layer(x)
-
-            x = x.squeeze(dim=1)
 
         return x
 
