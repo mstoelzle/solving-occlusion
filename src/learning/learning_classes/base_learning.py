@@ -189,6 +189,7 @@ class BaseLearning(ABC):
             self.model.load_state_dict(best_dict)
             self.task.save_state_dict(best_dict)
 
+        self.trace_model()
         self.test()
 
         return self.model
@@ -324,6 +325,31 @@ class BaseLearning(ABC):
         for key, value in data.items():
             data[key] = value.to(self.device)
         return data
+
+    def trace_model(self):
+        assert self.task is not None
+
+        self.logger.info(f"Tracing model for task {self.task.uid}")
+        # TODO: this function is not adapted to model & data uncertainty estimation
+        self.model.eval()
+
+        if self.task.type in [TaskTypeEnum.SUPERVISED_LEARNING, TaskTypeEnum.INFERENCE]:
+            dataloader = self.task.labeled_dataloader.dataloaders['test']
+        else:
+            raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
+
+        for batch_idx, data in enumerate(dataloader):
+            data = self.dict_to_device(data)
+            batch_size = data[ChannelEnum.GT_DEM].size(0)
+
+            input, norm_consts = self.model.assemble_input(data)
+
+            traced = torch.jit.trace(self.model, input)
+
+            # we only need to trace one batch
+            break
+
+        traced.save(str(self.task.logdir / "traced_model.pt"))
 
     @staticmethod
     def add_batch_data_to_hdf5_results(hdf5_group: h5py.Group, batch_data: dict,

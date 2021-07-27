@@ -1,0 +1,60 @@
+{
+    "name": "unet_anymal_rosbag_inference_gonzen",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "datasets": [
+                        {
+                            "type": "hdf5",
+                            "path": "data/2021-02-13-21-03-23_dataset_generation_anymal_rosbag_mission_1_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                            "size": [64, 64],
+                            "sampling_weights": {"train":  1, "val":  1, "test":  1},
+                            "self_supervision": true,
+                            "transforms": {
+                                "defaults": [
+                                    {
+                                        "type": "random_occlusion_raycasting",
+                                        "height_viewpoint": {"min":  0.3, "max":  1},
+                                        "occluded_area_constraint": {
+                                            "min":  0.001,
+                                            "max": 0.5,
+                                            "max_iterations": 15,
+                                            "min_step": 0.15
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": {"mean": true, "stdev": false},
+                    "NaN_replacement": 0,
+                    "bilinear": true
+                },
+                "dataloaders": {"labeled_dataloader":  "target"}
+            },
+            "tasks": [
+                {
+                    "task_type": "inference",
+                    "model_to_infer": "logs/2021-05-26-22-23-08_learning_unet_anymal_rosbag_learning_syn2real_raycasting_mission_1_v2_seed_101_mstolzle/seed_101/task_2/model.pt",
+                    "domains": {"target": {}}
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [101]
+}
