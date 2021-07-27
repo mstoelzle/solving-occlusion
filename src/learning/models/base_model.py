@@ -71,8 +71,8 @@ class BaseModel(ABC, nn.Module):
 
         self.dropout_mode = mode
 
-    def forward(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
-                **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
+    def forward_pass(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
+                     **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         input, norm_consts = self.assemble_input(data)
 
         output = {}
@@ -80,7 +80,7 @@ class BaseModel(ABC, nn.Module):
         self.set_dropout_mode(dropout_mode=True if self.training and self.use_training_dropout else False)
 
         data_uncertainty = None
-        x = self.forward_pass(input=input)
+        x = self.forward(input=input)
         if type(x) in [list, tuple]:
             # remove channels dimension from tensor
             for i in range(len(x)):
