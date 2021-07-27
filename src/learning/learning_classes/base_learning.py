@@ -228,7 +228,7 @@ class BaseLearning(ABC):
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
                 with profiler.record_function("model_inference"):
-                    output = self.model(data)
+                    output = self.model.forward_pass(data)
 
                 if traversability_assessment is not None:
                     output = traversability_assessment(output=output, data=data)
@@ -284,7 +284,7 @@ class BaseLearning(ABC):
                     data = self.split_subgrids(subgrid_size, data)
 
                 with profiler.record_function("model_inference"):
-                    output = self.model(data)
+                    output = self.model.forward_pass(data)
 
                 if subgrid_size is not None:
                     # max occlusion ratio threshold for COMP_DEM where we accept reconstruction

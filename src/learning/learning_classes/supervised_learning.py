@@ -33,7 +33,7 @@ class SupervisedLearning(BaseLearning):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
-                output = self.model(data)
+                output = self.model.forward_pass(data)
 
                 if torch.isnan(output[ChannelEnum.REC_DEM]).sum() > 0:
                     raise RuntimeError("We detected NaNs in the model outputs which means "
@@ -63,7 +63,7 @@ class SupervisedLearning(BaseLearning):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
-                output = self.model(data)
+                output = self.model.forward_pass(data)
 
                 loss_dict = self.model.loss_function(loss_config=self.task.config["loss"],
                                                      output=output,

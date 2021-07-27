@@ -101,7 +101,7 @@ class BaseModel(ABC, nn.Module):
                 dem_solutions = []
                 data_uncertainties = []
                 for i in range(self.num_solutions):
-                    x = self.forward_pass(input=input)
+                    x = self.forward(input=input)
 
                     if type(x) in [list, tuple]:
                         # remove channels dimension from tensor
