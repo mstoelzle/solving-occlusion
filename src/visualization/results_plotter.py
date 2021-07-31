@@ -221,6 +221,11 @@ class ResultsPlotter:
                 # Hide grid lines
                 ax.grid(False)
 
+                # hide ticks
+                if self.config.get("hide_ticks", False):
+                    ax.axes.xaxis.set_ticks([])
+                    ax.axes.yaxis.set_ticks([])
+
             plt.draw()
             plt.savefig(str(logdir / f"sample_3d_{idx}.pdf"))
             if self.remote is not True:
@@ -234,15 +239,18 @@ class ResultsPlotter:
                                             rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                             model_um=model_um, total_um=total_um,
                                             robot_position_pixel=robot_position_pixel, remote=self.remote,
-                                            indiv_vranges=indiv_vranges)
+                                            indiv_vranges=indiv_vranges,
+                                            hide_ticks=self.config.get("hide_ticks", False))
 
             if rec_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.REC_DEMS, rec_dems,
-                                    robot_position_pixel=robot_position_pixel, remote=self.remote)
+                                    robot_position_pixel=robot_position_pixel, remote=self.remote,
+                                    hide_ticks=self.config.get("hide_ticks", False))
 
             if comp_dems is not None:
                 draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
-                                    robot_position_pixel=robot_position_pixel, remote=self.remote)
+                                    robot_position_pixel=robot_position_pixel, remote=self.remote,
+                                    hide_ticks=self.config.get("hide_ticks", False))
 
             if ChannelEnum.REC_TRAV_RISK_MAP.value in data_hdf5_group \
                     and ChannelEnum.COMP_TRAV_RISK_MAP.value in data_hdf5_group:
@@ -253,7 +261,8 @@ class ResultsPlotter:
                                          rec_data_um=rec_data_um, comp_data_um=comp_data_um,
                                          model_um=model_um, total_um=total_um,
                                          rec_trav_risk_map=rec_trav_risk_map, comp_trav_risk_map=comp_trav_risk_map,
-                                         robot_position_pixel=robot_position_pixel, remote=self.remote)
+                                         robot_position_pixel=robot_position_pixel, remote=self.remote,
+                                         hide_ticks=self.config.get("hide_ticks", False))
 
             progress_bar.next()
         progress_bar.finish()
@@ -428,7 +437,8 @@ class ResultsPlotter:
 
                 draw_qualitative_comparison_plot(idx, purpose_logdir,
                                                  gt_dem=gt_dem, occ_dem=occ_dem, rec_dems=rec_dems,
-                                                 robot_position_pixel=robot_position_pixel, remote=self.remote)
+                                                 robot_position_pixel=robot_position_pixel, remote=self.remote,
+                                                 hide_ticks=self.config.get("hide_ticks", False))
 
                 progress_bar.next()
             progress_bar.finish()

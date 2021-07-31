@@ -404,7 +404,8 @@
             "qualitative_comparison":  [
                 {"title":  "Telea", "task": 0},
                 {"title":  "Self-supervised", "task": 2}
-            ]
+            ],
+            "hide_ticks": true
         }
     },
     "remote": true,

@@ -9,7 +9,7 @@ from src.enums import *
 def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
                          gt_dem: np.array = None, occ_dem: np.array = None, occ_mask: np.array = None,
                          gt_data_um: np.array = None, occ_data_um: np.array = None,
-                         robot_position_pixel: np.array = None, remote=False):
+                         robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
     if occ_dem is None and occ_mask is not None:
         occ_dem = gt_dem.copy()
         occ_dem[occ_mask == 1] = np.nan
@@ -59,6 +59,11 @@ def draw_dataset_samples(sample_idx: int, logdir: pathlib.Path,
         # Hide grid lines
         ax.grid(False)
 
+        # hide ticks
+        if hide_ticks:
+            ax.axes.xaxis.set_ticks([])
+            ax.axes.yaxis.set_ticks([])
+
     plt.draw()
     plt.savefig(str(logdir / f"sample_2d_{sample_idx}.pdf"))
     if remote is not True:
@@ -70,7 +75,8 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
                                 gt_dem: np.array = None, rec_dem: np.array = None, comp_dem: np.array = None,
                                 rec_data_um: np.array = None, comp_data_um: np.array = None,
                                 model_um: np.array = None, total_um: np.array = None,
-                                robot_position_pixel: np.array = None, remote=False, indiv_vranges=True):
+                                robot_position_pixel: np.array = None, remote=False, indiv_vranges=True,
+                                hide_ticks=False):
     fig, axes = plt.subplots(nrows=3, ncols=2, figsize=[1.3 * 10, 1.9 * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
@@ -192,6 +198,15 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
     if indiv_vranges is False:
         fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.1)
 
+    for i, ax in enumerate(axes.reshape(-1)):
+        # Hide grid lines
+        ax.grid(False)
+
+        # hide ticks
+        if hide_ticks:
+            ax.axes.xaxis.set_ticks([])
+            ax.axes.yaxis.set_ticks([])
+
     plt.draw()
     plt.savefig(str(logdir / f"error_uncertainty_{sample_idx}.pdf"))
     if remote is not True:
@@ -201,7 +216,7 @@ def draw_error_uncertainty_plot(sample_idx: int, logdir: pathlib.Path,
 
 def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
                         channel: ChannelEnum, dems: np.array,
-                        robot_position_pixel: np.array = None, remote=False):
+                        robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
     num_solutions = dems.shape[0]
     grid_size = int(np.floor(np.sqrt(num_solutions)).item())
 
@@ -226,6 +241,11 @@ def draw_solutions_plot(sample_idx: int, logdir: pathlib.Path,
                                      cmap=dems_cmap, vmin=dems_vmin, vmax=dems_vmax)
             axes[i, j].grid(False)
 
+            # hide ticks
+            if hide_ticks:
+                axes[i, j].axes.xaxis.set_ticks([])
+                axes[i, j].axes.yaxis.set_ticks([])
+
             solution_idx += 1
 
     fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
@@ -242,7 +262,7 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
                              rec_data_um: np.array = None, comp_data_um: np.array = None,
                              model_um: np.array = None, total_um: np.array = None,
                              rec_trav_risk_map: np.array = None, comp_trav_risk_map: np.array = None,
-                             robot_position_pixel: np.array = None, remote=False):
+                             robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[1.2 * 10, 1.1 * 10])
 
     cmap = plt.get_cmap("RdYlGn_r")
@@ -288,7 +308,7 @@ def draw_traversability_plot(sample_idx: int, logdir: pathlib.Path,
 def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
                                      gt_dem: np.array = None, occ_dem: np.array = None,
                                      rec_dems: Dict[str, np.array] = {},
-                                     robot_position_pixel: np.array = None, remote=False):
+                                     robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
     dem_cmap = plt.get_cmap("viridis")
 
     num_subplots = len(rec_dems)
@@ -346,8 +366,9 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
         ax.grid(False)
 
         # hide ticks
-        ax.axes.xaxis.set_ticks([])
-        ax.axes.yaxis.set_ticks([])
+        if hide_ticks:
+            ax.axes.xaxis.set_ticks([])
+            ax.axes.yaxis.set_ticks([])
 
     plt.draw()
     plt.savefig(str(logdir / f"qualitative_comparison_2d_{sample_idx}.pdf"))
