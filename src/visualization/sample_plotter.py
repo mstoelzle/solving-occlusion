@@ -297,7 +297,7 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
     if occ_dem is not None:
         num_subplots += 1
 
-    fig, axes = plt.subplots(nrows=1, ncols=num_subplots, figsize=[num_subplots * 6.4, 1.2 * 4.8])
+    fig, axes = plt.subplots(nrows=1, ncols=num_subplots, figsize=[num_subplots * 0.7 * 6.4, 1.2 * 4.8])
     axes = np.expand_dims(axes, axis=0)
 
     mins = [np.Inf]
@@ -336,7 +336,7 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
                                        vmax=elevation_vmax, cmap=elevation_cmap)
         plot_id += 1
 
-    fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.045)
+    fig.colorbar(mat, ax=axes.ravel().tolist(), fraction=0.01)
 
     for i, ax in enumerate(axes.reshape(-1)):
         if robot_position_pixel is not None:
@@ -346,12 +346,8 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
         ax.grid(False)
 
         # hide ticks
-        ax.tick_params(
-            axis='x',  # changes apply to the x-axis
-            which='both',  # both major and minor ticks are affected
-            bottom=False,  # ticks along the bottom edge are off
-            top=False,  # ticks along the top edge are off
-            labelbottom=False)  # labels along the bottom edge are off
+        ax.axes.xaxis.set_ticks([])
+        ax.axes.yaxis.set_ticks([])
 
     plt.draw()
     plt.savefig(str(logdir / f"qualitative_comparison_2d_{sample_idx}.pdf"))

@@ -9,7 +9,8 @@ import torch
 from typing import *
 import warnings
 
-from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, draw_traversability_plot
+from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, draw_traversability_plot, \
+    draw_qualitative_comparison_plot
 from src.enums import *
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, l1_loss_fct, psnr_loss_fct
 from src.utils.log import get_logger
@@ -42,6 +43,9 @@ class ResultsPlotter:
 
             if self.config.get("loss_magnitude_distribution", False) is True:
                 self.plot_loss_magnitude_distribution()
+
+            if len(self.config.get("qualitative_comparison", [])) > 0:
+                self.plot_qualitative_comparison()
 
     def plot_task(self, task_uid: int, task_hdf5_group: h5py.Group):
         logdir = self.logdir / f"task_{task_uid}"
@@ -361,3 +365,70 @@ class ResultsPlotter:
             if self.remote is not True:
                 plt.show()
             plt.close()
+
+    def plot_qualitative_comparison(self):
+        qual_comp_config = self.config["qualitative_comparison"]
+
+        for purpose in ["test"]:
+            purpose_logdir = self.logdir / f"{purpose}_qualitative_comparison"
+            purpose_logdir.mkdir(exist_ok=True, parents=True)
+
+            dataset_length = None
+            for task_spec in qual_comp_config:
+                method_title = task_spec["title"]
+                task_uid = task_spec["task"]
+
+                data_hdf5_group = self.results_hdf5_file[f"task_{task_uid}/{purpose}/data"]
+                task_dataset_length = len(data_hdf5_group[ChannelEnum.REC_DEM.value])
+
+                if dataset_length is None:
+                    dataset_length = task_dataset_length
+                else:
+                    assert dataset_length == task_dataset_length
+
+            num_samples = int(dataset_length / self.config["sample_frequency"])
+
+            progress_bar = Bar(f"Plot qualitative comparison for {purpose}", max=num_samples)
+            for sample_idx in range(num_samples):
+                idx = sample_idx * self.config["sample_frequency"]
+
+                # all tasks should contain the same combination of occ_dems and gt_dems
+                # as we are trying to compare different methods
+                task_uid = qual_comp_config[0]["task"]
+                data_hdf5_group = self.results_hdf5_file[f"task_{task_uid}/{purpose}/data"]
+                if ChannelEnum.OCC_DEM.value in data_hdf5_group:
+                    occ_dem = data_hdf5_group[ChannelEnum.OCC_DEM.value][idx, ...]
+                else:
+                    occ_dem = None
+                if ChannelEnum.GT_DEM.value in data_hdf5_group:
+                    gt_dem = data_hdf5_group[ChannelEnum.GT_DEM.value][idx, ...]
+                else:
+                    gt_dem = None
+
+                res_grid = data_hdf5_group[ChannelEnum.RES_GRID.value][idx, ...]
+                rel_position = data_hdf5_group[ChannelEnum.REL_POSITION.value][idx, ...]
+
+                u = int(round(occ_dem.shape[0] / 2 + rel_position[0] / res_grid[0]))
+                v = int(round(occ_dem.shape[1] / 2 + rel_position[1] / res_grid[1]))
+                # we only visualize the robot position if its inside the elevation map
+                plot_robot_position = 0 < u < occ_dem.shape[0] and 0 < v < occ_dem.shape[1]
+                if plot_robot_position:
+                    robot_position_pixel = np.array([u, v])
+                else:
+                    robot_position_pixel = None
+
+                rec_dems = {}
+                for task_spec in qual_comp_config:
+                    method_title = task_spec["title"]
+                    task_uid = task_spec["task"]
+                    data_hdf5_group = self.results_hdf5_file[f"task_{task_uid}/{purpose}/data"]
+
+                    comp_dem = data_hdf5_group[ChannelEnum.COMP_DEM.value][idx, ...]
+                    rec_dems[method_title] = comp_dem
+
+                draw_qualitative_comparison_plot(idx, purpose_logdir,
+                                                 gt_dem=gt_dem, occ_dem=occ_dem, rec_dems=rec_dems,
+                                                 robot_position_pixel=robot_position_pixel, remote=self.remote)
+
+                progress_bar.next()
+            progress_bar.finish()
