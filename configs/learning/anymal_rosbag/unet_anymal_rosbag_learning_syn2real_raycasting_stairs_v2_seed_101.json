@@ -474,7 +474,15 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+        "visualization": {
+            "sample_frequency":  50,
+            "indiv_vranges": true,
+            "qualitative_comparison":  [
+                {"title":  "Telea", "task": 0},
+                {"title":  "Self-supervised", "task": 2}
+            ],
+            "hide_ticks": true
+        }
     },
     "remote": true,
     "seeds": [101]
