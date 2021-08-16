@@ -75,15 +75,16 @@ class ResultsPlotter:
             idx = sample_idx * self.config["sample_frequency"]
             res_grid = data_hdf5_group[ChannelEnum.RES_GRID.value][idx, ...]
             rel_position = data_hdf5_group[ChannelEnum.REL_POSITION.value][idx, ...]
+            occ_dem = data_hdf5_group[ChannelEnum.OCC_DEM.value][idx, ...]
+            occ_mask = data_hdf5_group[ChannelEnum.OCC_MASK.value][idx, ...]
             rec_dem = data_hdf5_group[ChannelEnum.REC_DEM.value][idx, ...]
-            occluded_elevation_map = data_hdf5_group[ChannelEnum.OCC_DEM.value][idx, ...]
             comp_dem = data_hdf5_group[ChannelEnum.COMP_DEM.value][idx, ...]
 
             gt_dem = None
             if ChannelEnum.GT_DEM.value in data_hdf5_group:
                 gt_dem = data_hdf5_group[ChannelEnum.GT_DEM.value][idx, ...]
 
-            non_occluded_elevation_map = occluded_elevation_map[~np.isnan(occluded_elevation_map)]
+            nocc_dem = occ_dem[~np.isnan(occ_dem)]
 
             rec_data_um = None
             if ChannelEnum.REC_DATA_UM.value in data_hdf5_group:
@@ -105,10 +106,10 @@ class ResultsPlotter:
             if ChannelEnum.COMP_DEMS.value in data_hdf5_group:
                 comp_dems = data_hdf5_group[ChannelEnum.COMP_DEMS.value][idx, ...]
 
-            u = int(round(occluded_elevation_map.shape[0] / 2 + rel_position[0] / res_grid[0]))
-            v = int(round(occluded_elevation_map.shape[1] / 2 + rel_position[1] / res_grid[1]))
+            u = int(round(occ_dem.shape[0] / 2 + rel_position[0] / res_grid[0]))
+            v = int(round(occ_dem.shape[1] / 2 + rel_position[1] / res_grid[1]))
             # we only visualize the robot position if its inside the elevation map
-            plot_robot_position = 0 < u < occluded_elevation_map.shape[0] and 0 < v < occluded_elevation_map.shape[1]
+            plot_robot_position = 0 < u < occ_dem.shape[0] and 0 < v < occ_dem.shape[1]
             if plot_robot_position:
                 robot_position_pixel = np.array([u, v])
             else:
@@ -120,9 +121,9 @@ class ResultsPlotter:
                 elevation_vmin = np.min([np.min(rec_dem), np.min(comp_dem[~np.isnan(comp_dem)])])
                 elevation_vmax = np.max([np.max(rec_dem), np.max(comp_dem[~np.isnan(comp_dem)])])
 
-                if non_occluded_elevation_map.size != 0:
-                    elevation_vmin = np.min([elevation_vmin, np.min(non_occluded_elevation_map)])
-                    elevation_vmax = np.max([elevation_vmax, np.max(non_occluded_elevation_map)])
+                if nocc_dem.size != 0:
+                    elevation_vmin = np.min([elevation_vmin, np.min(nocc_dem)])
+                    elevation_vmax = np.max([elevation_vmax, np.max(nocc_dem)])
 
                 if gt_dem is not None and np.isnan(gt_dem).all() is False:
                     ground_truth_dem_vmin = np.min(gt_dem[~np.isnan(gt_dem)])
@@ -160,7 +161,7 @@ class ResultsPlotter:
                 fig.colorbar(mat, ax=axes[1, 0], fraction=0.08)
             axes[1, 1].set_title("Occlusion")
             # matshow plots x and y swapped
-            mat = axes[1, 1].matshow(np.swapaxes(occluded_elevation_map, 0, 1), vmin=elevation_vmin,
+            mat = axes[1, 1].matshow(np.swapaxes(occ_dem, 0, 1), vmin=elevation_vmin,
                                      vmax=elevation_vmax, cmap=elevation_cmap)
             if indiv_vranges:
                 fig.colorbar(mat, ax=axes[1, 1], fraction=0.08)
@@ -192,10 +193,10 @@ class ResultsPlotter:
             axes = []
             num_cols = 3
 
-            x_3d = np.arange(start=-int(occluded_elevation_map.shape[0] / 2),
-                             stop=int(occluded_elevation_map.shape[0] / 2)) * res_grid[0]
-            y_3d = np.arange(start=-int(occluded_elevation_map.shape[1] / 2),
-                             stop=int(occluded_elevation_map.shape[1] / 2)) * res_grid[1]
+            x_3d = np.arange(start=-int(occ_dem.shape[0] / 2),
+                             stop=int(occ_dem.shape[0] / 2)) * res_grid[0]
+            y_3d = np.arange(start=-int(occ_dem.shape[1] / 2),
+                             stop=int(occ_dem.shape[1] / 2)) * res_grid[1]
             x_3d, y_3d = np.meshgrid(x_3d, y_3d)
 
             axes.append(fig.add_subplot(100 + num_cols * 10 + 1, projection="3d"))
@@ -211,7 +212,7 @@ class ResultsPlotter:
                                  cmap=elevation_cmap)
             axes.append(fig.add_subplot(100 + num_cols * 10 + 3, projection="3d"))
             axes[2].set_title("Occlusion")
-            axes[2].plot_surface(x_3d, y_3d, occluded_elevation_map, vmin=elevation_vmin, vmax=elevation_vmax,
+            axes[2].plot_surface(x_3d, y_3d, occ_dem, vmin=elevation_vmin, vmax=elevation_vmax,
                                  cmap=elevation_cmap)
             warnings.filterwarnings("default", category=UserWarning)
             fig.colorbar(mat, ax=axes, fraction=0.015)
