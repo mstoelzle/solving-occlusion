@@ -175,6 +175,11 @@ class ResultsPlotter:
                 # Hide grid lines
                 ax.grid(False)
 
+                # hide ticks
+                if self.config.get("hide_ticks", False):
+                    ax.axes.xaxis.set_ticks([])
+                    ax.axes.yaxis.set_ticks([])
+
             plt.draw()
             plt.savefig(str(logdir / f"sample_2d_{idx}.pdf"))
             if self.remote is not True:
