@@ -10,7 +10,7 @@ from typing import *
 import warnings
 
 from .sample_plotter import draw_error_uncertainty_plot, draw_solutions_plot, draw_traversability_plot, \
-    draw_qualitative_comparison_plot
+    draw_qualitative_comparison_plot, draw_occ_mask_plot
 from src.enums import *
 from src.learning.loss.loss import masked_loss_fct, mse_loss_fct, l1_loss_fct, psnr_loss_fct
 from src.utils.log import get_logger
@@ -257,6 +257,11 @@ class ResultsPlotter:
                 draw_solutions_plot(idx, logdir, ChannelEnum.COMP_DEMS, rec_dems,
                                     robot_position_pixel=robot_position_pixel, remote=self.remote,
                                     hide_ticks=self.config.get("hide_ticks", False))
+
+            if occ_mask is not None:
+                draw_occ_mask_plot(idx, logdir, occ_mask=occ_mask,
+                                   robot_position_pixel=robot_position_pixel, remote=self.remote,
+                                   hide_ticks=self.config.get("hide_ticks", False))
 
             if ChannelEnum.REC_TRAV_RISK_MAP.value in data_hdf5_group \
                     and ChannelEnum.COMP_TRAV_RISK_MAP.value in data_hdf5_group:

@@ -309,8 +309,6 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
                                      gt_dem: np.array = None, occ_dem: np.array = None,
                                      rec_dems: Dict[str, np.array] = {},
                                      robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
-    dem_cmap = plt.get_cmap("viridis")
-
     num_subplots = len(rec_dems)
     if gt_dem is not None:
         num_subplots += 1
@@ -372,6 +370,36 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
 
     plt.draw()
     plt.savefig(str(logdir / f"qualitative_comparison_2d_{sample_idx}.pdf"))
+    if remote is not True:
+        plt.show()
+    plt.close()
+
+
+def draw_occ_mask_plot(sample_idx: int, logdir: pathlib.Path, occ_mask: np.array = None,
+                       robot_position_pixel: np.array = None, remote=False, hide_ticks=False):
+    mask_cmap = plt.get_cmap("binary")
+
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=[6.4, 4.8])
+    axes = np.expand_dims(np.expand_dims(axes, axis=0), axis=0)
+
+    axes[0, 0].set_title("Occlusion mask")
+    # matshow plots x and y swapped
+    mat = axes[0, 0].matshow(np.swapaxes(occ_mask, 0, 1), cmap=mask_cmap, vmin=0, vmax=1)
+
+    for i, ax in enumerate(axes.reshape(-1)):
+        if robot_position_pixel is not None:
+            ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
+
+        # Hide grid lines
+        ax.grid(False)
+
+        # hide ticks
+        if hide_ticks:
+            ax.axes.xaxis.set_ticks([])
+            ax.axes.yaxis.set_ticks([])
+
+    plt.draw()
+    plt.savefig(str(logdir / f"occ_mask_2d_{sample_idx}.pdf"))
     if remote is not True:
         plt.show()
     plt.close()
