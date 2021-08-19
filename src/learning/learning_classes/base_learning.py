@@ -189,7 +189,9 @@ class BaseLearning(ABC):
             self.model.load_state_dict(best_dict)
             self.task.save_state_dict(best_dict)
 
-        self.trace_model()
+        if self.task.config.get("model", {}).get("trace", True):
+            self.trace_model()
+
         self.test()
 
         return self.model

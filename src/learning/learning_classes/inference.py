@@ -13,6 +13,7 @@ class Inference(BaseLearning):
         self.task = task
 
         self.set_model(task.model_to_infer, pick_optimizer=False)
-        self.trace_model()
+        if self.task.config.get("model", {}).get("trace", True):
+            self.trace_model()
 
         return self.infer()
