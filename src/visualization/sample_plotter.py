@@ -326,9 +326,9 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
     if occ_dem is not None and np.isnan(occ_dem).all() is False:
         mins.append(np.min(occ_dem[~np.isnan(occ_dem)]))
         maxs.append(np.max(occ_dem[~np.isnan(occ_dem)]))
-    for key, rec_dem in rec_dems.items():
-        mins.append(np.min(rec_dem[~np.isnan(rec_dem)]))
-        maxs.append(np.max(rec_dem[~np.isnan(rec_dem)]))
+    for key, error_dem in rec_dems.items():
+        mins.append(np.min(error_dem[~np.isnan(error_dem)]))
+        maxs.append(np.max(error_dem[~np.isnan(error_dem)]))
     elevation_vmin = np.min(mins)
     elevation_vmax = np.max(maxs)
 
@@ -347,10 +347,10 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
         mat = axes[0, plot_id].matshow(np.swapaxes(gt_dem, 0, 1), vmin=elevation_vmin,
                                        vmax=elevation_vmax, cmap=elevation_cmap)
         plot_id += 1
-    for key, rec_dem in rec_dems.items():
+    for key, error_dem in rec_dems.items():
         axes[0, plot_id].set_title(key)
         # matshow plots x and y swapped
-        mat = axes[0, plot_id].matshow(np.swapaxes(rec_dem, 0, 1), vmin=elevation_vmin,
+        mat = axes[0, plot_id].matshow(np.swapaxes(error_dem, 0, 1), vmin=elevation_vmin,
                                        vmax=elevation_vmax, cmap=elevation_cmap)
         plot_id += 1
 
@@ -373,6 +373,52 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
     if remote is not True:
         plt.show()
     plt.close()
+
+    if gt_dem is not None:
+        fig, axes = plt.subplots(nrows=1, ncols=len(rec_dems), figsize=[len(rec_dems) * 0.7 * 6.4, 1.2 * 4.8])
+        axes = np.expand_dims(axes, axis=0)
+
+        error_dems = {}
+        mins = [np.Inf]
+        maxs = [-np.Inf]
+        for key, error_dem in rec_dems.items():
+            error_dem = np.abs(error_dem - gt_dem)
+            error_dems[key] = error_dem
+            mins.append(np.min(error_dem[~np.isnan(error_dem)]))
+            maxs.append(np.max(error_dem[~np.isnan(error_dem)]))
+
+        error_vmin = np.min(mins)
+        error_vmax = np.max(maxs)
+
+        error_cmap = plt.get_cmap("RdYlGn_r")
+
+        plot_id = 0
+        for key, error_dem in error_dems.items():
+            axes[0, plot_id].set_title(key)
+            # matshow plots x and y swapped
+            mat = axes[0, plot_id].matshow(np.swapaxes(error_dem, 0, 1), vmin=error_vmin,
+                                           vmax=error_vmax, cmap=error_cmap)
+            plot_id += 1
+
+        fig.colorbar(mat, ax=axes.ravel().tolist())
+
+        for i, ax in enumerate(axes.reshape(-1)):
+            if robot_position_pixel is not None:
+                ax.plot([robot_position_pixel[0]], [robot_position_pixel[1]], marker="*", color="red")
+
+            # Hide grid lines
+            ax.grid(False)
+
+            # hide ticks
+            if hide_ticks:
+                ax.axes.xaxis.set_ticks([])
+                ax.axes.yaxis.set_ticks([])
+
+        plt.draw()
+        plt.savefig(str(logdir / f"qualitative_error_comparison_2d_{sample_idx}.pdf"))
+        if remote is not True:
+            plt.show()
+        plt.close()
 
 
 def draw_occ_mask_plot(sample_idx: int, logdir: pathlib.Path, occ_mask: np.array = None,
