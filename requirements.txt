@@ -1,7 +1,7 @@
 # requires Python 3.9.1
 aenum==3.1.0
 coloredlogs==15.0.1
-dash==1.21.0
+dash==2.0.0
 h5py==3.4.0
 jsonschema==3.2.0
 matplotlib==3.4.3
