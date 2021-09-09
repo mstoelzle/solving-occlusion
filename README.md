@@ -205,6 +205,24 @@ Replay rosbag with point cloud 2 messages at rate of 1% of original speed:
 rosbag play -r 0.01 run1_clouds_only.bag
 ```
 
+## Sample commands
+Generate a synthetic height map dataset:
+```bash
+python dataset_generation.py configs/dg/synthetic_height_map_dataset_generation.json
+```
+Train on the synthetic height map terrain using supervised learning (after adjusting the path to the dataset in the config):
+````bash
+python main.py configs/learning/height_map/unet_synthetic_height_map_learning_supervised.json
+````
+Generate a HDF5 solving occlusion dataset from a rosbag containing GridMap messages (in this case for ENAV planetary dataset):
+```bash
+python dataset_generation.py configs/dg/enav_planetary.json
+```
+Train using self-supervised learning on a real-world solving occlusion HDF5 dataset:
+```bash
+python main.py configs/learning/enav/unet_enav_learning_self_supervision_raycasting_seed_101.json
+```
+
 ## Citations
 <a id="1">[1]</a> Barnes, Connelly, et al. 
 "PatchMatch: A randomized correspondence algorithm for structural image editing." 
