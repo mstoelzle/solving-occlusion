@@ -13,7 +13,7 @@ plotly==5.3.1
 progress==1.6
 psutil==5.8.0
 pybind11==2.8.0
-pycryptodomex==3.10.4
+pycryptodomex==3.11.0
 pytorch-msssim==0.2.1
 pyyaml==5.4.1
 rosbags==0.9.6
