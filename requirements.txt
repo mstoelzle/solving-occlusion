@@ -12,7 +12,7 @@ Pillow>=8.1.2, <9.0
 plotly==5.3.1
 progress==1.6
 psutil==5.8.0
-pybind11==2.8.0
+pybind11==2.8.1
 pycryptodomex==3.11.0
 pytorch-msssim==0.2.1
 pyyaml==6.0
