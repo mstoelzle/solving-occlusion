@@ -1,5 +1,5 @@
 # requires Python 3.9.1
-aenum==3.1.1
+aenum==3.1.2
 coloredlogs==15.0.1
 dash==2.0.0
 h5py==3.5.0
