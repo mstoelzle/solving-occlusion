@@ -46,6 +46,27 @@
                     "model_to_train": "untrained",
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "nearest"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "linear"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "cubic"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
                     "model": {"name": "Telea"}
                 },
                 {
