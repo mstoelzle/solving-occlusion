@@ -16,7 +16,7 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 class BaseModel(ABC, nn.Module):
     def __init__(self, seed: int, in_channels: List[str], out_channels: List[str],
-                 input_normalization: Dict = None, **kwargs):
+                 input_normalization: Dict = None, strict_forward_def: bool = True, **kwargs):
         super().__init__()
         self.config = kwargs
         self.seed = seed
@@ -27,6 +27,9 @@ class BaseModel(ABC, nn.Module):
         self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
 
         self.input_normalization = None if input_normalization is False else input_normalization
+
+        # models with strict forward definitions only take torch.Tensors as input
+        self.strict_forward_def = strict_forward_def
 
         self.dropout_mode = False
         self.dropout_p = self.config.get("training_dropout_probability", 0.0)
@@ -80,7 +83,12 @@ class BaseModel(ABC, nn.Module):
         self.set_dropout_mode(dropout_mode=True if self.training and self.use_training_dropout else False)
 
         data_uncertainty = None
-        x = self.forward(input=input)
+
+        if self.strict_forward_def:
+            x = self.forward(input=input)
+        else:
+            x = self.forward(input=input, data=data)
+
         if type(x) in [list, tuple]:
             # remove channels dimension from tensor
             for i in range(len(x)):

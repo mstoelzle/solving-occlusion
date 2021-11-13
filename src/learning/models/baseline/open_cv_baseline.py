@@ -31,7 +31,7 @@ class OpenCVBaseline(BaseBaselineModel):
 
         self.patch_match = None
 
-    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
+    def forward(self, input: torch.Tensor, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         # init PatchMatch if necessary
         if self.inpainting_method == "PatchMatch" and self.patch_match is None:
@@ -41,18 +41,15 @@ class OpenCVBaseline(BaseBaselineModel):
         else:
             patch_match = self.patch_match
 
-        # we need to call this to generate the binary occlusion map into the data dict
-        _ = self.assemble_input(data)
+        rec_dems = data[ChannelEnum.OCC_DEM].clone()
 
-        rec_dem = data[ChannelEnum.OCC_DEM].clone()
-
-        for idx in range(rec_dem.size(0)):
+        for idx in range(rec_dems.size(0)):
             map = data[ChannelEnum.OCC_DEM][idx, ...].clone()
             occ_mask = data[ChannelEnum.OCC_MASK][idx, ...]
 
             if torch.isnan(map).all():
                 # the occ_dem is fully occluded
-                rec_dem[idx, ...] = torch.zeros(size=map.size())
+                rec_dems[idx, ...] = torch.zeros(size=map.size())
                 continue
 
             min = torch.min(map[~torch.isnan(map)])
@@ -89,15 +86,9 @@ class OpenCVBaseline(BaseBaselineModel):
             # plt.matshow(reconstructed_map)
             # plt.show()
 
-            rec_dem[idx, ...] = reconstructed_map
+            rec_dems[idx, ...] = reconstructed_map
 
-        comp_dem = self.create_composed_map(data[ChannelEnum.OCC_DEM],
-                                            rec_dem)
-
-        output = {ChannelEnum.REC_DEM: rec_dem,
-                  ChannelEnum.COMP_DEM: comp_dem}
-
-        return output
+        return rec_dems
 
     def loss_function(self, **kwargs) -> dict:
         return self.eval_loss_function(**kwargs)

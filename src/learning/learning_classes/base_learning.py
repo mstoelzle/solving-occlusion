@@ -189,7 +189,7 @@ class BaseLearning(ABC):
             self.model.load_state_dict(best_dict)
             self.task.save_state_dict(best_dict)
 
-        if self.task.config.get("model", {}).get("trace", True):
+        if self.task.config.get("model", {}).get("trace", True) and self.model.strict_forward_def is True:
             self.trace_model()
 
         self.test()
