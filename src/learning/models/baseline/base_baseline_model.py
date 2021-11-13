@@ -11,19 +11,17 @@ class BaseBaselineModel(BaseModel):
 
     def forward_pass(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                      **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
-        input, norm_consts = self.assemble_input(data)
-
         output = {}
 
-        if self.strict_forward_def:
-            x = self.forward(input=input)
-        else:
-            x = self.forward(input=input, data=data)
+        assert(self.strict_forward_def is False)
+        x = self.forward(data=data)
 
-        x = x.squeeze(dim=1)
-        rec_dem = x
+        rec_dem = x.squeeze(dim=1)
         output[ChannelEnum.REC_DEM] = rec_dem
 
-        output = self.denormalize_output(data, output, norm_consts)
+        comp_dem = self.create_composed_map(data[ChannelEnum.OCC_DEM], rec_dem)
+
+        output = {ChannelEnum.REC_DEM: rec_dem,
+                  ChannelEnum.COMP_DEM: comp_dem}
 
         return output

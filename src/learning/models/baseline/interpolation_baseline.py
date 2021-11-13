@@ -20,7 +20,7 @@ class InterpolationBaseline(BaseBaselineModel):
 
         self.method = name
 
-    def forward(self, input: torch.Tensor, data: Dict[Union[str, ChannelEnum], torch.Tensor],
+    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         rec_dems = data[ChannelEnum.OCC_DEM].clone()
 

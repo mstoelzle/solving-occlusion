@@ -27,11 +27,11 @@ class OpenCVBaseline(BaseBaselineModel):
         else:
             raise ValueError
 
-        self.inpaint_radius = self.config["inpaint_radius"]
+        self.inpaint_radius = self.config.get("inpaint_radius", 3)
 
         self.patch_match = None
 
-    def forward(self, input: torch.Tensor, data: Dict[Union[str, ChannelEnum], torch.Tensor],
+    def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],
                 **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
         # init PatchMatch if necessary
         if self.inpainting_method == "PatchMatch" and self.patch_match is None:
