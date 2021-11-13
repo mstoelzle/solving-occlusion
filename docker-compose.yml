@@ -1,5 +1,5 @@
 services:
-  solving-occlusion:
+  solving-occlusion-core:
     container_name: solving-occlusion
     image: mstoelzle/solving-occlusion:latest
     build:
@@ -9,8 +9,20 @@ services:
     environment:
       - DISPLAY=:0
       - QT_X11_NO_MITSHM=1
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility,display
-    runtime: nvidia
     volumes:
       - ./data:/workspace/solving-occlusion/data
+  solving-occlusion-ubuntu:
+    extends: solving-occlusion-core
+    build:
+      network: host
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility,display
+    network_mode: host
+    runtime: nvidia
+  solving-occlusion-macos:
+    extends: solving-occlusion-core
+    volumes:
+        - type: bind
+          source: /tmp/.X11-unix
+          target: /tmp/.X11-unix
