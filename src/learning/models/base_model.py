@@ -192,16 +192,21 @@ class BaseModel(ABC, nn.Module):
 
         return input, norm_consts
 
-    def preprocess_occluded_map(self, occ_dem: torch.Tensor, NaN_replacement: float = 0.0) -> torch.Tensor:
-        if StrictVersion(torch.__version__) < StrictVersion("1.8.0"):
-            poem = occ_dem.clone()
+    def preprocess_occluded_map(self, occ_dem: torch.Tensor, NaN_replacement: Union[float, int, str] = 0.0) -> torch.Tensor:
+        if NaN_replacement == "linear":
+            # replace NaNs signifying occluded areas with linear interpolation
+            # between the two closest non-NaN values
+            raise NotImplementedError
+        elif isinstance(NaN_replacement, float) or isinstance(NaN_replacement, int):
+            if StrictVersion(torch.__version__) < StrictVersion("1.8.0"):
+                poem = occ_dem.clone()
 
-            # replace NaNs signifying occluded areas with arbitrary high or low number
-            # poem[occ_dem != occ_dem] = -10000
-            poem[occ_dem != occ_dem] = NaN_replacement
-
+                # replace NaNs signifying occluded areas with arbitrary high or low number
+                poem[occ_dem != occ_dem] = NaN_replacement
+            else:
+                poem = torch.nan_to_num(occ_dem, nan=NaN_replacement)
         else:
-            poem = torch.nan_to_num(occ_dem, nan=NaN_replacement)
+            raise NotImplementedError
 
         return poem
 
