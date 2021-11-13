@@ -11,13 +11,21 @@ from src.learning.normalization.input_normalization import InputNormalization
 
 
 class BaseNeuralNetworkModel(BaseModel):
-    def __init__(self, **kwargs):
+    def __init__(self, seed: int, in_channels: List[str], out_channels: List[str], input_normalization: Dict = None,
+                 **kwargs):
         super().__init__(**kwargs)
+
+        self.seed = seed
+
+        self.in_channels = [ChannelEnum(in_channel) for in_channel in in_channels]
+        self.out_channels = [ChannelEnum(out_channel) for out_channel in out_channels]
+
+        self.input_normalization = None if input_normalization is False else input_normalization
 
         self.NaN_replacement = self.config.get("NaN_replacement", 0.0)
 
         self.NaN_replacement_model = None
-        if isinstance(self.NaN_replacement, str):
+        if isinstance(self.NaN_replacement, str) or isinstance(self.NaN_replacement, dict):
             baseline_models = {
                 "cubic": InterpolationBaseline,
                 "linear": InterpolationBaseline,
@@ -26,10 +34,50 @@ class BaseNeuralNetworkModel(BaseModel):
                 "Telea": OpenCVBaseline,
             }
 
-            replacement_model_config = deepcopy(kwargs)
-            replacement_model_config["name"] = self.NaN_replacement
+            if isinstance(self.NaN_replacement, str):
+                # use the same model config as for the NN
+                replacement_model_config = deepcopy(kwargs)
+                replacement_model_config["name"] = self.NaN_replacement
+            else:
+                # use the model config specified in the NaN_replacement dictionary
+                replacement_model_config = self.NaN_replacement
 
-            self.NaN_replacement_model = baseline_models[self.NaN_replacement](**replacement_model_config)
+            self.NaN_replacement_model = baseline_models[replacement_model_config["name"]](**replacement_model_config)
+
+        self.dropout_mode = False
+        self.dropout_p = self.config.get("training_dropout_probability", 0.0)
+        self.use_training_dropout = True if self.dropout_p > 0.0 else False
+
+        self.adf = False
+        self.keep_variance_fn = None
+        if self.config.get("data_uncertainty_estimation") is not None:
+            data_uncertainty_config = self.config["data_uncertainty_estimation"]
+            self.data_uncertainty_method = DataUncertaintyMethodEnum(data_uncertainty_config["method"])
+            if self.data_uncertainty_method == DataUncertaintyMethodEnum.ADF:
+                self.adf = True
+                min_variance = data_uncertainty_config.get("min_variance", 0.001)
+                self.keep_variance_fn = lambda x: adf.keep_variance(x, min_variance=min_variance)
+            else:
+                raise NotImplementedError
+
+        self.model_uncertainty_method = None
+        self.num_solutions: int = 1
+        if self.config.get("model_uncertainty_estimation") is not None:
+            model_uncertainty_config = self.config["model_uncertainty_estimation"]
+            self.model_uncertainty_method = ModelUncertaintyMethodEnum(model_uncertainty_config["method"])
+            if self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_DROPOUT:
+                if self.use_training_dropout:
+                    assert self.dropout_p == model_uncertainty_config["probability"]
+                else:
+                    self.dropout_p = model_uncertainty_config["probability"]
+
+                self.num_solutions = int(model_uncertainty_config["num_solutions"])
+                self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
+            elif self.model_uncertainty_method == ModelUncertaintyMethodEnum.MONTE_CARLO_VAE:
+                self.num_solutions = int(model_uncertainty_config["num_solutions"])
+                self.use_mean_as_rec = model_uncertainty_config.get("use_mean_as_rec", False)
+            else:
+                raise NotImplementedError
 
     def forward_pass(self, data: Dict[Union[ChannelEnum, str], torch.Tensor],
                      **kwargs) -> Dict[Union[ChannelEnum, str], torch.Tensor]:
