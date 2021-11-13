@@ -6,10 +6,10 @@ from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.learning.loss.loss import masked_total_variation_loss_fct, adf_heteroscedastic_loss_fct
 from .unet_parts import *
-from ..base_model import BaseModel
+from ..base_neural_network_model import BaseNeuralNetworkModel
 
 
-class UNet(BaseModel):
+class UNet(BaseNeuralNetworkModel):
     def __init__(self, hidden_dims: List = None, bilinear=True, **kwargs):
         super(UNet, self).__init__(**kwargs)
 

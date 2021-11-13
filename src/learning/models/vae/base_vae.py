@@ -3,11 +3,11 @@ import torch
 from torch import nn
 from typing import Dict, List, Callable, Union, Any, TypeVar, Tuple
 
-from src.learning.models.base_model import BaseModel
+from src.learning.models.base_neural_network_model import BaseNeuralNetworkModel
 from src.enums.channel_enum import ChannelEnum
 
 
-class BaseVAE(BaseModel, ABC):
+class BaseVAE(BaseNeuralNetworkModel, ABC):
     def __init__(self, latent_dim: int, **kwargs) -> None:
         super(BaseVAE, self).__init__(**kwargs)
 

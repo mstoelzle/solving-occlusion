@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torchvision import models
 from typing import *
 
-from ..base_model import BaseModel
+from ..base_neural_network_model import BaseNeuralNetworkModel
 from src.dataloaders.dataloader_meta_info import DataloaderMetaInfo
 from src.enums import *
 from src.datasets.base_dataset import BaseDataset
@@ -162,7 +162,7 @@ class PCBActiv(nn.Module):
         return h, h_mask
 
 
-class PartialConvUNet(BaseModel):
+class PartialConvUNet(BaseNeuralNetworkModel):
     # https://github.com/naoto0804/pytorch-inpainting-with-partial-conv/blob/master/net.py
     def __init__(self, hidden_dims: List = None, num_layers=None, upsampling_mode='nearest', partial_conv: bool = True,
                  **kwargs):
