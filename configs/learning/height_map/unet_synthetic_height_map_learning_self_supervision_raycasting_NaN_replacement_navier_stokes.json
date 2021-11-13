@@ -1,0 +1,91 @@
+{
+    "name": "unet_synthetic_height_map_learning_self_supervision_raycasting_NaN_replacement_navier_stokes",
+    "cuda": true,
+    "experiment": {
+        "task_path": {
+            "defaults": {
+                "loss": {
+                    "report_frequency": 100,
+                    "normalization": [],
+                    "train_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 1,
+                        "mse_rec_occ": 10,
+                        "total_variation": 0.1
+                    },
+                    "eval_weights": {
+                        "mse_rec_all": 0,
+                        "mse_rec_nocc": 0,
+                        "mse_rec_occ": 1
+                    }
+                },
+                "domain_defaults": {
+                    "batch_size": 6,
+                    "num_workers": 4,
+                    "shuffle": true
+                },
+                "model": {
+                    "name": "UNet",
+                    "save_frequency": 1,
+                    "input_dim": [64, 64],
+                    "in_channels": ["occ_dem", "occ_mask"],
+                    "out_channels": ["rec_dem"],
+                    "hidden_dims": [64, 128, 256],
+                    "input_normalization": false,
+                    "NaN_replacement": {
+                        "name": "NavierStokes",
+                        "input_dim": [64, 64],
+                        "inpaint_radius": 3
+                    },
+                    "bilinear": true,
+                    "feature_extractor": true
+                },
+                "optimizer": {
+                    "name": "Adam",
+                    "lr": 0.0001,
+                    "weight_decay": 0.001
+                },
+                "controller": {
+                    "max_num_epochs": 100,
+                    "max_num_better_results": 35
+                },
+                "dataloaders": {"labeled_dataloader":  "target"},
+                "domains": {"target": {}},
+                "model_to_train": "untrained"
+            },
+            "tasks": [
+                {
+                    "task_type": "supervised-learning",
+                    "domain_defaults": {
+                        "datasets": [
+                            {
+                                "type": "hdf5",
+                                "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                "size": [64, 64],
+                                "sampling_weights": {"train": 1, "val":  1, "test":  0},
+                                "self_supervision": true,
+                                "transforms": {
+                                    "defaults": [
+                                        {
+                                            "type": "random_occlusion_raycasting",
+                                            "height_viewpoint": {"min":  0.2, "max":  0.5}
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "hdf5",
+                                "path": "data/2021-02-08-12-01-39_dataset_generation_synthetic_height_map_dataset_generation_maximilianstoelzle/DATASET_OCCLUSION.hdf5",
+                                "size": [64, 64],
+                                "sampling_weights": {"train": 0, "val":  0, "test":  1}
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualization": {"sample_frequency":  10, "indiv_vranges": true}
+    },
+    "remote": true,
+    "seeds": [101, 102, 103]
+}
