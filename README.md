@@ -44,7 +44,7 @@ git submodule update --init --recursive
 Please install the following C++ dependencies to use this repo:
 
 ```bash
-conda install cmake pybind11 eigen
+conda install cmake gcc pybind11 eigen
 ```
 or alternatively on macOS with homebrew:
 ```bash
