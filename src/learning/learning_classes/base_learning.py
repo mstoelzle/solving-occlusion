@@ -18,6 +18,7 @@ from src.learning.controller.controller import Controller
 from src.learning.loss.loss import Loss
 from src.learning.models import pick_model
 from src.learning.models.baseline.base_baseline_model import BaseBaselineModel
+from src.learning.models.baseline.lsq_plane_fit_baseline import LsqPlaneFitBaseline
 from src.learning.models.unet.unet_parts import VGG16FeatureExtractor
 from src.learning.tasks import Task
 from src.traversability.traversability_assessment import TraversabilityAssessment
@@ -222,16 +223,24 @@ class BaseLearning(ABC):
             raise NotImplementedError(f"The following task type is not implemented: {self.task.type}")
 
         dataloader_meta_info = DataloaderMetaInfo(dataloader)
-        with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad(), \
-             profiler.profile() as prof:
+        with self.task.loss.new_epoch(0, "test", dataloader_meta_info=dataloader_meta_info), torch.no_grad():
+            prof = None
+            if not isinstance(self.model, LsqPlaneFitBaseline):
+                prof = profiler.profile()
+                prof.__enter__()
+
             start_idx = 0
             progress_bar = Bar(f"Test inference for task {self.task.uid}", max=len(dataloader))
             for batch_idx, data in enumerate(dataloader):
                 data = self.dict_to_device(data)
                 batch_size = data[ChannelEnum.GT_DEM].size(0)
 
-                with profiler.record_function("model_inference"):
+                if isinstance(self.model, LsqPlaneFitBaseline):
+                    # the profiler somehow has issues with the scipy lsq solver
                     output = self.model.forward_pass(data)
+                else:
+                    with profiler.record_function("model_inference"):
+                        output = self.model.forward_pass(data)
 
                 if traversability_assessment is not None:
                     output = traversability_assessment(output=output, data=data)
@@ -256,9 +265,11 @@ class BaseLearning(ABC):
 
             progress_bar.finish()
 
-        with open(str(self.task.logdir / "test_cputime.txt"), "a") as f:
-            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
-        prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
+        if not isinstance(self.model, LsqPlaneFitBaseline):
+            prof.__exit__()
+            with open(str(self.task.logdir / "test_cputime.txt"), "a") as f:
+                f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+            prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
 
     def infer(self):
         hdf5_group_prefix = f"/task_{self.task.uid}/inference"
@@ -274,53 +285,63 @@ class BaseLearning(ABC):
 
         subgrid_size = self.task.labeled_dataloader.config.get("subgrid_size")
 
-        with torch.no_grad(), profiler.profile() as prof:
-            start_idx = 0
-            progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
-            for batch_idx, data in enumerate(dataloader):
-                data = self.dict_to_device(data)
-                batch_size = data[ChannelEnum.OCC_DEM].size(0)
-                grid_size = list(data[ChannelEnum.OCC_DEM].size()[1:3])
+        prof = None
+        if not isinstance(self.model, LsqPlaneFitBaseline):
+            prof = profiler.profile()
+            prof.__enter__()
 
-                grid_data = data
-                if subgrid_size is not None:
-                    data = self.split_subgrids(subgrid_size, data)
+        start_idx = 0
+        progress_bar = Bar(f"Inference for task {self.task.uid}", max=len(dataloader))
+        for batch_idx, data in enumerate(dataloader):
+            data = self.dict_to_device(data)
+            batch_size = data[ChannelEnum.OCC_DEM].size(0)
+            grid_size = list(data[ChannelEnum.OCC_DEM].size()[1:3])
 
+            grid_data = data
+            if subgrid_size is not None:
+                data = self.split_subgrids(subgrid_size, data)
+
+            if isinstance(self.model, LsqPlaneFitBaseline):
+                # the profiler somehow has issues with the scipy lsq solver
+                output = self.model.forward_pass(data)
+            else:
                 with profiler.record_function("model_inference"):
                     output = self.model.forward_pass(data)
 
-                if subgrid_size is not None:
-                    # max occlusion ratio threshold for COMP_DEM where we accept reconstruction
-                    # instead of just taking all OCC_DEM
-                    subgrid_max_occ_ratio_thresh = self.task.config.get("subgrid_max_occ_ratio_thresh", 1.0)
-                    if subgrid_max_occ_ratio_thresh < 1.0:
-                        occ_dem = data[ChannelEnum.OCC_DEM]
-                        occ_ratio = torch.isnan(occ_dem).sum(dim=(1, 2)) / (occ_dem.size(1) * occ_dem.size(2))
-                        occ_ratio_selector = occ_ratio > subgrid_max_occ_ratio_thresh
+            if subgrid_size is not None:
+                # max occlusion ratio threshold for COMP_DEM where we accept reconstruction
+                # instead of just taking all OCC_DEM
+                subgrid_max_occ_ratio_thresh = self.task.config.get("subgrid_max_occ_ratio_thresh", 1.0)
+                if subgrid_max_occ_ratio_thresh < 1.0:
+                    occ_dem = data[ChannelEnum.OCC_DEM]
+                    occ_ratio = torch.isnan(occ_dem).sum(dim=(1, 2)) / (occ_dem.size(1) * occ_dem.size(2))
+                    occ_ratio_selector = occ_ratio > subgrid_max_occ_ratio_thresh
 
-                        comp_dem = output[ChannelEnum.COMP_DEM]
-                        comp_dem[occ_ratio_selector, :, :] = occ_dem[occ_ratio_selector, :, :]
-                        output[ChannelEnum.COMP_DEM] = comp_dem
+                    comp_dem = output[ChannelEnum.COMP_DEM]
+                    comp_dem[occ_ratio_selector, :, :] = occ_dem[occ_ratio_selector, :, :]
+                    output[ChannelEnum.COMP_DEM] = comp_dem
 
-                        if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.COMP_DATA_UM in output:
-                            occ_data_um = output[ChannelEnum.OCC_DATA_UM]
-                            comp_data_um = output[ChannelEnum.COMP_DATA_UM]
-                            comp_data_um[occ_ratio_selector, :, :] = occ_data_um[occ_ratio_selector, :, :]
-                            output[ChannelEnum.COMP_DATA_UM] = comp_dem
+                    if ChannelEnum.OCC_DATA_UM in data and ChannelEnum.COMP_DATA_UM in output:
+                        occ_data_um = output[ChannelEnum.OCC_DATA_UM]
+                        comp_data_um = output[ChannelEnum.COMP_DATA_UM]
+                        comp_data_um[occ_ratio_selector, :, :] = occ_data_um[occ_ratio_selector, :, :]
+                        output[ChannelEnum.COMP_DATA_UM] = comp_dem
 
-                    output = self.unsplit_subgrids(grid_size, output)
-                    data = grid_data
+                output = self.unsplit_subgrids(grid_size, output)
+                data = grid_data
 
-                self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
-                self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, data, start_idx, dataloader_meta_info.length)
+            self.add_batch_data_to_hdf5_results(data_hdf5_group, output, start_idx, dataloader_meta_info.length)
 
-                start_idx += batch_size
-                progress_bar.next()
-            progress_bar.finish()
+            start_idx += batch_size
+            progress_bar.next()
+        progress_bar.finish()
 
-        with open(str(self.task.logdir / "inference_cputime.txt"), "a") as f:
-            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
-        prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
+        if not isinstance(self.model, LsqPlaneFitBaseline):
+            with open(str(self.task.logdir / "inference_cputime.txt"), "a") as f:
+                f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
+            prof.__exit__()
+            prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:
