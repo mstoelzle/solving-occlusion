@@ -33,8 +33,9 @@
 
 # Uncomment these lines when your job requires this software
 module use /opt/insy/modulefiles
-module load cuda/11.1
+module load cuda/11.2
 module load miniconda
+module load devtoolset/10 # newest version of gcc / g++
 
 # init conda
 conda init && conda activate rsl-solving-occlusion
