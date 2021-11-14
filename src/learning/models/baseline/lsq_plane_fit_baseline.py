@@ -37,14 +37,15 @@ def select_patch(occ_dem: torch.Tensor, occ_mask: torch.Tensor,
             return patch_dem, patch_mask, target_patch_cell_indice
 
 
-def lsq_plane_fit(occ_dem: torch.Tensor, occ_mask: torch.Tensor, **kwargs):
+def lsq_plane_fit(occ_dem: torch.Tensor, occ_mask: torch.Tensor, min_num_points_per_axis: int = 4):
     rec_dem = occ_dem.clone()
     occ_indices = torch.nonzero(occ_mask == 1)
 
     for occ_cell_idx in range(occ_indices.size(0)):
         target_cell_indice = occ_indices[occ_cell_idx, ...]
 
-        patch_dem, patch_mask, target_patch_cell_indice = select_patch(occ_dem, occ_mask, target_cell_indice, **kwargs)
+        patch_dem, patch_mask, target_patch_cell_indice = select_patch(occ_dem, occ_mask, target_cell_indice,
+                                                                       min_num_points_per_axis)
 
         patch_nocc_indices = torch.nonzero(patch_mask == 0)
         patch_nocc_z = patch_dem[patch_mask == 0]
