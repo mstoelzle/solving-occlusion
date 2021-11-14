@@ -7,37 +7,44 @@ from src.enums import *
 from .base_baseline_model import BaseBaselineModel
 
 
-# @torch.jit.script
-def lsq_plane_fit(occ_dem: torch.Tensor, occ_mask: torch.Tensor, min_num_points_per_axis: int = 4):
+@torch.jit.script
+def select_patch(occ_dem: torch.Tensor, occ_mask: torch.Tensor,
+                 target_cell_indice: torch.Tensor, min_num_points_per_axis: int = 4):
+    pixel_radius_x = 1
+    pixel_radius_y = 1
+    num_points_x = 0
+    num_points_y = 0
+    while num_points_x < min_num_points_per_axis or num_points_y < min_num_points_per_axis:
+        if num_points_x < min_num_points_per_axis:
+            pixel_radius_x += 1
+        if num_points_y < min_num_points_per_axis:
+            pixel_radius_y += 1
+
+        start_idx_x = max(int(target_cell_indice[0] - pixel_radius_x), 0)
+        start_idx_y = max(int(target_cell_indice[1] - pixel_radius_y), 0)
+        stop_idx_x = min(int(target_cell_indice[0] + pixel_radius_x), occ_dem.size(0) - 1)
+        stop_idx_y = min(int(target_cell_indice[1] + pixel_radius_y), occ_dem.size(1) - 1)
+
+        patch_dem = occ_dem[start_idx_x:stop_idx_x, start_idx_y:stop_idx_y]
+        patch_mask = occ_mask[start_idx_x:stop_idx_x, start_idx_y:stop_idx_y]
+
+        target_patch_cell_indice = target_cell_indice - torch.tensor([start_idx_x, start_idx_y])
+
+        num_points_x = torch.nonzero((patch_mask == 0).sum(dim=1)).size(0)
+        num_points_y = torch.nonzero((patch_mask == 0).sum(dim=0)).size(0)
+
+        if num_points_x >= min_num_points_per_axis or num_points_y >= min_num_points_per_axis:
+            return patch_dem, patch_mask, target_patch_cell_indice
+
+
+def lsq_plane_fit(occ_dem: torch.Tensor, occ_mask: torch.Tensor, **kwargs):
     rec_dem = occ_dem.clone()
     occ_indices = torch.nonzero(occ_mask == 1)
 
     for occ_cell_idx in range(occ_indices.size(0)):
         target_cell_indice = occ_indices[occ_cell_idx, ...]
 
-        pixel_radius_x = 1
-        pixel_radius_y = 1
-        patch_dem, patch_mask, target_patch_cell_indice = None, None, None
-        num_points_x = 0
-        num_points_y = 0
-        while num_points_x < min_num_points_per_axis or num_points_y < min_num_points_per_axis:
-            if num_points_x < min_num_points_per_axis:
-                pixel_radius_x += 1
-            if num_points_y < min_num_points_per_axis:
-                pixel_radius_y += 1
-
-            start_idx_x = max(int(target_cell_indice[0] - pixel_radius_x), 0)
-            start_idx_y = max(int(target_cell_indice[1] - pixel_radius_y), 0)
-            stop_idx_x = min(int(target_cell_indice[0] + pixel_radius_x), occ_dem.size(0) - 1)
-            stop_idx_y = min(int(target_cell_indice[1] + pixel_radius_y), occ_dem.size(1) - 1)
-
-            patch_dem = occ_dem[start_idx_x:stop_idx_x, start_idx_y:stop_idx_y]
-            patch_mask = occ_mask[start_idx_x:stop_idx_x, start_idx_y:stop_idx_y]
-
-            target_patch_cell_indice = target_cell_indice - torch.tensor([start_idx_x, start_idx_y])
-
-            num_points_x = torch.nonzero((patch_mask == 0).sum(axis=1)).size(0)
-            num_points_y = torch.nonzero((patch_mask == 0).sum(axis=0)).size(0)
+        patch_dem, patch_mask, target_patch_cell_indice = select_patch(occ_dem, occ_mask, target_cell_indice, **kwargs)
 
         patch_nocc_indices = torch.nonzero(patch_mask == 0)
         patch_nocc_z = patch_dem[patch_mask == 0]
@@ -77,7 +84,7 @@ class LsqPlaneFitBaseline(BaseBaselineModel):
                 rec_dems[idx, ...] = torch.zeros(size=occ_dem.size())
                 continue
 
-            rec_dem = lsq_plane_fit(occ_dem, occ_mask, self.min_num_points_per_axis)
+            rec_dem = lsq_plane_fit(occ_dem, occ_mask, min_num_points_per_axis=self.min_num_points_per_axis)
 
             # if ChannelEnum.GT_DEM in data:
             #     gt_dem = data[ChannelEnum.GT_DEM][idx, ...]
