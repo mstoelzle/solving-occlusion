@@ -15,9 +15,6 @@ class InterpolationBaseline(BaseBaselineModel):
     def __init__(self, name: str, **kwargs):
         super().__init__(**kwargs)
 
-        self.in_channels = []
-        self.out_channels = [ChannelEnum.REC_DEM]
-
         self.method = name
 
     def forward(self, data: Dict[Union[str, ChannelEnum], torch.Tensor],

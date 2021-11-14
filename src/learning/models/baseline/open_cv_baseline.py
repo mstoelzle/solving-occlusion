@@ -15,9 +15,6 @@ class OpenCVBaseline(BaseBaselineModel):
     def __init__(self, name: str, **kwargs):
         super().__init__(**kwargs)
 
-        self.in_channels = []
-        self.out_channels = [ChannelEnum.REC_DEM]
-
         if name == "NavierStokes":
             self.inpainting_method = cv.INPAINT_NS
         elif name == "Telea":
