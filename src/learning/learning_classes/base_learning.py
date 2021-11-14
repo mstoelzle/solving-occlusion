@@ -266,7 +266,7 @@ class BaseLearning(ABC):
             progress_bar.finish()
 
         if not isinstance(self.model, LsqPlaneFitBaseline):
-            prof.__exit__()
+            prof.__exit__(0, None, None)
             with open(str(self.task.logdir / "test_cputime.txt"), "a") as f:
                 f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
             prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
@@ -340,7 +340,7 @@ class BaseLearning(ABC):
         if not isinstance(self.model, LsqPlaneFitBaseline):
             with open(str(self.task.logdir / "inference_cputime.txt"), "a") as f:
                 f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
-            prof.__exit__()
+            prof.__exit__(0, None, None)
             prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
