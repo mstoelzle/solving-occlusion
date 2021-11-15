@@ -76,6 +76,27 @@
                     "domains": {"target": {}},
                     "dataloaders": {"labeled_dataloader":  "target"},
                     "model": {"min_num_points_per_axis": 8}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"min_num_points_per_axis": 10}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"min_num_points_per_axis": 12}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"min_num_points_per_axis": 16}
                 }
             ]
         },
