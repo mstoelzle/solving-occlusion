@@ -362,9 +362,6 @@ class ResultsPlotter:
             df_occ = pd.DataFrame(data=pd_occ_dict)
             df_nocc = pd.DataFrame(data=pd_nocc_dict)
 
-            # sns.violinplot(data=df, x="task_uid", y="mse_rec_occ", inner="box")
-            # plt.show()
-
             fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
 
             axes[0, 0].set_title("L1 loss occluded area")
@@ -381,7 +378,28 @@ class ResultsPlotter:
 
             plt.tight_layout()
             plt.draw()
-            plt.savefig(str(purpose_logdir / f"loss_magnitude_distribution.pdf"))
+            plt.savefig(str(purpose_logdir / f"loss_magnitude_dist_boxplot.pdf"))
+            if self.remote is not True:
+                plt.show()
+            plt.close()
+
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
+
+            axes[0, 0].set_title("L1 loss occluded area")
+            sns.violinplot(x="task_uid", y="l1_rec_occ", data=df_occ, ax=axes[0, 0], showfliers=False)
+
+            axes[0, 1].set_title("L1 loss non-occluded area")
+            sns.violinplot(x="task_uid", y="l1_rec_nocc", data=df_nocc, ax=axes[0, 1], showfliers=False)
+
+            axes[1, 0].set_title("MSE loss occluded area")
+            sns.violinplot(x="task_uid", y="mse_rec_occ", data=df_occ, ax=axes[1, 0], showfliers=False)
+
+            axes[1, 1].set_title("MSE loss non-occluded area")
+            sns.violinplot(x="task_uid", y="mse_rec_nocc", data=df_nocc, ax=axes[1, 1], showfliers=False)
+
+            plt.tight_layout()
+            plt.draw()
+            plt.savefig(str(purpose_logdir / f"loss_magnitude_dist_violinplot.pdf"))
             if self.remote is not True:
                 plt.show()
             plt.close()
