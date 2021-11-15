@@ -349,13 +349,13 @@ class ResultsPlotter:
                 mse_rec_nocc = masked_loss_fct(mse_loss_fct, rec_dem,
                                                gt_dem, ~occ_mask, reduction="none")[occ_mask == False]
 
-                task_uid_occ = np.ones(shape=l1_rec_occ.shape) * task_uid
-                pd_occ_dict["task_uid"].extend(task_uid_occ.tolist())
+                task_uid_occ = [str(task_uid)] * l1_rec_occ.shape[0]
+                pd_occ_dict["task_uid"].extend(task_uid_occ)
                 pd_occ_dict["l1_rec_occ"].extend(l1_rec_occ.tolist())
                 pd_occ_dict["mse_rec_occ"].extend(mse_rec_occ.tolist())
 
-                task_uid_nocc = np.ones(shape=l1_rec_nocc.shape) * task_uid
-                pd_nocc_dict["task_uid"].extend(task_uid_nocc.tolist())
+                task_uid_nocc = [str(task_uid)] * l1_rec_nocc.shape[0]
+                pd_nocc_dict["task_uid"].extend(task_uid_nocc)
                 pd_nocc_dict["l1_rec_nocc"].extend(l1_rec_nocc.tolist())
                 pd_nocc_dict["mse_rec_nocc"].extend(mse_rec_nocc.tolist())
 
