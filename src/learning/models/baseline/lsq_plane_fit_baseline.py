@@ -10,8 +10,8 @@ from .base_baseline_model import BaseBaselineModel
 @torch.jit.script
 def select_patch(occ_dem: torch.Tensor, occ_mask: torch.Tensor,
                  target_cell_indice: torch.Tensor, min_num_points_per_axis: int = 4):
-    pixel_radius_x = 1
-    pixel_radius_y = 1
+    pixel_radius_x = min_num_points_per_axis // 2
+    pixel_radius_y = min_num_points_per_axis // 2
     num_points_x = 0
     num_points_y = 0
     while num_points_x < min_num_points_per_axis or num_points_y < min_num_points_per_axis:
