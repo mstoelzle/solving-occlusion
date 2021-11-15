@@ -41,7 +41,10 @@ class ResultsPlotter:
 
                 self.plot_task(task_uid, task_hdf5_group)
 
-            if self.config.get("loss_magnitude_distribution", False) is True:
+            if (isinstance(self.config.get("loss_magnitude_distribution", False), bool)
+                    and self.config.get("loss_magnitude_distribution", False)) \
+                or (isinstance(self.config.get("loss_magnitude_distribution", []), list)
+                    and len(self.config.get("loss_magnitude_distribution", [])) > 0):
                 self.plot_loss_magnitude_distribution()
 
             if len(self.config.get("qualitative_comparison", [])) > 0:
@@ -326,14 +329,25 @@ class ResultsPlotter:
             purpose_logdir = self.logdir / f"{purpose}_analysis"
             purpose_logdir.mkdir(exist_ok=True, parents=True)
 
+            loss_magnitude_config = self.config["loss_magnitude_distribution"]
+
+            x_axis_label_task_uid = False
+            if loss_magnitude_config is True:
+                x_axis_label_task_uid = True
+                loss_magnitude_config = []
+                for task_string, _ in self.results_hdf5_file.items():
+                    task_string_split = task_string.split("_")
+                    task_uid = int(task_string_split[1])
+                    loss_magnitude_config.append({"title": str(task_uid), "task": task_uid})
+
             pd_occ_dict = {"task_uid": [], "l1_rec_occ": [], "mse_rec_occ": []}
             pd_nocc_dict = {"task_uid": [], "l1_rec_nocc": [], "mse_rec_nocc": []}
-            for task_string, task_hdf5_group in self.results_hdf5_file.items():
-                task_string_split = task_string.split("_")
-                task_uid = int(task_string_split[1])
+            for task_spec in loss_magnitude_config:
+                method_title = task_spec["title"]
+                task_uid = task_spec["task"]
 
-                data_hdf5_group = task_hdf5_group[purpose]["data"]
-                loss_hdf5_group = task_hdf5_group[purpose]["loss"]
+                data_hdf5_group = self.results_hdf5_file[f"task_{task_uid}/{purpose}/data"]
+                loss_hdf5_group = self.results_hdf5_file[f"task_{task_uid}/{purpose}/loss"]
 
                 gt_dem = torch.tensor(np.array(data_hdf5_group[ChannelEnum.GT_DEM.value]))
                 occ_dem = torch.tensor(np.array(data_hdf5_group[ChannelEnum.OCC_DEM.value]))
@@ -349,12 +363,12 @@ class ResultsPlotter:
                 mse_rec_nocc = masked_loss_fct(mse_loss_fct, rec_dem,
                                                gt_dem, ~occ_mask, reduction="none")[occ_mask == False]
 
-                task_uid_occ = [str(task_uid)] * l1_rec_occ.shape[0]
+                task_uid_occ = [str(method_title)] * l1_rec_occ.shape[0]
                 pd_occ_dict["task_uid"].extend(task_uid_occ)
                 pd_occ_dict["l1_rec_occ"].extend(l1_rec_occ.tolist())
                 pd_occ_dict["mse_rec_occ"].extend(mse_rec_occ.tolist())
 
-                task_uid_nocc = [str(task_uid)] * l1_rec_nocc.shape[0]
+                task_uid_nocc = [str(method_title)] * l1_rec_nocc.shape[0]
                 pd_nocc_dict["task_uid"].extend(task_uid_nocc)
                 pd_nocc_dict["l1_rec_nocc"].extend(l1_rec_nocc.tolist())
                 pd_nocc_dict["mse_rec_nocc"].extend(mse_rec_nocc.tolist())
@@ -362,11 +376,9 @@ class ResultsPlotter:
             df_occ = pd.DataFrame(data=pd_occ_dict)
             df_nocc = pd.DataFrame(data=pd_nocc_dict)
 
-            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
-
             for plot_type in ["boxplot", "violinplot"]:
                 for area in ["occ", "nocc"]:
-                    fig = plt.figure(figsize=[6.4, 4.8])
+                    fig = plt.figure(figsize=[len(self.results_hdf5_file)/4+6.4, 4.8])
 
                     if area == "occ":
                         df_plot = df_occ
@@ -376,11 +388,16 @@ class ResultsPlotter:
                     if plot_type == "boxplot":
                         sns.boxplot(x="task_uid", y=f"l1_rec_{area}", data=df_plot, showfliers=False)
                     else:
-                        sns.violinplot(x="task_uid", y=f"l1_rec_{area}", data=df_plot, showfliers=False)
+                        sns.violinplot(x="task_uid", y=f"l1_rec_{area}", data=df_plot, showfliers=False, width=1.0)
 
                         df_plot_90th = df_plot.quantile(q=0.9, axis=0)
                         l1_90th = df_plot_90th[f"l1_rec_{area}"]
                         plt.ylim(top=l1_90th * 1.1)
+
+                    if x_axis_label_task_uid:
+                        plt.xlabel("Task")
+                    else:
+                        plt.xlabel(None)
 
                     if area == "occ":
                         plt.ylabel("$\ell_{1,\mathrm{rec},\mathrm{occ}}$ [m]")
