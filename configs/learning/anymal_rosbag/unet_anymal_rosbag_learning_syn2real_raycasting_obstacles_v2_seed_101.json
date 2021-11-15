@@ -528,7 +528,18 @@
                 }
             ]
         },
-        "visualization": {"sample_frequency":  50, "indiv_vranges": true}
+        "visualization": {
+            "sample_frequency":  50,
+            "indiv_vranges": true,
+            "loss_magnitude_distribution":  [
+                {"title":  "Telea", "task": 0},
+                {"title":  "Navier-Stokes", "task": 1},
+                {"title":  "Self-supervised", "task": 2},
+                {"title":  "Synthetic", "task": 3},
+                {"title":  "Transfer", "task": 4},
+                {"title":  "Simultaneous", "task": 5}
+            ]
+        }
     },
     "remote": true,
     "seeds": [101]

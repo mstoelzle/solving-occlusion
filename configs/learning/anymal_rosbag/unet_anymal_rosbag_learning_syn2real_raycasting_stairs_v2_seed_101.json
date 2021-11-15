@@ -481,7 +481,15 @@
                 {"title":  "Telea", "task": 0},
                 {"title":  "Self-supervised", "task": 2}
             ],
-            "hide_ticks": true
+            "hide_ticks": true,
+                "loss_magnitude_distribution":  [
+                {"title":  "Telea", "task": 0},
+                {"title":  "Navier-Stokes", "task": 1},
+                {"title":  "Self-supervised", "task": 2},
+                {"title":  "Synthetic", "task": 3},
+                {"title":  "Transfer", "task": 4},
+                {"title":  "Simultaneous", "task": 5}
+            ]
         }
     },
     "remote": true,
