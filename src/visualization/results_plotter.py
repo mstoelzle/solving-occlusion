@@ -364,45 +364,35 @@ class ResultsPlotter:
 
             fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
 
-            axes[0, 0].set_title("L1 loss occluded area")
-            sns.boxplot(x="task_uid", y="l1_rec_occ", data=df_occ, ax=axes[0, 0], showfliers=False)
+            for plot_type in ["boxplot", "violinplot"]:
+                for area in ["occ", "nocc"]:
+                    fig = plt.figure(figsize=[6.4, 4.8])
 
-            axes[0, 1].set_title("L1 loss non-occluded area")
-            sns.boxplot(x="task_uid", y="l1_rec_nocc", data=df_nocc, ax=axes[0, 1], showfliers=False)
+                    if area == "occ":
+                        df_plot = df_occ
+                    else:
+                        df_plot = df_nocc
 
-            axes[1, 0].set_title("MSE loss occluded area")
-            sns.boxplot(x="task_uid", y="mse_rec_occ", data=df_occ, ax=axes[1, 0], showfliers=False)
+                    if plot_type == "boxplot":
+                        sns.boxplot(x="task_uid", y=f"l1_rec_{area}", data=df_plot, showfliers=False)
+                    else:
+                        sns.violinplot(x="task_uid", y=f"l1_rec_{area}", data=df_plot, showfliers=False)
 
-            axes[1, 1].set_title("MSE loss non-occluded area")
-            sns.boxplot(x="task_uid", y="mse_rec_nocc", data=df_nocc, ax=axes[1, 1], showfliers=False)
+                        df_plot_90th = df_plot.quantile(q=0.9, axis=0)
+                        l1_90th = df_plot_90th[f"l1_rec_{area}"]
+                        plt.ylim(top=l1_90th * 1.1)
 
-            plt.tight_layout()
-            plt.draw()
-            plt.savefig(str(purpose_logdir / f"loss_magnitude_dist_boxplot.pdf"))
-            if self.remote is not True:
-                plt.show()
-            plt.close()
+                    if area == "occ":
+                        plt.ylabel("$\ell_{1,\mathrm{rec},\mathrm{occ}}$ [m]")
+                    else:
+                        plt.ylabel("$\ell_{1,\mathrm{rec},\mathrm{nocc}}$ [m]")
 
-            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=[2 * 6.4, 2 * 4.8])
-
-            axes[0, 0].set_title("L1 loss occluded area")
-            sns.violinplot(x="task_uid", y="l1_rec_occ", data=df_occ, ax=axes[0, 0], showfliers=False)
-
-            axes[0, 1].set_title("L1 loss non-occluded area")
-            sns.violinplot(x="task_uid", y="l1_rec_nocc", data=df_nocc, ax=axes[0, 1], showfliers=False)
-
-            axes[1, 0].set_title("MSE loss occluded area")
-            sns.violinplot(x="task_uid", y="mse_rec_occ", data=df_occ, ax=axes[1, 0], showfliers=False)
-
-            axes[1, 1].set_title("MSE loss non-occluded area")
-            sns.violinplot(x="task_uid", y="mse_rec_nocc", data=df_nocc, ax=axes[1, 1], showfliers=False)
-
-            plt.tight_layout()
-            plt.draw()
-            plt.savefig(str(purpose_logdir / f"loss_magnitude_dist_violinplot.pdf"))
-            if self.remote is not True:
-                plt.show()
-            plt.close()
+                    plt.tight_layout()
+                    plt.draw()
+                    plt.savefig(str(purpose_logdir / f"loss_magnitude_dist_{plot_type}_{area}.pdf"))
+                    if self.remote is not True:
+                        plt.show()
+                    plt.close()
 
     def plot_qualitative_comparison(self):
         qual_comp_config = self.config["qualitative_comparison"]
