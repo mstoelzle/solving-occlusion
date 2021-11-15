@@ -335,10 +335,10 @@ class ResultsPlotter:
                 data_hdf5_group = task_hdf5_group[purpose]["data"]
                 loss_hdf5_group = task_hdf5_group[purpose]["loss"]
 
-                gt_dem = torch.tensor(data_hdf5_group[ChannelEnum.GT_DEM.value])
-                occ_dem = torch.tensor(data_hdf5_group[ChannelEnum.OCC_DEM.value])
-                occ_mask = torch.tensor(data_hdf5_group[ChannelEnum.OCC_MASK.value], dtype=torch.bool)
-                rec_dem = torch.tensor(data_hdf5_group[ChannelEnum.REC_DEM.value])
+                gt_dem = torch.tensor(np.array(data_hdf5_group[ChannelEnum.GT_DEM.value]))
+                occ_dem = torch.tensor(np.array(data_hdf5_group[ChannelEnum.OCC_DEM.value]))
+                occ_mask = torch.tensor(np.array(data_hdf5_group[ChannelEnum.OCC_MASK.value]), dtype=torch.bool)
+                rec_dem = torch.tensor(np.array(data_hdf5_group[ChannelEnum.REC_DEM.value]))
 
                 l1_rec_occ = masked_loss_fct(l1_loss_fct, rec_dem,
                                              gt_dem, occ_mask, reduction="none")[occ_mask == True]
