@@ -4,7 +4,7 @@ coloredlogs==15.0.1
 dash==2.0.0
 h5py==3.5.0
 jsonschema==4.2.1
-matplotlib==3.4.3
+matplotlib==3.5.0
 msgpack==1.0.2
 numpy>=1.19.4, <2.0
 opencv-python>=4.4.0.46, <5.0
