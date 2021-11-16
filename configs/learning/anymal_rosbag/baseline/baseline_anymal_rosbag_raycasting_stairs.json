@@ -80,12 +80,44 @@
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "model": {"name": "Telea"}
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "nearest"}
                 },
                 {
                     "task_type": "supervised-learning",
                     "model_to_train": "untrained",
-                    "model": {"name": "NavierStokes"}
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "linear"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "cubic"}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "Telea", "inpaint_radius": 3}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "NavierStokes", "inpaint_radius": 3}
+                },
+                {
+                    "task_type": "supervised-learning",
+                    "model_to_train": "untrained",
+                    "domains": {"target": {}},
+                    "dataloaders": {"labeled_dataloader":  "target"},
+                    "model": {"name": "lsq_plane_fit", "min_num_points_per_axis": 8}
                 }
             ]
         },
