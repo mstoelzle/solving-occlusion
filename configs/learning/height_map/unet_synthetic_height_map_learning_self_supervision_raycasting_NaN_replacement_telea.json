@@ -38,7 +38,7 @@
                         "inpaint_radius": 3
                     },
                     "bilinear": true,
-                    "feature_extractor": true
+                    "feature_extractor": false
                 },
                 "optimizer": {
                     "name": "Adam",

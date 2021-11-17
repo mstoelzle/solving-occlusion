@@ -37,7 +37,7 @@
                         "input_dim": [64, 64]
                     },
                     "bilinear": true,
-                    "feature_extractor": true
+                    "feature_extractor": false
                 },
                 "optimizer": {
                     "name": "Adam",

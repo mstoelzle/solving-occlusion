@@ -67,5 +67,5 @@
         "visualization": {"sample_frequency":  10, "indiv_vranges": true}
     },
     "remote": true,
-    "seeds": [101]
+    "seeds": [101, 102, 103]
 }
