@@ -32,7 +32,10 @@
                     "out_channels": ["rec_dem"],
                     "hidden_dims": [64, 128, 256],
                     "input_normalization": false,
-                    "NaN_replacement": 0,
+                    "NaN_replacement": {
+                        "name": "linear",
+                        "input_dim": [64, 64]
+                    },
                     "bilinear": true,
                     "feature_extractor": true
                 },
