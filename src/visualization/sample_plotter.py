@@ -377,6 +377,8 @@ def draw_qualitative_comparison_plot(sample_idx: int, logdir: pathlib.Path,
     if gt_dem is not None:
         fig, axes = plt.subplots(nrows=1, ncols=len(rec_dems), figsize=[len(rec_dems) * 0.7 * 6.4, 1.2 * 4.8])
         axes = np.expand_dims(axes, axis=0)
+        if axes.ndim == 1:
+            axes = np.expand_dims(axes, axis=0)
 
         error_dems = {}
         mins = [np.Inf]
