@@ -104,9 +104,6 @@
         "visualization": {
             "sample_frequency":  50,
             "indiv_vranges": true,
-            "qualitative_comparison":  [
-                {"title":  "Self-supervised", "task": 0}
-            ],
             "hide_ticks": true,
             "loss_magnitude_distribution":  [
                 {"title":  "Self-supervised", "task": 0}
