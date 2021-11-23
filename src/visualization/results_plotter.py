@@ -288,16 +288,16 @@ class ResultsPlotter:
         # percentage of entire area which is occluded
         occ_mask = purpose_hdf5_group["data"][ChannelEnum.OCC_MASK.value]
         shape_map = occ_mask.shape
-        occluded_area = np.sum(occ_mask, axis=(1, 2)) / (shape_map[1] * shape_map[2])
+        occlusion_ratio = np.sum(occ_mask, axis=(1, 2)) / (shape_map[1] * shape_map[2])
 
         bins = [0.01, 0.05, 0.10, 0.2, 1]
-        box_plot_y = np.zeros(shape=occluded_area.shape)
+        box_plot_y = np.zeros(shape=occlusion_ratio.shape)
         bin_decs = []
         lower_bound = 0
         idx = 0
         for higher_bound in bins:
-            selector = np.logical_and(lower_bound <= occluded_area,
-                                      occluded_area <= higher_bound)
+            selector = np.logical_and(lower_bound <= occlusion_ratio,
+                                      occlusion_ratio <= higher_bound)
 
             loss_for_bin = np.array(loss_hdf5_group[LossEnum.MSE_REC_OCC.value])
             loss_for_bin = loss_for_bin[selector]
@@ -318,6 +318,16 @@ class ResultsPlotter:
         plt.tight_layout()
         plt.draw()
         plt.savefig(str(logdir / f"correlation_area_occluded.pdf"))
+        if self.remote is not True:
+            plt.show()
+        plt.close()
+
+        plt.figure()
+        ax = sns.violinplot(y=occlusion_ratio)
+        plt.title("Distribution of occlusion ratio")
+        plt.tight_layout()
+        plt.draw()
+        plt.savefig(str(logdir / f"distribution_occlusion_ratio.pdf"))
         if self.remote is not True:
             plt.show()
         plt.close()
