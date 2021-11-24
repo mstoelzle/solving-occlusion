@@ -269,7 +269,8 @@ class BaseLearning(ABC):
             prof.__exit__(0, None, None)
             with open(str(self.task.logdir / "test_cputime.txt"), "a") as f:
                 f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
-            prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
+            if self.task.config.get("profiler_export_chrome_trace", False):
+                prof.export_chrome_trace(str(self.task.logdir / "test_cputime_chrome_trace.json"))
 
     def infer(self):
         hdf5_group_prefix = f"/task_{self.task.uid}/inference"
@@ -341,7 +342,8 @@ class BaseLearning(ABC):
             prof.__exit__(0, None, None)
             with open(str(self.task.logdir / "inference_cputime.txt"), "a") as f:
                 f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=20))
-            prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
+            if self.task.config.get("profiler_export_chrome_trace", False):
+                prof.export_chrome_trace(str(self.task.logdir / "inference_cputime_chrome_trace.json"))
 
     def dict_to_device(self, data: Dict[Union[ChannelEnum, str], torch.Tensor]) \
             -> Dict[Union[ChannelEnum, str], torch.Tensor]:
