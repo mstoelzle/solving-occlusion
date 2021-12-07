@@ -9,7 +9,7 @@ Our paper is currently under review. Please consider having a look at the pre-pr
 We invite you to see our method in action in a video, where we record the inference of our method on the Gonzen mine dataset recorded with the ANYmal C legged robot: https://youtu.be/2Khxeto62LQ
 
 Please cite our paper if you use our method in your work:
-```
+```bibtex
 @article{stolzle2021solving,
   title={Solving Occlusion in Terrain Mapping with Neural Networks},
   author={St{\"o}lzle, Maximilian and Miki, Takahiro and Gerdes, Levin and Azkarate, Martin and Hutter, Marco},
