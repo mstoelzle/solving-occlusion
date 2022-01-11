@@ -4,17 +4,21 @@
 Accurate and complete terrain maps enhance the awareness of autonomous robots and enable safe and optimal path planning. Rocks and topography often create occlusions and lead to missing elevation information in the Digital Elevation Map (DEM). Currently, mostly traditional inpainting techniques based on diffusion or patch-matching are used by autonomous mobile robots to fill-in incomplete DEMs. These methods cannot leverage the high-level terrain characteristics and the geometric constraints of line of sight we humans use intuitively to predict occluded areas. We propose to use neural networks to reconstruct the occluded areas in DEMs. We introduce a self-supervised learning approach capable of training on real-world data without a need for ground-truth information. We accomplish this by adding artificial occlusion to the incomplete elevation maps constructed on a real robot by performing ray casting. We first evaluate a supervised learning approach on synthetic data for which we have the full ground-truth available and subsequently move to several real-world datasets. These real-world datasets were recorded during autonomous exploration of both structured and unstructured terrain with a legged robot, and additionally in a planetary scenario on Lunar analogue terrain. We state a significant improvement compared to the Telea and Navier-Stokes baseline methods both on synthetic terrain and for the real-world datasets. Our neural network is able to run in real-time on both CPU and GPU with suitable sampling rates for autonomous ground robots.
 
 ## Paper and Link
-Our paper is currently under review. Please consider having a look at the pre-print for now: https://arxiv.org/abs/2109.07150
+Our work has been published in the IEEE Robotics and Automation Letters (RA-L). Please refer to the paper on [IEEE Xplore](https://ieeexplore.ieee.org/document/9676411) or on [ArXiv](https://arxiv.org/abs/2109.07150).
 
 We invite you to see our method in action in a video, where we record the inference of our method on the Gonzen mine dataset recorded with the ANYmal C legged robot: https://youtu.be/2Khxeto62LQ
 
 Please cite our paper if you use our method in your work:
 ```bibtex
-@article{stolzle2021solving,
-  title={Solving Occlusion in Terrain Mapping with Neural Networks},
-  author={St{\"o}lzle, Maximilian and Miki, Takahiro and Gerdes, Levin and Azkarate, Martin and Hutter, Marco},
-  journal={arXiv preprint arXiv:2109.07150},
-  year={2021}
+@ARTICLE{stolzle2022reconstructing,
+  author={Stolzle, Maximilian and Miki, Takahiro and Gerdes, Levin and Azkarate, Martin and Hutter, Marco},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={Reconstructing occluded Elevation Information in Terrain Maps with Self-supervised Learning}, 
+  year={2022},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/LRA.2022.3141662}
 }
 ```
 
