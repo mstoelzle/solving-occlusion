@@ -15,9 +15,9 @@ Please cite our paper if you use our method in your work:
   journal={IEEE Robotics and Automation Letters}, 
   title={Reconstructing occluded Elevation Information in Terrain Maps with Self-supervised Learning}, 
   year={2022},
-  volume={},
-  number={},
-  pages={1-1},
+  volume={7},
+  number={2},
+  pages={1697-1704},
   doi={10.1109/LRA.2022.3141662}
 }
 ```
