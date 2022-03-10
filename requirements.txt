@@ -22,7 +22,7 @@ seaborn==0.11.2
 scipy==1.8.0
 tensorboard==2.8.0
 tifffile==2022.2.9
-torch==1.10.2
+torch==1.11.0
 torchvision==0.11.3
 
 git+https://github.com/mstoelzle/grid-map-raycasting
