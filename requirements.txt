@@ -9,7 +9,7 @@ msgpack==1.0.3
 numpy>=1.19.4, <2.0
 opencv-python>=4.4.0.46, <5.0
 Pillow>=8.1.2, <10.0
-plotly==5.5.0
+plotly==5.11.0
 progress==1.6
 psutil==5.9.0
 pybind11==2.9.1
