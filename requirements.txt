@@ -21,7 +21,7 @@ rospkg==1.4.0
 seaborn==0.11.2
 scipy==1.8.0
 tensorboard==2.8.0
-tifffile==2022.2.9
+tifffile==2023.2.3
 torch==1.10.2
 torchvision==0.11.3
 
